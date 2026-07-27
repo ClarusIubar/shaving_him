@@ -11,11 +11,37 @@
     <!-- Razor Cursor -->
     <div id="razorCursor">🪒</div>
 
-    <!-- Loading Screen -->
-    <div class="loading-screen" id="loadingScreen">
-        <div class="spinner"></div>
-        <div>스테이지 데이터를 로드하는 중입니다...</div>
-        <div style="font-size:12px;color:#8892b0;">ASCII 아트 & 털 마스크 데이터 준비 중</div>
+    <!-- Start & Stage Selector Modal -->
+    <div class="overlay" id="startModal">
+        <div class="overlay-box">
+            <h2>🪒 면도 게임 모드 선택</h2>
+            <div style="font-size:13px;color:#8892b0;margin-bottom:8px;">
+                제공된 기본 아스키 아트 또는 직접 올려주신 사진으로 게임을 즐겨보세요!
+            </div>
+
+            <!-- Option A: Preset Stage -->
+            <button class="btn-primary" id="startPresetBtn" style="margin-bottom:12px;">
+                🎮 기본 스테이지로 시작 (기본 아스키 아트)
+            </button>
+
+            <div style="border-top:1px solid #2d3345;padding-top:12px;margin-top:4px;">
+                <div style="font-size:14px;font-weight:bold;color:#4ecdc4;margin-bottom:8px;">
+                    📷 내 사진으로 커스텀 게임 만들기
+                </div>
+                
+                <div class="upload-drop-zone" id="uploadDropZone">
+                    <span style="font-size:24px;">📁</span>
+                    <span style="font-size:13px;">사진 파일을 선택하거나 이곳으로 드롭하세요</span>
+                    <span style="font-size:11px;color:#8892b0;">(PNG, JPG, WEBP 이미지 지원 - 100% 브라우저 내 처리)</span>
+                    <img id="photoPreview" class="photo-preview" alt="선택한 이미지 미리보기" />
+                </div>
+                <input type="file" id="photoInput" accept="image/*" style="display:none;" />
+
+                <button class="btn-primary" id="startCustomBtn" disabled style="margin-top:12px;opacity:0.5;">
+                    🪒 선택한 사진으로 게임 시작
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Main Game Container -->
@@ -28,6 +54,7 @@
                 <span class="stat-item">점수 <span class="stat-val" id="scoreVal">0</span></span>
                 <span class="stat-item">⏱ <span class="stat-val" id="timerVal">60</span>초</span>
                 <span class="stat-item">털 <span class="stat-val" id="remainVal">--</span></span>
+                <button class="action-btn" id="changeStageBtn" style="margin-left:8px;">📂 스테이지 변경</button>
             </div>
         </div>
 
@@ -53,7 +80,7 @@
     </div>
 
     <!-- Game Over Overlay -->
-    <div class="overlay" id="gameOverlay">
+    <div class="overlay" id="gameOverlay" style="display:none;">
         <div class="overlay-box">
             <h2 id="overlayTitle">게임 종료!</h2>
             <div class="final-score" id="overlayFinalScore">0</div>

@@ -116,17 +116,18 @@ canvas {
     gap: 8px;
 }
 
-.brush-btn {
+.brush-btn, .action-btn {
     background: #252a38;
     color: #ccc;
     border: 1px solid #363d52;
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 11px;
+    font-size: 12px;
+    transition: all 0.2s;
 }
 
-.brush-btn.active {
+.brush-btn.active, .action-btn:hover {
     background: #4ecdc4;
     color: #0d0e15;
     font-weight: bold;
@@ -137,46 +138,82 @@ canvas {
     position: fixed;
     inset: 0;
     z-index: 10000;
-    background: rgba(13, 14, 21, 0.85);
-    backdrop-filter: blur(4px);
-    display: none;
+    background: rgba(13, 14, 21, 0.88);
+    backdrop-filter: blur(6px);
+    display: flex;
     justify-content: center;
     align-items: center;
 }
 
 .overlay-box {
     background: #1c202e;
-    padding: 36px;
-    border-radius: 12px;
+    padding: 28px 36px;
+    border-radius: 14px;
     border: 1px solid #363d52;
     text-align: center;
     color: #fff;
-    min-width: 320px;
+    width: 440px;
+    max-width: 90vw;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .overlay-box h2 {
-    font-size: 32px;
-    margin-bottom: 12px;
-}
-
-.overlay-box .final-score {
-    font-size: 36px;
+    font-size: 26px;
     color: #4ecdc4;
-    font-weight: bold;
-    margin: 12px 0;
 }
 
-.overlay-box .msg {
-    font-size: 16px;
-    color: #ccd6f6;
-    margin: 8px 0;
+.mode-selector {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
 }
 
-.overlay-box .detail {
+.mode-tab {
+    flex: 1;
+    padding: 10px;
+    background: #252a38;
+    border: 1px solid #363d52;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #a0aec0;
     font-size: 13px;
-    color: #8892b0;
-    margin-bottom: 20px;
+    transition: all 0.2s;
+}
+
+.mode-tab.active {
+    background: #4ecdc4;
+    color: #0d0e15;
+    font-weight: bold;
+    border-color: #4ecdc4;
+}
+
+.upload-drop-zone {
+    border: 2px dashed #4ecdc4;
+    border-radius: 8px;
+    padding: 20px;
+    background: #151821;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.upload-drop-zone:hover {
+    background: #1e2330;
+}
+
+.photo-preview {
+    max-width: 100%;
+    max-height: 120px;
+    border-radius: 6px;
+    display: none;
+    margin-top: 8px;
+    border: 1px solid #363d52;
 }
 
 .btn-primary {
@@ -184,16 +221,33 @@ canvas {
     color: #0d0e15;
     border: none;
     padding: 12px 28px;
-    font-size: 16px;
+    font-size: 15px;
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
     transition: transform 0.1s, background 0.2s;
+    width: 100%;
 }
 
 .btn-primary:hover {
     background: #45b7af;
-    transform: scale(1.03);
+    transform: scale(1.02);
+}
+
+.btn-secondary {
+    background: #252a38;
+    color: #ccc;
+    border: 1px solid #363d52;
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #32384a;
+    color: #fff;
 }
 
 .loading-screen {

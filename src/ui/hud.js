@@ -1,6 +1,6 @@
 /**
  * Interface Layer: HUD
- * Updates score, timer, progress bar, razor size label, and result overlays.
+ * Updates score, timer, progress bar, razor size label, result overlays, and stage start modal.
  */
 import { SessionStatus } from '../domain/shave-session.js';
 
@@ -10,16 +10,74 @@ export class HUD {
         this.timerEl = document.getElementById('timerVal');
         this.remainEl = document.getElementById('remainVal');
         this.barFillEl = document.getElementById('progressBarFill');
+
+        // Game Over Overlay
         this.overlayEl = document.getElementById('gameOverlay');
         this.titleEl = document.getElementById('overlayTitle');
         this.finalScoreEl = document.getElementById('overlayFinalScore');
         this.msgEl = document.getElementById('overlayMsg');
         this.detailEl = document.getElementById('overlayDetail');
+
+        // Start Modal Elements
+        this.startModalEl = document.getElementById('startModal');
+        this.photoInputEl = document.getElementById('photoInput');
+        this.dropZoneEl = document.getElementById('uploadDropZone');
+        this.previewEl = document.getElementById('photoPreview');
+        this.startPresetBtn = document.getElementById('startPresetBtn');
+        this.startCustomBtn = document.getElementById('startCustomBtn');
+
+        this.selectedFile = null;
+        this.initStartModalEvents();
+    }
+
+    initStartModalEvents() {
+        if (this.dropZoneEl && this.photoInputEl) {
+            this.dropZoneEl.addEventListener('click', () => this.photoInputEl.click());
+
+            this.photoInputEl.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    this.handleFileSelected(e.target.files[0]);
+                }
+            });
+
+            // Drag and Drop support
+            this.dropZoneEl.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                this.dropZoneEl.style.borderColor = '#4ecdc4';
+            });
+
+            this.dropZoneEl.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    this.handleFileSelected(e.dataTransfer.files[0]);
+                }
+            });
+        }
+    }
+
+    handleFileSelected(file) {
+        this.selectedFile = file;
+        if (this.previewEl) {
+            const url = URL.createObjectURL(file);
+            this.previewEl.src = url;
+            this.previewEl.style.display = 'block';
+        }
+        if (this.startCustomBtn) {
+            this.startCustomBtn.disabled = false;
+            this.startCustomBtn.style.opacity = '1';
+        }
+    }
+
+    showStartModal() {
+        if (this.startModalEl) this.startModalEl.style.display = 'flex';
+    }
+
+    hideStartModal() {
+        if (this.startModalEl) this.startModalEl.style.display = 'none';
     }
 
     update(snapshot) {
         if (!snapshot) return;
-
         if (this.scoreEl) this.scoreEl.textContent = snapshot.score;
         if (this.timerEl) this.timerEl.textContent = snapshot.timeLeft;
         if (this.remainEl) this.remainEl.textContent = snapshot.remainingHairs;
