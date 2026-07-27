@@ -92,12 +92,14 @@ canvas {
 
 #razorCursor {
     position: fixed;
+    top: 0;
+    left: 0;
     pointer-events: none;
     z-index: 9999;
     font-size: 28px;
-    transform: translate(-50%, -50%) rotate(-30deg);
+    will-change: transform;
     opacity: 0;
-    transition: opacity 0.2s, transform 0.1s ease-out;
+    transition: opacity 0.15s ease-out;
     filter: drop-shadow(0 0 6px rgba(78, 205, 196, 0.6));
 }
 

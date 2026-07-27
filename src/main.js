@@ -45,9 +45,9 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // Subscribe to state updates with high-performance rAF partial redraws
-    orchestrator.onUpdate((snapshot, dirtyCells) => {
+    orchestrator.onUpdate((snapshot, dirtyCells, isTimerTick) => {
         hud.update(snapshot);
-        if (currentStageData && orchestrator.session) {
+        if (!isTimerTick && currentStageData && orchestrator.session) {
             renderer.requestRender(currentStageData, orchestrator.session.hairGrid, dirtyCells);
         }
     });

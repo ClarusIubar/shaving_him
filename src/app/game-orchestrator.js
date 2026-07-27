@@ -22,11 +22,11 @@ export class GameOrchestrator {
         this.gameOverCallbacks.push(callback);
     }
 
-    notifyUpdate(dirtyCells = null) {
+    notifyUpdate(dirtyCells = null, isTimerTick = false) {
         if (!this.session) return;
         const snapshot = this.session.getSnapshot();
         for (let i = 0; i < this.updateCallbacks.length; i++) {
-            this.updateCallbacks[i](snapshot, dirtyCells);
+            this.updateCallbacks[i](snapshot, dirtyCells, isTimerTick);
         }
     }
 
@@ -44,7 +44,7 @@ export class GameOrchestrator {
         this.session = new ShaveSession(stageData, maxTime);
         this.session.start();
         this.startTimer();
-        this.notifyUpdate(null); // Full redraw
+        this.notifyUpdate(null, false); // Full initial redraw
         return stageData;
     }
 
@@ -53,7 +53,7 @@ export class GameOrchestrator {
         this.timerId = setInterval(() => {
             if (!this.session) return;
             const ended = this.session.tick();
-            this.notifyUpdate(null);
+            this.notifyUpdate(null, true); // Timer tick: HUD update only
 
             if (ended || this.session.status === SessionStatus.WON || this.session.status === SessionStatus.TIMEOUT) {
                 this.stopTimer();
@@ -79,7 +79,7 @@ export class GameOrchestrator {
         if (!this.session) return;
         const { removed, dirtyCells } = this.session.shave(row, col, radius);
         if (removed > 0 || (dirtyCells && dirtyCells.length > 0)) {
-            this.notifyUpdate(dirtyCells);
+            this.notifyUpdate(dirtyCells, false);
             if (this.session.status === SessionStatus.WON) {
                 this.stopTimer();
                 this.notifyGameOver();
@@ -106,7 +106,7 @@ export class GameOrchestrator {
             });
             this.session.start();
             this.startTimer();
-            this.notifyUpdate(null);
+            this.notifyUpdate(null, false);
         }
     }
 }

@@ -1,6 +1,6 @@
 /**
  * Interface Layer: BrushController
- * Manages razor brush size (3x3 ~ 15x15), mouse drag, touch drag, and mouse wheel zooming.
+ * Optimized with cached getBoundingClientRect and GPU transform translate3d positioning.
  */
 export class BrushController {
     constructor(canvasElement, cursorElement, onShaveCallback) {
@@ -14,8 +14,16 @@ export class BrushController {
         this.fontH = 6;
         this.lastR = -1;
         this.lastC = -1;
+        this.rect = null;
 
+        this.updateRect();
         this.initEvents();
+    }
+
+    updateRect() {
+        if (this.canvas) {
+            this.rect = this.canvas.getBoundingClientRect();
+        }
     }
 
     setRadius(radius) {
@@ -30,17 +38,21 @@ export class BrushController {
     }
 
     getGridCoords(clientX, clientY) {
-        const rect = this.canvas.getBoundingClientRect();
-        const scaleX = this.canvas.width / rect.width;
-        const scaleY = this.canvas.height / rect.height;
-        const mx = (clientX - rect.left) * scaleX;
-        const my = (clientY - rect.top) * scaleY;
+        if (!this.rect) this.updateRect();
+        const scaleX = this.canvas.width / this.rect.width;
+        const scaleY = this.canvas.height / this.rect.height;
+        const mx = (clientX - this.rect.left) * scaleX;
+        const my = (clientY - this.rect.top) * scaleY;
         const col = Math.floor(mx / this.fontW);
         const row = Math.floor(my / this.fontH);
         return { row, col };
     }
 
     initEvents() {
+        // Cache canvas bounding box on resize / scroll to eliminate layout thrashing
+        window.addEventListener('resize', () => this.updateRect(), { passive: true });
+        window.addEventListener('scroll', () => this.updateRect(), { passive: true });
+
         // Mouse Down / Up for Drag Shaving
         this.canvas.addEventListener('mousedown', (e) => {
             this.isMouseDown = true;
@@ -55,10 +67,9 @@ export class BrushController {
 
         this.canvas.addEventListener('mousemove', (e) => {
             if (this.cursor) {
-                this.cursor.style.left = `${e.clientX}px`;
-                this.cursor.style.top = `${e.clientY}px`;
+                // GPU composited transform positioning (no DOM reflow)
+                this.cursor.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%) rotate(-30deg)`;
             }
-            // Allow drag or hover shaving
             this.handlePointerMove(e.clientX, e.clientY);
         });
 
@@ -67,8 +78,7 @@ export class BrushController {
             if (e.touches.length > 0) {
                 const t = e.touches[0];
                 if (this.cursor) {
-                    this.cursor.style.left = `${t.clientX}px`;
-                    this.cursor.style.top = `${t.clientY}px`;
+                    this.cursor.style.transform = `translate3d(${t.clientX}px, ${t.clientY}px, 0) translate(-50%, -50%) rotate(-30deg)`;
                 }
                 this.handlePointerMove(t.clientX, t.clientY);
             }
@@ -82,9 +92,10 @@ export class BrushController {
             } else {
                 this.setRadius(this.brushRadius - 1); // Decrease size
             }
-        });
+        }, { passive: false });
 
         this.canvas.addEventListener('mouseenter', () => {
+            this.updateRect();
             if (this.cursor) this.cursor.style.opacity = '1';
         });
 

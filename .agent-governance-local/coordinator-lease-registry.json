@@ -158,5 +158,69 @@
     },
     "writeSet": [],
     "replacementClaims": []
+  },
+  {
+    "schemaVersion": "worktree-lease-boundary.v1",
+    "leaseKey": {
+      "ownerRepo": "ClarusIubar/shaving_him",
+      "childIssue": "https://github.com/ClarusIubar/shaving_him/issues/7",
+      "branch": "main",
+      "workspaceIdentity": "d:\\Code305\\shaving_him"
+    },
+    "leaseOwner": {
+      "deviceId": "d:\\Code305\\shaving_him",
+      "agentId": "ClarusIubar/shaving_him:TSK-001-06",
+      "processId": "context-start",
+      "sessionId": "d:\\Code305\\shaving_him"
+    },
+    "leaseState": "active",
+    "heartbeat": {
+      "lastSeenAt": "2026-07-27T13:09:14Z",
+      "ttlSeconds": 3600
+    },
+    "authority": "execution-state-diagnostic-only",
+    "evidence": {
+      "lockAcquisition": "context-start",
+      "editBoundary": {
+        "status": "not-applicable",
+        "allowedWriteSet": [],
+        "blockers": [],
+        "authority": "not-registration-child"
+      }
+    },
+    "writeSet": [],
+    "replacementClaims": []
+  },
+  {
+    "schemaVersion": "worktree-lease-boundary.v1",
+    "leaseKey": {
+      "ownerRepo": "ClarusIubar/shaving_him",
+      "childIssue": "https://github.com/ClarusIubar/shaving_him/issues/8",
+      "branch": "main",
+      "workspaceIdentity": "d:\\Code305\\shaving_him"
+    },
+    "leaseOwner": {
+      "deviceId": "d:\\Code305\\shaving_him",
+      "agentId": "ClarusIubar/shaving_him:TSK-001-07",
+      "processId": "context-start",
+      "sessionId": "d:\\Code305\\shaving_him"
+    },
+    "leaseState": "active",
+    "heartbeat": {
+      "lastSeenAt": "2026-07-27T13:12:08Z",
+      "ttlSeconds": 3600
+    },
+    "authority": "execution-state-diagnostic-only",
+    "evidence": {
+      "lockAcquisition": "context-start",
+      "editBoundary": {
+        "status": "not-applicable",
+        "allowedWriteSet": [],
+        "blockers": [],
+        "authority": "not-registration-child"
+      }
+    },
+    "writeSet": [],
+    "replacementClaims": []
   }
 ]

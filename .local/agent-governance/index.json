@@ -6,10 +6,10 @@
       "recordKey": "active-focus|repo=github.com/ClarusIubar/shaving_him|workspace=ws:1bb222bd20a8ead3|thread=thread:manual:default",
       "recordType": "active-focus",
       "repoKey": "github.com/ClarusIubar/shaving_him",
-      "runKey": "run:20260727T034933Z",
-      "slotKey": "flat-materialized|ClarusIubar/shaving_him#TSK-001-05|manual:default",
+      "runKey": "run:20260727T131208Z",
+      "slotKey": "flat-materialized|ClarusIubar/shaving_him#TSK-001-07|manual:default",
       "status": "active",
-      "taskKey": "github.issue:6",
+      "taskKey": "github.issue:8",
       "threadKey": "thread:manual:default",
       "workspaceKey": "ws:1bb222bd20a8ead3"
     }
@@ -73,6 +73,30 @@
       "runKey": "run:20260727T034933Z",
       "status": "not-acquired",
       "taskKey": "github.issue:6",
+      "threadKey": "thread:manual:default",
+      "workspaceKey": "ws:1bb222bd20a8ead3"
+    },
+    "repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|run=run:20260727T130914Z": {
+      "activeFocusRequired": true,
+      "laneKey": "repo=github.com/ClarusIubar/shaving_him|workspace=ws:1bb222bd20a8ead3|thread=thread:manual:default",
+      "recordKey": "lease|repo=github.com/ClarusIubar/shaving_him|workspace=ws:1bb222bd20a8ead3|thread=thread:manual:default",
+      "recordType": "lease",
+      "repoKey": "github.com/ClarusIubar/shaving_him",
+      "runKey": "run:20260727T130914Z",
+      "status": "not-acquired",
+      "taskKey": "github.issue:7",
+      "threadKey": "thread:manual:default",
+      "workspaceKey": "ws:1bb222bd20a8ead3"
+    },
+    "repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|run=run:20260727T131208Z": {
+      "activeFocusRequired": true,
+      "laneKey": "repo=github.com/ClarusIubar/shaving_him|workspace=ws:1bb222bd20a8ead3|thread=thread:manual:default",
+      "recordKey": "lease|repo=github.com/ClarusIubar/shaving_him|workspace=ws:1bb222bd20a8ead3|thread=thread:manual:default",
+      "recordType": "lease",
+      "repoKey": "github.com/ClarusIubar/shaving_him",
+      "runKey": "run:20260727T131208Z",
+      "status": "not-acquired",
+      "taskKey": "github.issue:8",
       "threadKey": "thread:manual:default",
       "workspaceKey": "ws:1bb222bd20a8ead3"
     }
@@ -182,6 +206,30 @@
         "runKey": "run:20260727T034933Z",
         "status": "active",
         "taskKey": "github.issue:6"
+      }
+    ],
+    "repo=github.com/ClarusIubar/shaving_him|task=github.issue:7": [
+      {
+        "branch": "main",
+        "laneKey": "repo=github.com/ClarusIubar/shaving_him|workspace=ws:1bb222bd20a8ead3|thread=thread:manual:default",
+        "recordKey": "run|github.com/ClarusIubar/shaving_him|github.issue:7|run:20260727T130914Z",
+        "recordType": "workflow-run",
+        "repoKey": "github.com/ClarusIubar/shaving_him",
+        "runKey": "run:20260727T130914Z",
+        "status": "active",
+        "taskKey": "github.issue:7"
+      }
+    ],
+    "repo=github.com/ClarusIubar/shaving_him|task=github.issue:8": [
+      {
+        "branch": "main",
+        "laneKey": "repo=github.com/ClarusIubar/shaving_him|workspace=ws:1bb222bd20a8ead3|thread=thread:manual:default",
+        "recordKey": "run|github.com/ClarusIubar/shaving_him|github.issue:8|run:20260727T131208Z",
+        "recordType": "workflow-run",
+        "repoKey": "github.com/ClarusIubar/shaving_him",
+        "runKey": "run:20260727T131208Z",
+        "status": "active",
+        "taskKey": "github.issue:8"
       }
     ]
   },
@@ -591,6 +639,168 @@
       "resultRefs": [],
       "substrateStatus": "stale",
       "taskKey": "github.issue:6"
+    },
+    "repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|provider=graphify": {
+      "blockers": [
+        "Graphify substrate record is mandatory even when provider is unavailable",
+        "Graphify freshness readback is blocked"
+      ],
+      "cacheRefs": [],
+      "completionAuthority": false,
+      "currentAuthority": false,
+      "currentSelector": {
+        "current": false,
+        "freshnessRef": "",
+        "legacyTypedStructure": "cache-ref-only",
+        "repairRoute": "graphify-freshness-repair-required",
+        "source": "flat-index"
+      },
+      "currentnessSummary": "{'reason': 'graphify-typed-unavailable: artifact receipt missing: d:\\\\Code305\\\\shaving_him\\\\.local\\\\agent-governance\\\\graphify\\\\artifacts\\\\typed-structure\\\\graphify-artifact.json'} {'reason': 'record-exists-not-used: Graphify prework requir",
+      "freshnessRef": "",
+      "freshnessStatus": "blocked",
+      "legacyCacheRefs": [
+        "d:\\Code305\\shaving_him\\.local\\agent-governance\\graphify\\artifacts\\typed-structure\\graphify-artifact.json"
+      ],
+      "mutationAuthority": false,
+      "nativeCurrentAuthority": false,
+      "nativeRefs": [],
+      "provider": "graphify",
+      "providerStatus": "unavailable",
+      "recordKey": "substrate.graphify|repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|provider=graphify",
+      "recordType": "substrate.graphify",
+      "relationRefs": [],
+      "repairRoute": "graphify-freshness-repair-required",
+      "repoKey": "github.com/ClarusIubar/shaving_him",
+      "substrateStatus": "unavailable",
+      "taskKey": "github.issue:7",
+      "typedStructureCurrentAuthority": false
+    },
+    "repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|provider=hermes": {
+      "blockers": [
+        "Hermes substrate record is mandatory even when provider is unavailable"
+      ],
+      "completionAuthority": false,
+      "currentAuthority": false,
+      "incidentRefs": [],
+      "mutationAuthority": false,
+      "observationRefs": [],
+      "pendingProposalRefs": [],
+      "profile": "",
+      "proposalRefs": [],
+      "provider": "hermes",
+      "providerStatus": "unavailable",
+      "recordKey": "substrate.hermes|repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|provider=hermes",
+      "recordType": "substrate.hermes",
+      "repairRoute": "hermes-provider-profile-required",
+      "replayRefs": [],
+      "repoKey": "github.com/ClarusIubar/shaving_him",
+      "substrateStatus": "unavailable",
+      "taskKey": "github.issue:7",
+      "userCorrectionRefs": []
+    },
+    "repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|provider=qmd": {
+      "blockers": [],
+      "collection": "",
+      "collectionCoverage": "not checked",
+      "collectionState": "missing",
+      "currentAuthority": false,
+      "diagnostic": false,
+      "disambiguation": {
+        "status": "not-required"
+      },
+      "lookupScope": "workspace",
+      "nativeRefs": [],
+      "provider": "qmd",
+      "providerStatus": "stale",
+      "querySummary": "context rehydrate scoped qmd provider readback",
+      "recordKey": "substrate.qmd|repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|provider=qmd",
+      "recordType": "substrate.qmd",
+      "repairRoute": "qmd-substrate-readback-required",
+      "repoKey": "github.com/ClarusIubar/shaving_him",
+      "resultRefs": [],
+      "substrateStatus": "stale",
+      "taskKey": "github.issue:7"
+    },
+    "repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|provider=graphify": {
+      "blockers": [
+        "Graphify substrate record is mandatory even when provider is unavailable",
+        "Graphify freshness readback is blocked"
+      ],
+      "cacheRefs": [],
+      "completionAuthority": false,
+      "currentAuthority": false,
+      "currentSelector": {
+        "current": false,
+        "freshnessRef": "",
+        "legacyTypedStructure": "cache-ref-only",
+        "repairRoute": "graphify-freshness-repair-required",
+        "source": "flat-index"
+      },
+      "currentnessSummary": "{'reason': 'graphify-typed-unavailable: artifact receipt missing: d:\\\\Code305\\\\shaving_him\\\\.local\\\\agent-governance\\\\graphify\\\\artifacts\\\\typed-structure\\\\graphify-artifact.json'} {'reason': 'record-exists-not-used: Graphify prework requir",
+      "freshnessRef": "",
+      "freshnessStatus": "blocked",
+      "legacyCacheRefs": [
+        "d:\\Code305\\shaving_him\\.local\\agent-governance\\graphify\\artifacts\\typed-structure\\graphify-artifact.json"
+      ],
+      "mutationAuthority": false,
+      "nativeCurrentAuthority": false,
+      "nativeRefs": [],
+      "provider": "graphify",
+      "providerStatus": "unavailable",
+      "recordKey": "substrate.graphify|repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|provider=graphify",
+      "recordType": "substrate.graphify",
+      "relationRefs": [],
+      "repairRoute": "graphify-freshness-repair-required",
+      "repoKey": "github.com/ClarusIubar/shaving_him",
+      "substrateStatus": "unavailable",
+      "taskKey": "github.issue:8",
+      "typedStructureCurrentAuthority": false
+    },
+    "repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|provider=hermes": {
+      "blockers": [
+        "Hermes substrate record is mandatory even when provider is unavailable"
+      ],
+      "completionAuthority": false,
+      "currentAuthority": false,
+      "incidentRefs": [],
+      "mutationAuthority": false,
+      "observationRefs": [],
+      "pendingProposalRefs": [],
+      "profile": "",
+      "proposalRefs": [],
+      "provider": "hermes",
+      "providerStatus": "unavailable",
+      "recordKey": "substrate.hermes|repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|provider=hermes",
+      "recordType": "substrate.hermes",
+      "repairRoute": "hermes-provider-profile-required",
+      "replayRefs": [],
+      "repoKey": "github.com/ClarusIubar/shaving_him",
+      "substrateStatus": "unavailable",
+      "taskKey": "github.issue:8",
+      "userCorrectionRefs": []
+    },
+    "repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|provider=qmd": {
+      "blockers": [],
+      "collection": "",
+      "collectionCoverage": "not checked",
+      "collectionState": "missing",
+      "currentAuthority": false,
+      "diagnostic": false,
+      "disambiguation": {
+        "status": "not-required"
+      },
+      "lookupScope": "workspace",
+      "nativeRefs": [],
+      "provider": "qmd",
+      "providerStatus": "stale",
+      "querySummary": "context rehydrate scoped qmd provider readback",
+      "recordKey": "substrate.qmd|repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|provider=qmd",
+      "recordType": "substrate.qmd",
+      "repairRoute": "qmd-substrate-readback-required",
+      "repoKey": "github.com/ClarusIubar/shaving_him",
+      "resultRefs": [],
+      "substrateStatus": "stale",
+      "taskKey": "github.issue:8"
     }
   },
   "tasks": {
@@ -968,6 +1178,156 @@
         }
       ],
       "taskKey": "github.issue:6"
+    },
+    "repo=github.com/ClarusIubar/shaving_him|task=github.issue:7": {
+      "cacheRefs": [
+        "d:\\Code305\\shaving_him\\.local\\agent-governance\\graphify\\artifacts\\typed-structure\\graphify-artifact.json"
+      ],
+      "childIssue": "https://github.com/ClarusIubar/shaving_him/issues/7",
+      "completionAuthority": false,
+      "currentAuthority": false,
+      "handoffMode": "terminal-close",
+      "handoffRefs": [],
+      "latestContextPackRecordKey": "context-pack|repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|run=run:20260727T130914Z",
+      "latestLegacyImportRecordKey": "legacy-import|repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|provider=graphify|source=typed-structure",
+      "legacyTaskKey": "ClarusIubar/shaving_him#TSK-001-06",
+      "mutationAuthority": false,
+      "provider": "graphify",
+      "recordKey": "task|github.com/ClarusIubar/shaving_him|github.issue:7",
+      "recordType": "task",
+      "repairRoute": "graphify-typed-structure-demotion",
+      "repoKey": "github.com/ClarusIubar/shaving_him",
+      "requirements": [
+        {
+          "handoff": true,
+          "provider": "qmd",
+          "read": true,
+          "replay": true,
+          "required": true,
+          "writeback": true
+        },
+        {
+          "handoff": true,
+          "provider": "hermes",
+          "read": true,
+          "replay": true,
+          "required": true,
+          "writeback": true
+        },
+        {
+          "handoff": true,
+          "provider": "graphify",
+          "read": true,
+          "replay": true,
+          "required": true,
+          "writeback": true
+        }
+      ],
+      "runKey": "run:20260727T130914Z",
+      "source": "typed-structure",
+      "status": "active",
+      "substrateRefs": [
+        {
+          "provider": "qmd",
+          "providerStatus": "stale",
+          "replayRefs": [],
+          "substrateKey": "repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|provider=qmd",
+          "substrateRecordKey": "substrate.qmd|repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|provider=qmd",
+          "substrateStatus": "stale"
+        },
+        {
+          "provider": "hermes",
+          "providerStatus": "unavailable",
+          "replayRefs": [],
+          "substrateKey": "repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|provider=hermes",
+          "substrateRecordKey": "substrate.hermes|repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|provider=hermes",
+          "substrateStatus": "unavailable"
+        },
+        {
+          "provider": "graphify",
+          "providerStatus": "unavailable",
+          "replayRefs": [],
+          "substrateKey": "repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|provider=graphify",
+          "substrateRecordKey": "substrate.graphify|repo=github.com/ClarusIubar/shaving_him|task=github.issue:7|provider=graphify",
+          "substrateStatus": "unavailable"
+        }
+      ],
+      "taskKey": "github.issue:7"
+    },
+    "repo=github.com/ClarusIubar/shaving_him|task=github.issue:8": {
+      "cacheRefs": [
+        "d:\\Code305\\shaving_him\\.local\\agent-governance\\graphify\\artifacts\\typed-structure\\graphify-artifact.json"
+      ],
+      "childIssue": "https://github.com/ClarusIubar/shaving_him/issues/8",
+      "completionAuthority": false,
+      "currentAuthority": false,
+      "handoffMode": "terminal-close",
+      "handoffRefs": [],
+      "latestContextPackRecordKey": "context-pack|repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|run=run:20260727T131208Z",
+      "latestLegacyImportRecordKey": "legacy-import|repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|provider=graphify|source=typed-structure",
+      "legacyTaskKey": "ClarusIubar/shaving_him#TSK-001-07",
+      "mutationAuthority": false,
+      "provider": "graphify",
+      "recordKey": "task|github.com/ClarusIubar/shaving_him|github.issue:8",
+      "recordType": "task",
+      "repairRoute": "graphify-typed-structure-demotion",
+      "repoKey": "github.com/ClarusIubar/shaving_him",
+      "requirements": [
+        {
+          "handoff": true,
+          "provider": "qmd",
+          "read": true,
+          "replay": true,
+          "required": true,
+          "writeback": true
+        },
+        {
+          "handoff": true,
+          "provider": "hermes",
+          "read": true,
+          "replay": true,
+          "required": true,
+          "writeback": true
+        },
+        {
+          "handoff": true,
+          "provider": "graphify",
+          "read": true,
+          "replay": true,
+          "required": true,
+          "writeback": true
+        }
+      ],
+      "runKey": "run:20260727T131208Z",
+      "source": "typed-structure",
+      "status": "active",
+      "substrateRefs": [
+        {
+          "provider": "qmd",
+          "providerStatus": "stale",
+          "replayRefs": [],
+          "substrateKey": "repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|provider=qmd",
+          "substrateRecordKey": "substrate.qmd|repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|provider=qmd",
+          "substrateStatus": "stale"
+        },
+        {
+          "provider": "hermes",
+          "providerStatus": "unavailable",
+          "replayRefs": [],
+          "substrateKey": "repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|provider=hermes",
+          "substrateRecordKey": "substrate.hermes|repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|provider=hermes",
+          "substrateStatus": "unavailable"
+        },
+        {
+          "provider": "graphify",
+          "providerStatus": "unavailable",
+          "replayRefs": [],
+          "substrateKey": "repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|provider=graphify",
+          "substrateRecordKey": "substrate.graphify|repo=github.com/ClarusIubar/shaving_him|task=github.issue:8|provider=graphify",
+          "substrateStatus": "unavailable"
+        }
+      ],
+      "taskKey": "github.issue:8"
     }
   }
 }
