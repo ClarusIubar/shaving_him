@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🪒 면도 게임 - Shaving Game v1.0</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Razor Cursor -->
+    <div id="razorCursor">🪒</div>
+
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="spinner"></div>
+        <div>스테이지 데이터를 로드하는 중입니다...</div>
+        <div style="font-size:12px;color:#8892b0;">ASCII 아트 & 털 마스크 데이터 준비 중</div>
+    </div>
+
+    <!-- Main Game Container -->
+    <div class="game-container" id="gameContainer" style="display:none">
+        
+        <!-- Header / HUD Stats -->
+        <div class="header">
+            <span class="header-title">🪒 면도 게임</span>
+            <div class="stat-group">
+                <span class="stat-item">점수 <span class="stat-val" id="scoreVal">0</span></span>
+                <span class="stat-item">⏱ <span class="stat-val" id="timerVal">60</span>초</span>
+                <span class="stat-item">털 <span class="stat-val" id="remainVal">--</span></span>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+        </div>
+
+        <!-- ASCII Canvas -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <span>🪒 마우스를 긁거나 터치하여 면도하세요 (휠 스크롤로 크기 조절)</span>
+            <div class="brush-size-picker">
+                <span>면도날 크기:</span>
+                <button class="brush-btn active" data-radius="1">3x3</button>
+                <button class="brush-btn" data-radius="3">7x7</button>
+                <button class="brush-btn" data-radius="5">11x11</button>
+                <button class="brush-btn" data-radius="7">15x15</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div class="overlay" id="gameOverlay">
+        <div class="overlay-box">
+            <h2 id="overlayTitle">게임 종료!</h2>
+            <div class="final-score" id="overlayFinalScore">0</div>
+            <div class="msg" id="overlayMsg">결과</div>
+            <div class="detail" id="overlayDetail"></div>
+            <button class="btn-primary" id="restartBtn">🔄 다시 하기</button>
+        </div>
+    </div>
+
+    <!-- ES Module Main Script -->
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+{
+  "authority": "workspace-local-readback-cache-only",
+  "notAuthority": [
+    "edit authority",
+    "task authority",
+    "checklist authority",
+    "completion authority",
+    "focus/registry authority",
+    "canonical learning authority"
+  ],
+  "sandboxes": {
+    "m3s_119142deabba13b34a98bbc2": {
+      "branch": "main",
+      "focusSlotKey": "5e8be62293f81e74fd706a43a82d3031bb09f0b4498dd6a5ddf5b49cd89f8a94",
+      "issueUrl": "https://github.com/ClarusIubar/shaving_him/issues/2",
+      "lifecycleState": "active-owned",
+      "path": "d:\\Code305\\shaving_him\\.local\\agent-governance\\execution-sandboxes\\m3s_119142deabba13b34a98bbc2.json",
+      "repo": "ClarusIubar/shaving_him",
+      "taskKey": "TSK-001-01",
+      "threadId": "manual:default",
+      "workspaceRoot": "d:\\Code305\\shaving_him"
+    },
+    "m3s_73ad0350d391b6c0168e5647": {
+      "branch": "main",
+      "focusSlotKey": "",
+      "issueUrl": "https://github.com/ClarusIubar/shaving_him/issues/4",
+      "lifecycleState": "handoff-required",
+      "path": "d:\\Code305\\shaving_him\\.local\\agent-governance\\execution-sandboxes\\m3s_73ad0350d391b6c0168e5647.json",
+      "repo": "ClarusIubar/shaving_him",
+      "taskKey": "github-com-clarusiubar-shaving-him-issue-4",
+      "threadId": "manual:default",
+      "workspaceRoot": "d:\\Code305\\shaving_him"
+    },
+    "m3s_9ee89d6f88d1b0b0d758d094": {
+      "branch": "main",
+      "focusSlotKey": "",
+      "issueUrl": "https://github.com/ClarusIubar/shaving_him/issues/3",
+      "lifecycleState": "handoff-required",
+      "path": "d:\\Code305\\shaving_him\\.local\\agent-governance\\execution-sandboxes\\m3s_9ee89d6f88d1b0b0d758d094.json",
+      "repo": "ClarusIubar/shaving_him",
+      "taskKey": "github-com-clarusiubar-shaving-him-issue-3",
+      "threadId": "manual:default",
+      "workspaceRoot": "d:\\Code305\\shaving_him"
+    },
+    "m3s_acb9b7d26fd81ad3b22edb50": {
+      "branch": "main",
+      "focusSlotKey": "",
+      "issueUrl": "https://github.com/ClarusIubar/shaving_him/issues/6",
+      "lifecycleState": "handoff-required",
+      "path": "d:\\Code305\\shaving_him\\.local\\agent-governance\\execution-sandboxes\\m3s_acb9b7d26fd81ad3b22edb50.json",
+      "repo": "ClarusIubar/shaving_him",
+      "taskKey": "github-com-clarusiubar-shaving-him-issue-6",
+      "threadId": "manual:default",
+      "workspaceRoot": "d:\\Code305\\shaving_him"
+    },
+    "m3s_e91917718179e456886ea499": {
+      "branch": "main",
+      "focusSlotKey": "",
+      "issueUrl": "https://github.com/ClarusIubar/shaving_him/issues/5",
+      "lifecycleState": "handoff-required",
+      "path": "d:\\Code305\\shaving_him\\.local\\agent-governance\\execution-sandboxes\\m3s_e91917718179e456886ea499.json",
+      "repo": "ClarusIubar/shaving_him",
+      "taskKey": "github-com-clarusiubar-shaving-him-issue-5",
+      "threadId": "manual:default",
+      "workspaceRoot": "d:\\Code305\\shaving_him"
+    }
+  },
+  "schemaVersion": "mode3-execution-sandbox-index.v1",
+  "updatedAt": "20260727T034933Z"
+}

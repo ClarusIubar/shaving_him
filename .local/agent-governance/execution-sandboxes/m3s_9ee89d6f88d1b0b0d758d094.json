@@ -1,0 +1,61 @@
+{
+  "artifactRoot": "d:\\Code305\\shaving_him\\.local\\agent-governance\\tasks\\github-com-clarusiubar-shaving-him-issue-3\\mode3",
+  "authority": "mode3-execution-sandbox-readback-only",
+  "blockers": [],
+  "branch": "main",
+  "finishOwnership": {
+    "authority": "finish-readback-only",
+    "blockerCount": 0,
+    "finishApplied": false,
+    "maintenanceCount": 0,
+    "status": "not-run"
+  },
+  "focusGroupKey": "m3s_9ee89d6f88d1b0b0d758d094",
+  "focusGroupSchemaVersion": "focus-group.v1",
+  "focusSlotKey": "",
+  "foreignGroupsVisible": "metadata-only",
+  "foreignTaskDetailsInjected": false,
+  "graphifyScope": {
+    "authority": "recovery-context-aid-only",
+    "scope": "current-focus-group"
+  },
+  "hermesScope": {
+    "authority": "observation-only",
+    "issueUrl": "https://github.com/ClarusIubar/shaving_him/issues/3",
+    "scope": "current-focus-group"
+  },
+  "issueUrl": "https://github.com/ClarusIubar/shaving_him/issues/3",
+  "lifecycleState": "handoff-required",
+  "notAuthority": [
+    "edit authority",
+    "task authority",
+    "checklist authority",
+    "completion authority",
+    "focus/registry authority",
+    "canonical learning authority"
+  ],
+  "parentIssueUrl": "",
+  "phaseEvidenceRoot": "d:\\Code305\\shaving_him\\.local\\agent-governance\\tasks\\github-com-clarusiubar-shaving-him-issue-3\\mode3\\phase-evidence",
+  "qmdScope": {
+    "authority": "lookup-context-aid-only",
+    "scope": "current-workspace-collection"
+  },
+  "repo": "ClarusIubar/shaving_him",
+  "sameWorktreeMutationPolicy": "requires-explicit-lease",
+  "sandboxKey": "m3s_9ee89d6f88d1b0b0d758d094",
+  "schemaVersion": "execution-sandbox.v1",
+  "storageAuthority": "workspace-local-readback-cache-only",
+  "taskKey": "github-com-clarusiubar-shaving-him-issue-3",
+  "threadId": "manual:default",
+  "traceabilityOwnership": {
+    "authority": "readback-only",
+    "issueUrl": "https://github.com/ClarusIubar/shaving_him/issues/3",
+    "taskKey": "github-com-clarusiubar-shaving-him-issue-3"
+  },
+  "visibleGroupCounts": {
+    "current": 0,
+    "foreign": 2,
+    "totalVisible": 2
+  },
+  "workspaceRoot": "d:\\Code305\\shaving_him"
+}

@@ -1,0 +1,162 @@
+[
+  {
+    "schemaVersion": "worktree-lease-boundary.v1",
+    "leaseKey": {
+      "ownerRepo": "ClarusIubar/shaving_him",
+      "childIssue": "https://github.com/ClarusIubar/shaving_him/issues/2",
+      "branch": "main",
+      "workspaceIdentity": "d:\\Code305\\shaving_him"
+    },
+    "leaseOwner": {
+      "deviceId": "d:\\Code305\\shaving_him",
+      "agentId": "ClarusIubar/shaving_him:TSK-001-01",
+      "processId": "context-start",
+      "sessionId": "d:\\Code305\\shaving_him"
+    },
+    "leaseState": "active",
+    "heartbeat": {
+      "lastSeenAt": "2026-07-27T03:46:29Z",
+      "ttlSeconds": 3600
+    },
+    "authority": "execution-state-diagnostic-only",
+    "evidence": {
+      "lockAcquisition": "context-start",
+      "editBoundary": {
+        "status": "not-applicable",
+        "allowedWriteSet": [],
+        "blockers": [],
+        "authority": "not-registration-child"
+      }
+    },
+    "writeSet": [],
+    "replacementClaims": []
+  },
+  {
+    "schemaVersion": "worktree-lease-boundary.v1",
+    "leaseKey": {
+      "ownerRepo": "ClarusIubar/shaving_him",
+      "childIssue": "https://github.com/ClarusIubar/shaving_him/issues/3",
+      "branch": "main",
+      "workspaceIdentity": "d:\\Code305\\shaving_him"
+    },
+    "leaseOwner": {
+      "deviceId": "d:\\Code305\\shaving_him",
+      "agentId": "ClarusIubar/shaving_him:TSK-001-02",
+      "processId": "context-start",
+      "sessionId": "d:\\Code305\\shaving_him"
+    },
+    "leaseState": "active",
+    "heartbeat": {
+      "lastSeenAt": "2026-07-27T03:47:15Z",
+      "ttlSeconds": 3600
+    },
+    "authority": "execution-state-diagnostic-only",
+    "evidence": {
+      "lockAcquisition": "context-start",
+      "editBoundary": {
+        "status": "not-applicable",
+        "allowedWriteSet": [],
+        "blockers": [],
+        "authority": "not-registration-child"
+      }
+    },
+    "writeSet": [],
+    "replacementClaims": []
+  },
+  {
+    "schemaVersion": "worktree-lease-boundary.v1",
+    "leaseKey": {
+      "ownerRepo": "ClarusIubar/shaving_him",
+      "childIssue": "https://github.com/ClarusIubar/shaving_him/issues/4",
+      "branch": "main",
+      "workspaceIdentity": "d:\\Code305\\shaving_him"
+    },
+    "leaseOwner": {
+      "deviceId": "d:\\Code305\\shaving_him",
+      "agentId": "ClarusIubar/shaving_him:TSK-001-03",
+      "processId": "context-start",
+      "sessionId": "d:\\Code305\\shaving_him"
+    },
+    "leaseState": "active",
+    "heartbeat": {
+      "lastSeenAt": "2026-07-27T03:48:08Z",
+      "ttlSeconds": 3600
+    },
+    "authority": "execution-state-diagnostic-only",
+    "evidence": {
+      "lockAcquisition": "context-start",
+      "editBoundary": {
+        "status": "not-applicable",
+        "allowedWriteSet": [],
+        "blockers": [],
+        "authority": "not-registration-child"
+      }
+    },
+    "writeSet": [],
+    "replacementClaims": []
+  },
+  {
+    "schemaVersion": "worktree-lease-boundary.v1",
+    "leaseKey": {
+      "ownerRepo": "ClarusIubar/shaving_him",
+      "childIssue": "https://github.com/ClarusIubar/shaving_him/issues/5",
+      "branch": "main",
+      "workspaceIdentity": "d:\\Code305\\shaving_him"
+    },
+    "leaseOwner": {
+      "deviceId": "d:\\Code305\\shaving_him",
+      "agentId": "ClarusIubar/shaving_him:TSK-001-04",
+      "processId": "context-start",
+      "sessionId": "d:\\Code305\\shaving_him"
+    },
+    "leaseState": "active",
+    "heartbeat": {
+      "lastSeenAt": "2026-07-27T03:48:46Z",
+      "ttlSeconds": 3600
+    },
+    "authority": "execution-state-diagnostic-only",
+    "evidence": {
+      "lockAcquisition": "context-start",
+      "editBoundary": {
+        "status": "not-applicable",
+        "allowedWriteSet": [],
+        "blockers": [],
+        "authority": "not-registration-child"
+      }
+    },
+    "writeSet": [],
+    "replacementClaims": []
+  },
+  {
+    "schemaVersion": "worktree-lease-boundary.v1",
+    "leaseKey": {
+      "ownerRepo": "ClarusIubar/shaving_him",
+      "childIssue": "https://github.com/ClarusIubar/shaving_him/issues/6",
+      "branch": "main",
+      "workspaceIdentity": "d:\\Code305\\shaving_him"
+    },
+    "leaseOwner": {
+      "deviceId": "d:\\Code305\\shaving_him",
+      "agentId": "ClarusIubar/shaving_him:TSK-001-05",
+      "processId": "context-start",
+      "sessionId": "d:\\Code305\\shaving_him"
+    },
+    "leaseState": "active",
+    "heartbeat": {
+      "lastSeenAt": "2026-07-27T03:49:33Z",
+      "ttlSeconds": 3600
+    },
+    "authority": "execution-state-diagnostic-only",
+    "evidence": {
+      "lockAcquisition": "context-start",
+      "editBoundary": {
+        "status": "not-applicable",
+        "allowedWriteSet": [],
+        "blockers": [],
+        "authority": "not-registration-child"
+      }
+    },
+    "writeSet": [],
+    "replacementClaims": []
+  }
+]
