@@ -32,8 +32,8 @@ export class ShaveSession {
     }
 
     initStage(stageData) {
-        const { hairPositions = [], rows = 0, cols = 0 } = stageData;
-        this.hairGrid = new HairGrid(hairPositions, rows, cols);
+        const { hairPositions = [], rows = 219, cols = 280 } = stageData;
+        this.hairGrid = new HairGrid(rows, cols, hairPositions);
         this.scoreCalculator.reset();
         this.timeLeft = this.maxTime;
         this.status = SessionStatus.INIT;
@@ -79,24 +79,31 @@ export class ShaveSession {
      * @param {number} r 
      * @param {number} c 
      * @param {number} radius 
+     * @returns {{ removed: number, dirtyCells: Array<{r: number, c: number}> }}
      */
     shave(r, c, radius = 1) {
-        if (this.status !== SessionStatus.RUNNING) return 0;
+        if (this.status !== SessionStatus.RUNNING) {
+            return { removed: 0, dirtyCells: [] };
+        }
 
-        const removed = this.hairGrid.shave(r, c, radius);
-        this.scoreCalculator.addShave(removed);
+        const { count, dirtyCells } = this.hairGrid.shave(r, c, radius);
+        this.scoreCalculator.addShave(count);
 
-        if (this.hairGrid.remainingCount === 0) {
+        if (this.hairGrid.getRemainingCount() === 0) {
             this.status = SessionStatus.WON;
         }
 
-        return removed;
+        return { removed: count, dirtyCells };
     }
 
     getSnapshot() {
+        const remain = this.hairGrid ? this.hairGrid.getRemainingCount() : 0;
+        const total = this.hairGrid ? this.hairGrid.totalHairCount : 0;
+        const clearedPct = this.hairGrid ? this.hairGrid.getClearedPercentage() : 0;
+
         const result = this.scoreCalculator.calculateFinalScore(
             this.timeLeft,
-            this.hairGrid ? this.hairGrid.remainingCount : 0
+            remain
         );
 
         return {
@@ -105,9 +112,9 @@ export class ShaveSession {
             maxTime: this.maxTime,
             score: result.baseScore,
             finalResult: result,
-            remainingHairs: this.hairGrid ? this.hairGrid.remainingCount : 0,
-            totalHairs: this.hairGrid ? this.hairGrid.totalCount : 0,
-            percentageCleared: this.hairGrid ? this.hairGrid.percentageCleared : 0
+            remainingHairs: remain,
+            totalHairs: total,
+            percentageCleared: clearedPct
         };
     }
 }

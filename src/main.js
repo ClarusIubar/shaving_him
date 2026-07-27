@@ -1,6 +1,6 @@
 /**
  * Application Entry Point: main.js
- * Bootstraps GameOrchestrator, CanvasRenderer, BrushController, and HUD.
+ * Bootstraps GameOrchestrator, CanvasRenderer, BrushController, and HUD with 60FPS rAF rendering.
  */
 import { GameOrchestrator } from './app/game-orchestrator.js';
 import { CanvasRenderer } from './ui/canvas-renderer.js';
@@ -44,11 +44,11 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Subscribe to state updates
-    orchestrator.onUpdate(snapshot => {
+    // Subscribe to state updates with high-performance rAF partial redraws
+    orchestrator.onUpdate((snapshot, dirtyCells) => {
         hud.update(snapshot);
         if (currentStageData && orchestrator.session) {
-            renderer.render(currentStageData, orchestrator.session.hairGrid);
+            renderer.requestRender(currentStageData, orchestrator.session.hairGrid, dirtyCells);
         }
     });
 
@@ -66,7 +66,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (gameContainer) gameContainer.style.display = 'flex';
 
             currentStageData = await orchestrator.loadAndStartStage(source, 60);
-            renderer.render(currentStageData, orchestrator.session.hairGrid);
+            renderer.requestRender(currentStageData, orchestrator.session.hairGrid, null); // Full initial render
         } catch (err) {
             console.error('Stage loading error:', err);
             alert(`스테이지 로드 실패: ${err.message}`);

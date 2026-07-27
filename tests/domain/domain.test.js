@@ -13,16 +13,17 @@ test('HairGrid - initializes and shaves correctly', () => {
         { r: 5, c: 5 }
     ];
 
-    const grid = new HairGrid(hairPositions, 10, 10);
-    assert.equal(grid.totalCount, 4);
-    assert.equal(grid.remainingCount, 4);
+    const grid = new HairGrid(10, 10, hairPositions);
+    assert.equal(grid.totalHairCount, 4);
+    assert.equal(grid.getRemainingCount(), 4);
     assert.equal(grid.has(0, 0), true);
     assert.equal(grid.has(2, 2), false);
 
     // Shave at (0, 0) with radius 1
-    const removed = grid.shave(0, 0, 1);
-    assert.equal(removed, 3); // (0,0), (0,1), (1,1) removed
-    assert.equal(grid.remainingCount, 1);
+    const { count, dirtyCells } = grid.shave(0, 0, 1);
+    assert.equal(count, 3); // (0,0), (0,1), (1,1) removed
+    assert.equal(dirtyCells.length, 3);
+    assert.equal(grid.getRemainingCount(), 1);
     assert.equal(grid.has(5, 5), true);
 });
 
@@ -52,7 +53,7 @@ test('ShaveSession - state transitions and timer ticks', () => {
     assert.equal(session.status, SessionStatus.RUNNING);
 
     // Shave the hair
-    const removed = session.shave(2, 2, 1);
+    const { removed } = session.shave(2, 2, 1);
     assert.equal(removed, 1);
     assert.equal(session.status, SessionStatus.WON);
 

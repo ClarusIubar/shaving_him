@@ -22,16 +22,20 @@ export class GameOrchestrator {
         this.gameOverCallbacks.push(callback);
     }
 
-    notifyUpdate() {
+    notifyUpdate(dirtyCells = null) {
         if (!this.session) return;
         const snapshot = this.session.getSnapshot();
-        this.updateCallbacks.forEach(cb => cb(snapshot));
+        for (let i = 0; i < this.updateCallbacks.length; i++) {
+            this.updateCallbacks[i](snapshot, dirtyCells);
+        }
     }
 
     notifyGameOver() {
         if (!this.session) return;
         const snapshot = this.session.getSnapshot();
-        this.gameOverCallbacks.forEach(cb => cb(snapshot));
+        for (let i = 0; i < this.gameOverCallbacks.length; i++) {
+            this.gameOverCallbacks[i](snapshot);
+        }
     }
 
     async loadAndStartStage(stageSource = 'game_data.json', maxTime = 60) {
@@ -40,7 +44,7 @@ export class GameOrchestrator {
         this.session = new ShaveSession(stageData, maxTime);
         this.session.start();
         this.startTimer();
-        this.notifyUpdate();
+        this.notifyUpdate(null); // Full redraw
         return stageData;
     }
 
@@ -49,7 +53,7 @@ export class GameOrchestrator {
         this.timerId = setInterval(() => {
             if (!this.session) return;
             const ended = this.session.tick();
-            this.notifyUpdate();
+            this.notifyUpdate(null);
 
             if (ended || this.session.status === SessionStatus.WON || this.session.status === SessionStatus.TIMEOUT) {
                 this.stopTimer();
@@ -73,9 +77,9 @@ export class GameOrchestrator {
      */
     shave(row, col, radius = 1) {
         if (!this.session) return;
-        const removed = this.session.shave(row, col, radius);
-        if (removed > 0) {
-            this.notifyUpdate();
+        const { removed, dirtyCells } = this.session.shave(row, col, radius);
+        if (removed > 0 || (dirtyCells && dirtyCells.length > 0)) {
+            this.notifyUpdate(dirtyCells);
             if (this.session.status === SessionStatus.WON) {
                 this.stopTimer();
                 this.notifyGameOver();
@@ -85,17 +89,24 @@ export class GameOrchestrator {
 
     restart() {
         if (this.session && this.session.hairGrid) {
+            const positions = [];
+            const grid = this.session.hairGrid;
+            for (let r = 0; r < grid.rows; r++) {
+                for (let c = 0; c < grid.cols; c++) {
+                    if (grid.data[r * grid.cols + c] === 1) {
+                        positions.push({ r, c });
+                    }
+                }
+            }
+
             this.session.initStage({
-                rows: this.session.hairGrid.rows,
-                cols: this.session.hairGrid.cols,
-                hairPositions: Array.from(this.session.hairGrid.hairSet).map(k => {
-                    const [r, c] = k.split(',').map(Number);
-                    return { r, c };
-                })
+                rows: grid.rows,
+                cols: grid.cols,
+                hairPositions: positions
             });
             this.session.start();
             this.startTimer();
-            this.notifyUpdate();
+            this.notifyUpdate(null);
         }
     }
 }

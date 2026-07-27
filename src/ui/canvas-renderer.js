@@ -1,6 +1,6 @@
 /**
  * Interface Layer: CanvasRenderer
- * Handles high-performance ASCII grid drawing on HTML5 Canvas.
+ * High-performance ASCII grid drawing with Dirty Region partial redraw and rAF batching.
  */
 export class CanvasRenderer {
     constructor(canvasElement, cols = 280, rows = 219, fontW = 6, fontH = 6) {
@@ -12,44 +12,91 @@ export class CanvasRenderer {
 
         this.canvas.width = cols * fontW;
         this.canvas.height = rows * fontH;
-        this.ctx = this.canvas.getContext('2d');
+        this.ctx = this.canvas.getContext('2d', { alpha: false });
         this.ctx.font = '900 6px "Courier New", monospace';
         this.ctx.textBaseline = 'top';
+
+        this.rafId = null;
+        this.pendingDirtyCells = [];
+        this.currentStageData = null;
+        this.currentHairGrid = null;
     }
 
     /**
-     * Render full stage and hair grid
-     * @param {Object} stageData - Stage DTO { textGrid, colorGrid }
-     * @param {Object} hairGrid - HairGrid instance
+     * Batch dirty cells and schedule 60FPS rAF render
      */
-    render(stageData, hairGrid) {
+    requestRender(stageData, hairGrid, dirtyCells = null) {
+        this.currentStageData = stageData;
+        this.currentHairGrid = hairGrid;
+
+        if (dirtyCells && dirtyCells.length > 0) {
+            this.pendingDirtyCells.push(...dirtyCells);
+        } else {
+            this.pendingDirtyCells = null; // Forces full redraw
+        }
+
+        if (!this.rafId) {
+            this.rafId = requestAnimationFrame(() => {
+                this.rafId = null;
+                const dirty = this.pendingDirtyCells;
+                this.pendingDirtyCells = [];
+                this.render(this.currentStageData, this.currentHairGrid, dirty);
+            });
+        }
+    }
+
+    /**
+     * Render stage and hair grid (full or dirty partial)
+     */
+    render(stageData, hairGrid, dirtyCells = null) {
         if (!stageData || !this.ctx) return;
         const { textGrid, colorGrid } = stageData;
 
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // Mode A: Partial Dirty Cell Redraw (Ultra Fast < 1ms)
+        if (dirtyCells && Array.isArray(dirtyCells) && dirtyCells.length > 0) {
+            for (let i = 0; i < dirtyCells.length; i++) {
+                const { r, c } = dirtyCells[i];
+                if (r < 0 || r >= this.rows || c < 0 || c >= this.cols) continue;
+                this.renderSingleCell(r, c, textGrid, colorGrid, hairGrid);
+            }
+            return;
+        }
 
-        for (let r = 0; r < this.rows && r < textGrid.length; r++) {
+        // Mode B: Full Canvas Redraw (Initial load or stage change)
+        this.ctx.fillStyle = '#000000';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        const maxR = Math.min(this.rows, textGrid.length);
+        for (let r = 0; r < maxR; r++) {
             const rowText = textGrid[r];
-            const rowColors = colorGrid[r];
-            const yOff = r * this.fontH;
+            const rowColors = colorGrid ? colorGrid[r] : null;
 
             for (let c = 0; c < this.cols && c < rowText.length; c++) {
-                const ch = rowText[c];
-                const xOff = c * this.fontH;
-                const isHair = hairGrid ? hairGrid.has(r, c) : false;
-
-                if (isHair) {
-                    // Hair overlay (darkened)
-                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-                } else if (rowColors && rowColors[c]) {
-                    const [cr, cg, cb] = rowColors[c];
-                    this.ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
-                } else {
-                    this.ctx.fillStyle = '#000';
-                }
-
-                this.ctx.fillText(ch, xOff, yOff);
+                this.renderSingleCell(r, c, textGrid, colorGrid, hairGrid);
             }
         }
+    }
+
+    renderSingleCell(r, c, textGrid, colorGrid, hairGrid) {
+        const xOff = c * this.fontW;
+        const yOff = r * this.fontH;
+        const ch = (textGrid[r] && textGrid[r][c]) ? textGrid[r][c] : ' ';
+        const isHair = hairGrid ? hairGrid.has(r, c) : false;
+
+        // Clear cell background rect
+        if (isHair) {
+            this.ctx.fillStyle = '#0a0a0f';
+            this.ctx.fillRect(xOff, yOff, this.fontW, this.fontH);
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        } else if (colorGrid && colorGrid[r] && colorGrid[r][c]) {
+            const [cr, cg, cb] = colorGrid[r][c];
+            this.ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
+        } else {
+            this.ctx.fillStyle = '#000000';
+            this.ctx.fillRect(xOff, yOff, this.fontW, this.fontH);
+            return;
+        }
+
+        this.ctx.fillText(ch, xOff, yOff);
     }
 }

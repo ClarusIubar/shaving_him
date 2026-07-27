@@ -1,73 +1,80 @@
 /**
  * Pure Domain Model: HairGrid
- * Encapsulates hair coordinate tracking and radius shaving math.
- * 0% DOM/Canvas dependency.
+ * Represents character canvas hair cell matrix.
+ * Optimized with 1D Uint8Array for 0B memory allocation and O(1) performance.
  */
 export class HairGrid {
-    /**
-     * @param {Array<{r: number, c: number}>} hairPositions - List of hair coordinates
-     * @param {number} rows - Grid row count
-     * @param {number} cols - Grid column count
-     */
-    constructor(hairPositions = [], rows = 0, cols = 0) {
+    constructor(rows = 219, cols = 280, hairPositions = []) {
         this.rows = rows;
         this.cols = cols;
-        this.hairSet = new Set();
-        
-        hairPositions.forEach(pos => {
-            this.hairSet.add(`${pos.r},${pos.c}`);
-        });
+        this.data = new Uint8Array(rows * cols);
+        this.totalHairCount = 0;
+        this.remainingHairs = 0;
 
-        this.initialCount = this.hairSet.size;
+        this.initHairs(hairPositions);
     }
 
-    /**
-     * Check if hair exists at (r, c)
-     */
+    initHairs(hairPositions) {
+        this.data.fill(0);
+        let count = 0;
+        for (let i = 0; i < hairPositions.length; i++) {
+            const p = hairPositions[i];
+            if (p.r >= 0 && p.r < this.rows && p.c >= 0 && p.c < this.cols) {
+                const idx = p.r * this.cols + p.c;
+                if (this.data[idx] === 0) {
+                    this.data[idx] = 1;
+                    count++;
+                }
+            }
+        }
+        this.totalHairCount = count;
+        this.remainingHairs = count;
+    }
+
     has(r, c) {
-        return this.hairSet.has(`${r},${c}`);
+        if (r < 0 || r >= this.rows || c < 0 || c >= this.cols) return false;
+        return this.data[r * this.cols + c] === 1;
     }
 
     /**
-     * Shave hair at (centerR, centerC) within radius
-     * @param {number} centerR 
-     * @param {number} centerC 
-     * @param {number} radius - e.g. 1 for 3x3, 3 for 7x7, 5 for 11x11, 7 for 15x15
-     * @returns {number} Count of hairs removed in this operation
+     * Shave hair within radius around (r, c)
+     * @param {number} r 
+     * @param {number} c 
+     * @param {number} radius 
+     * @returns {{ count: number, dirtyCells: Array<{r: number, c: number}> }}
      */
-    shave(centerR, centerC, radius = 1) {
-        let removed = 0;
+    shave(r, c, radius = 1) {
+        let count = 0;
+        const dirtyCells = [];
 
-        for (let dr = -radius; dr <= radius; dr++) {
-            for (let dc = -radius; dc <= radius; dc++) {
-                const r = centerR + dr;
-                const c = centerC + dc;
-                const key = `${r},${c}`;
+        const startR = Math.max(0, r - radius);
+        const endR = Math.min(this.rows - 1, r + radius);
+        const startC = Math.max(0, c - radius);
+        const endC = Math.min(this.cols - 1, c + radius);
 
-                if (this.hairSet.has(key)) {
-                    this.hairSet.delete(key);
-                    removed++;
+        for (let row = startR; row <= endR; row++) {
+            const rowOffset = row * this.cols;
+            for (let col = startC; col <= endC; col++) {
+                const idx = rowOffset + col;
+                if (this.data[idx] === 1) {
+                    this.data[idx] = 0;
+                    count++;
+                    dirtyCells.push({ r: row, c: col });
                 }
             }
         }
 
-        return removed;
+        this.remainingHairs -= count;
+        return { count, dirtyCells };
     }
 
-    get remainingCount() {
-        return this.hairSet.size;
+    getRemainingCount() {
+        return this.remainingHairs;
     }
 
-    get totalCount() {
-        return this.initialCount;
-    }
-
-    get removedCount() {
-        return this.initialCount - this.hairSet.size;
-    }
-
-    get percentageCleared() {
-        if (this.initialCount === 0) return 100;
-        return Math.round((this.removedCount / this.initialCount) * 100);
+    getClearedPercentage() {
+        if (this.totalHairCount === 0) return 100;
+        const cleared = this.totalHairCount - this.remainingHairs;
+        return Math.min(100, Math.max(0, Math.round((cleared / this.totalHairCount) * 100)));
     }
 }
