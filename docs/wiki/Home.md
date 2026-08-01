@@ -19,6 +19,7 @@
 | 위키 문서 | 주요 설명 | 바로가기 |
 | :--- | :--- | :---: |
 | 📋 **공식 패치노트** | 버전별 패치 내역, 버그 수정 및 GitHub 이슈 링킹 | **[Release Patch Notes](Release-Patch-Notes)** |
+| 📐 **구현된 아키텍처 의사결정 명세서** | 패턴 선택/배제 마트릭스, 모듈 책임 및 상호작용 통제 | **[Architecture Decision Matrix](Implemented-Architecture-Decision-Matrix)** |
 | 🏛️ **아키텍처 명세서** | 5계층 모듈 구조, 시퀀스 흐름, 레이어 마트릭스 및 검증 게이트 | **[Architecture Specification](Architecture-Specification)** |
 | ⚡ **성능 최적화 명세서** | 1D TypedArray, Dirty Region 부분 렌더링, GPU 합성 60 FPS 최적화 | **[Performance Architecture](Performance-Optimization-Architecture)** |
 
@@ -46,8 +47,8 @@
 ```mermaid
 flowchart TD
   subgraph Interface Layer [src/ui]
-    UI["CanvasRenderer & HUD"]
-    Events["EventHandler & BrushController"]
+    UI["CanvasRenderer and HUD"]
+    Events["EventHandler and BrushController"]
   end
 
   subgraph Application Layer [src/app]
