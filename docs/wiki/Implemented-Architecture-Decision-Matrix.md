@@ -56,27 +56,27 @@
 
 ```mermaid
 flowchart TD
-  subgraph Interface Layer [src/ui]
-    UI["CanvasRenderer and HUD"]
-    Events["EventHandler and BrushController"]
+  subgraph InterfaceLayer ["Interface Layer (src/ui)"]
+    UI["CanvasRenderer & HUD"]
+    Events["EventHandler & BrushController"]
   end
 
-  subgraph Application Layer [src/app]
+  subgraph ApplicationLayer ["Application Layer (src/app)"]
     Orchestrator["GameOrchestrator"]
     Pipeline["StagePipeline"]
   end
 
-  subgraph Core Domain Layer [src/domain]
+  subgraph DomainLayer ["Core Domain Layer (src/domain)"]
     Session["ShaveSession"]
     Grid["HairGrid"]
   end
 
-  subgraph Port Contracts [src/ports]
+  subgraph PortLayer ["Port Contracts (src/ports)"]
     ImgPort["ImageProcessorPort"]
     DiffPort["DiffEnginePort"]
   end
 
-  subgraph Adapters [src/adapters]
+  subgraph AdapterLayer ["Adapters (src/adapters)"]
     ImgAdap["CanvasImageProcessorAdapter"]
     DiffAdap["DeltaDiffEngineAdapter"]
   end
@@ -96,12 +96,12 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  subgraph Wrong [❌ 잘못된 결합 (금지)]
+  subgraph Wrong ["잘못된 결합 (금지)"]
     Bad1["Core Domain"] -->|"금지"| Bad2["Adapter Internals / Canvas API"]
     Bad3["CanvasRenderer"] -->|"금지"| Bad4["Game State Mutation"]
   end
 
-  subgraph Right [✅ 올바른 아키텍처 (구현 완료)]
+  subgraph Right ["올바른 아키텍처 (구현 완료)"]
     Good1["Core Domain"] -->|"순수 JS"| Good2["Domain Value Objects"]
     Good3["CanvasRenderer"] -->|"단방향"| Good4["Decision DTO / Color Matrix"]
   end

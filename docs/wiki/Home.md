@@ -46,29 +46,29 @@
 
 ```mermaid
 flowchart TD
-  subgraph Interface Layer [src/ui]
-    UI["CanvasRenderer and HUD"]
-    Events["EventHandler and BrushController"]
+  subgraph InterfaceLayer ["Interface Layer (src/ui)"]
+    UI["CanvasRenderer & HUD"]
+    Events["EventHandler & BrushController"]
   end
 
-  subgraph Application Layer [src/app]
+  subgraph ApplicationLayer ["Application Layer (src/app)"]
     Orchestrator["GameOrchestrator"]
     Pipeline["StagePipeline"]
   end
 
-  subgraph Core Domain Layer [src/domain]
+  subgraph DomainLayer ["Core Domain Layer (src/domain)"]
     Session["ShaveSession"]
     Grid["HairGrid"]
     Score["ScoreCalculator"]
   end
 
-  subgraph Port Contracts [src/ports]
+  subgraph PortLayer ["Port Contracts (src/ports)"]
     ImgPort["ImageProcessorPort"]
     AsciiPort["AsciiConverterPort"]
     DiffPort["DiffEnginePort"]
   end
 
-  subgraph Adapters [src/adapters]
+  subgraph AdapterLayer ["Adapters (src/adapters)"]
     ImgAdap["CanvasImageProcessorAdapter"]
     AsciiAdap["CanvasAsciiConverterAdapter"]
     DiffAdap["DeltaDiffEngineAdapter"]
