@@ -15,6 +15,7 @@ export class BrushController {
         this.lastR = -1;
         this.lastC = -1;
         this.rect = null;
+        this.radiusChangeCallbacks = [];
 
         this.updateRect();
         this.initEvents();
@@ -27,8 +28,21 @@ export class BrushController {
     }
 
     setRadius(radius) {
-        this.brushRadius = Math.max(1, Math.min(7, radius)); // Radius 1~7
+        const newRadius = Math.max(1, Math.min(7, radius)); // Radius 1~7
+        const changed = this.brushRadius !== newRadius;
+        this.brushRadius = newRadius;
         this.updateCursorSize();
+        if (changed) {
+            for (let i = 0; i < this.radiusChangeCallbacks.length; i++) {
+                this.radiusChangeCallbacks[i](this.brushRadius);
+            }
+        }
+    }
+
+    onRadiusChange(callback) {
+        if (typeof callback === 'function') {
+            this.radiusChangeCallbacks.push(callback);
+        }
     }
 
     updateCursorSize() {
@@ -49,9 +63,19 @@ export class BrushController {
     }
 
     initEvents() {
-        // Cache canvas bounding box on resize / scroll to eliminate layout thrashing
-        window.addEventListener('resize', () => this.updateRect(), { passive: true });
-        window.addEventListener('scroll', () => this.updateRect(), { passive: true });
+        if (typeof window !== 'undefined') {
+            // Cache canvas bounding box on resize / scroll to eliminate layout thrashing
+            window.addEventListener('resize', () => this.updateRect(), { passive: true });
+            window.addEventListener('scroll', () => this.updateRect(), { passive: true });
+
+            window.addEventListener('mouseup', () => {
+                this.isMouseDown = false;
+                this.lastR = -1;
+                this.lastC = -1;
+            });
+        }
+
+        if (!this.canvas) return;
 
         // Mouse Down / Up for Drag Shaving
         this.canvas.addEventListener('mousedown', (e) => {

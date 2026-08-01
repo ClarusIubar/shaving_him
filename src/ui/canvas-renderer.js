@@ -83,20 +83,25 @@ export class CanvasRenderer {
         const ch = (textGrid[r] && textGrid[r][c]) ? textGrid[r][c] : ' ';
         const isHair = hairGrid ? hairGrid.has(r, c) : false;
 
-        // Clear cell background rect
         if (isHair) {
+            // Draw dark hair cell background rect
             this.ctx.fillStyle = '#0a0a0f';
             this.ctx.fillRect(xOff, yOff, this.fontW, this.fontH);
+            // Draw subtle dark hair character
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.ctx.fillText(ch, xOff, yOff);
         } else if (colorGrid && colorGrid[r] && colorGrid[r][c]) {
-            const [cr, cg, cb] = colorGrid[r][c];
-            this.ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
-        } else {
+            // Clear background cell
             this.ctx.fillStyle = '#000000';
             this.ctx.fillRect(xOff, yOff, this.fontW, this.fontH);
-            return;
+            // Draw skin character in sampled RGB color
+            const [cr, cg, cb] = colorGrid[r][c];
+            this.ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
+            this.ctx.fillText(ch, xOff, yOff);
+        } else {
+            // Empty cell background fill
+            this.ctx.fillStyle = '#000000';
+            this.ctx.fillRect(xOff, yOff, this.fontW, this.fontH);
         }
-
-        this.ctx.fillText(ch, xOff, yOff);
     }
 }

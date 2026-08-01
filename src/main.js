@@ -26,6 +26,11 @@ window.addEventListener('DOMContentLoaded', () => {
         orchestrator.shave(row, col, radius);
     });
 
+    // Synchronize HUD brush button highlight when brush radius changes (e.g. via mouse wheel)
+    brushController.onRadiusChange(radius => {
+        hud.updateBrushSizeUI(radius);
+    });
+
     // Brush size selector buttons
     document.querySelectorAll('.brush-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {

@@ -46,7 +46,8 @@ export class CanvasImageProcessorAdapter extends ImageProcessorPort {
                 rowColors.push([
                     imageData.data[idx],
                     imageData.data[idx + 1],
-                    imageData.data[idx + 2]
+                    imageData.data[idx + 2],
+                    imageData.data[idx + 3]
                 ]);
             }
             colors.push(rowColors);

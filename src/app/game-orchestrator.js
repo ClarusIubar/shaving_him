@@ -9,6 +9,7 @@ export class GameOrchestrator {
     constructor(stagePipeline = new StagePipeline()) {
         this.pipeline = stagePipeline;
         this.session = null;
+        this.currentStageData = null;
         this.timerId = null;
         this.updateCallbacks = [];
         this.gameOverCallbacks = [];
@@ -41,6 +42,7 @@ export class GameOrchestrator {
     async loadAndStartStage(stageSource = 'game_data.json', maxTime = 60) {
         this.stopTimer();
         const stageData = await this.pipeline.loadStage(stageSource);
+        this.currentStageData = stageData;
         this.session = new ShaveSession(stageData, maxTime);
         this.session.start();
         this.startTimer();
@@ -76,7 +78,7 @@ export class GameOrchestrator {
      * @param {number} radius 
      */
     shave(row, col, radius = 1) {
-        if (!this.session) return;
+        if (!this.session || this.session.status !== SessionStatus.RUNNING) return;
         const { removed, dirtyCells } = this.session.shave(row, col, radius);
         if (removed > 0 || (dirtyCells && dirtyCells.length > 0)) {
             this.notifyUpdate(dirtyCells, false);
@@ -88,22 +90,8 @@ export class GameOrchestrator {
     }
 
     restart() {
-        if (this.session && this.session.hairGrid) {
-            const positions = [];
-            const grid = this.session.hairGrid;
-            for (let r = 0; r < grid.rows; r++) {
-                for (let c = 0; c < grid.cols; c++) {
-                    if (grid.data[r * grid.cols + c] === 1) {
-                        positions.push({ r, c });
-                    }
-                }
-            }
-
-            this.session.initStage({
-                rows: grid.rows,
-                cols: grid.cols,
-                hairPositions: positions
-            });
+        if (this.session && this.currentStageData) {
+            this.session.initStage(this.currentStageData);
             this.session.start();
             this.startTimer();
             this.notifyUpdate(null, false);

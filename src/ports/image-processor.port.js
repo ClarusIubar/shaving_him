@@ -4,10 +4,21 @@
  */
 export class ImageProcessorPort {
     /**
-     * @param {Object} imageSource - Image or Canvas source
-     * @returns {Promise<{ skinBaseBitmap: Object, hairMask: Uint8Array, width: number, height: number }>}
+     * @param {File|HTMLImageElement} source 
+     * @param {number} targetWidth 
+     * @param {number} targetHeight 
+     * @returns {Promise<{ imageData: Object, colors: Array<Array<[number, number, number]>> }>}
      */
-    async extractSkinAndHairMask(imageSource) {
-        throw new Error('ImageProcessorPort method not implemented');
+    async processImageSource(source, targetWidth = 280, targetHeight = 219) {
+        throw new Error('ImageProcessorPort processImageSource method not implemented');
+    }
+
+    /**
+     * @param {Object} imageData 
+     * @param {number} threshold 
+     * @returns {Object} ImageData
+     */
+    processSkinSmoothing(imageData, threshold = 80) {
+        throw new Error('ImageProcessorPort processSkinSmoothing method not implemented');
     }
 }

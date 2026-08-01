@@ -58,3 +58,25 @@ test('CanvasAsciiConverterAdapter - maps color matrix to ASCII grid', () => {
     assert.equal(textGrid[0][1], '@');
     assert.deepEqual(colorGrid[0][0], [0, 0, 0]);
 });
+
+test('StagePipeline - computes dynamic average skin tone correctly', async () => {
+    const { StagePipeline } = await import('../../src/app/stage-pipeline.js');
+    const pipeline = new StagePipeline();
+    const mockColors = [
+        [[10, 10, 10], [200, 180, 160]],
+        [[220, 200, 180], [10, 10, 10]]
+    ];
+    const avgSkin = pipeline.calculateAverageSkinTone(mockColors, 80);
+    assert.deepEqual(avgSkin, [210, 190, 170]);
+});
+
+test('StagePipeline - ignores transparent pixels (alpha < 128) in skin tone calculation', async () => {
+    const { StagePipeline } = await import('../../src/app/stage-pipeline.js');
+    const pipeline = new StagePipeline();
+    const mockColorsWithAlpha = [
+        [[255, 255, 255, 0], [200, 180, 160, 255]], // First pixel is transparent white (alpha=0)
+        [[220, 200, 180, 255], [0, 0, 0, 0]]        // Fourth pixel is transparent black (alpha=0)
+    ];
+    const avgSkin = pipeline.calculateAverageSkinTone(mockColorsWithAlpha, 80);
+    assert.deepEqual(avgSkin, [210, 190, 170]);
+});

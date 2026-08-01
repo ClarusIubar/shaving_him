@@ -27,6 +27,7 @@ export class HUD {
         this.startCustomBtn = document.getElementById('startCustomBtn');
 
         this.selectedFile = null;
+        this.previewUrl = null;
         this.initStartModalEvents();
     }
 
@@ -58,8 +59,13 @@ export class HUD {
     handleFileSelected(file) {
         this.selectedFile = file;
         if (this.previewEl) {
-            const url = URL.createObjectURL(file);
-            this.previewEl.src = url;
+            if (this.previewUrl && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+                URL.revokeObjectURL(this.previewUrl);
+            }
+            if (typeof URL !== 'undefined' && URL.createObjectURL) {
+                this.previewUrl = URL.createObjectURL(file);
+                this.previewEl.src = this.previewUrl;
+            }
             this.previewEl.style.display = 'block';
         }
         if (this.startCustomBtn) {
@@ -82,6 +88,19 @@ export class HUD {
         if (this.timerEl) this.timerEl.textContent = snapshot.timeLeft;
         if (this.remainEl) this.remainEl.textContent = snapshot.remainingHairs;
         if (this.barFillEl) this.barFillEl.style.width = `${snapshot.percentageCleared}%`;
+    }
+
+    updateBrushSizeUI(radius) {
+        if (typeof document === 'undefined') return;
+        const buttons = document.querySelectorAll('.brush-btn');
+        buttons.forEach(btn => {
+            const btnRadius = parseInt(btn.getAttribute('data-radius'), 10);
+            if (btnRadius === radius) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
     }
 
     showGameOver(snapshot, onRestart) {

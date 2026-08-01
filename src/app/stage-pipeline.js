@@ -21,13 +21,47 @@ export class StagePipeline {
     }
 
     /**
+     * Compute average skin color from brighter non-hair pixels in the image
+     * @param {Array<Array<[number, number, number]>>} colors 
+     * @param {number} threshold 
+     * @returns {[number, number, number]}
+     */
+    calculateAverageSkinTone(colors, threshold = 80) {
+        let sumR = 0, sumG = 0, sumB = 0, count = 0;
+        for (let r = 0; r < colors.length; r++) {
+            const row = colors[r];
+            for (let c = 0; c < row.length; c++) {
+                const pixel = row[c];
+                const cr = pixel[0], cg = pixel[1], cb = pixel[2], ca = pixel.length > 3 ? pixel[3] : 255;
+                if (ca < 128) continue; // Skip transparent pixels
+                const lum = (cr + cg + cb) / 3;
+                if (lum >= threshold) {
+                    sumR += cr;
+                    sumG += cg;
+                    sumB += cb;
+                    count++;
+                }
+            }
+        }
+        if (count === 0) return [210, 180, 150]; // Fallback default
+        return [
+            Math.round(sumR / count),
+            Math.round(sumG / count),
+            Math.round(sumB / count)
+        ];
+    }
+
+    /**
      * Load stage from preset JSON, File, or Image Element
      * @param {string|Object|File|HTMLImageElement} source 
      * @param {number} targetCols 
      * @param {number} targetRows 
+     * @param {Object} options - { hairThreshold: number, skinLumThreshold: number }
      * @returns {Promise<Object>} StageDataDTO
      */
-    async loadStage(source = 'game_data.json', targetCols = 280, targetRows = 219) {
+    async loadStage(source = 'game_data.json', targetCols = 280, targetRows = 219, options = {}) {
+        const { hairThreshold = 25, skinLumThreshold = 80 } = options;
+
         // Option 1: Preset JSON or JSON Object
         if (typeof source === 'string' || (typeof source === 'object' && source.text && !source.name)) {
             return await this.jsonAdapter.loadStage(source);
@@ -37,16 +71,19 @@ export class StagePipeline {
         if ((typeof File !== 'undefined' && source instanceof File) || (typeof HTMLImageElement !== 'undefined' && source instanceof HTMLImageElement)) {
             const { colors } = await this.imageProcessor.processImageSource(source, targetCols, targetRows);
 
-            // Generate skin base colors (smoothed out dark pixels)
+            // Dynamically sample skin color from non-hair pixels
+            const avgSkinColor = this.calculateAverageSkinTone(colors, skinLumThreshold);
+
+            // Generate skin base colors (smoothed out dark pixels with sampled skin color)
             const skinBaseColors = colors.map(row =>
                 row.map(([r, g, b]) => {
                     const lum = (r + g + b) / 3;
-                    return lum < 80 ? [210, 180, 150] : [r, g, b];
+                    return lum < skinLumThreshold ? avgSkinColor : [r, g, b];
                 })
             );
 
             // Extract hair coordinates via diff engine
-            const hairPositions = this.diffEngine.computeHairCoordinates(colors, skinBaseColors, 25);
+            const hairPositions = this.diffEngine.computeHairCoordinates(colors, skinBaseColors, hairThreshold);
 
             // Convert original image to ASCII textGrid & colorGrid DTO
             const { textGrid, colorGrid } = this.asciiConverter.convertToAsciiGrid(colors);
