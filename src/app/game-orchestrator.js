@@ -39,9 +39,9 @@ export class GameOrchestrator {
         }
     }
 
-    async loadAndStartStage(stageSource = 'game_data.json', maxTime = 60) {
+    async loadAndStartStage(stageSource = 'game_data.json', maxTime = 60, onProgress = null) {
         this.stopTimer();
-        const stageData = await this.pipeline.loadStage(stageSource);
+        const stageData = await this.pipeline.loadStage(stageSource, 280, 219, {}, onProgress);
         this.currentStageData = stageData;
         this.session = new ShaveSession(stageData, maxTime);
         this.session.start();

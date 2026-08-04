@@ -77,12 +77,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const startStageWithSource = async (source) => {
         try {
-            hud.showLoading('1-Photo 아스키 파이프라인 생성 중...');
+            hud.showLoading('1-Photo 아스키 파이프라인 생성 중...', 10);
             hud.hideStartModal();
             hud.hideOverlay();
             if (gameContainer) gameContainer.style.display = 'flex';
 
-            currentStageData = await orchestrator.loadAndStartStage(source, 60);
+            currentStageData = await orchestrator.loadAndStartStage(source, 60, (msg, pct) => {
+                hud.showLoading(msg, pct);
+            });
             renderer.render(currentStageData, orchestrator.session.hairGrid, null); // Immediate synchronous initial render
         } catch (err) {
             console.error('Stage loading error:', err);

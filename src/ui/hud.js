@@ -93,7 +93,7 @@ export class HUD {
         if (this.startModalEl) this.startModalEl.style.display = 'none';
     }
 
-    showLoading(message = '스테이지 생성 중...') {
+    showLoading(message = '스테이지 생성 중...', percentage = 0) {
         if (typeof document === 'undefined') return;
         if (!this.loadingEl) {
             this.loadingEl = document.createElement('div');
@@ -101,12 +101,17 @@ export class HUD {
             this.loadingEl.className = 'loading-screen';
             this.loadingEl.innerHTML = `
                 <div class="spinner"></div>
-                <div id="loadingMsg" style="font-weight:bold;color:#4ecdc4;">${message}</div>
+                <div id="loadingMsg" style="font-weight:bold;color:#4ecdc4;font-size:15px;">${message}</div>
+                <div style="width:280px;height:8px;background:#252a38;border-radius:4px;overflow:hidden;margin-top:4px;">
+                    <div id="loadingBarFill" style="width:${percentage}%;height:100%;background:linear-gradient(90deg, #ff6b6b, #4ecdc4);transition:width 0.2s;"></div>
+                </div>
             `;
             document.body.appendChild(this.loadingEl);
         } else {
             const msgNode = document.getElementById('loadingMsg');
+            const fillNode = document.getElementById('loadingBarFill');
             if (msgNode) msgNode.textContent = message;
+            if (fillNode) fillNode.style.width = `${percentage}%`;
             this.loadingEl.style.display = 'flex';
         }
     }
