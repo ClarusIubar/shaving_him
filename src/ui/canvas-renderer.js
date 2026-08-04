@@ -10,16 +10,31 @@ export class CanvasRenderer {
         this.fontW = fontW;
         this.fontH = fontH;
 
-        this.canvas.width = cols * fontW;
-        this.canvas.height = rows * fontH;
-        this.ctx = this.canvas.getContext('2d', { alpha: false });
-        this.ctx.font = '900 6px "Courier New", monospace';
-        this.ctx.textBaseline = 'top';
+        this.dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
 
+        this.setupCanvas();
         this.rafId = null;
         this.pendingDirtyCells = [];
         this.currentStageData = null;
         this.currentHairGrid = null;
+    }
+
+    setupCanvas() {
+        if (!this.canvas) return;
+        const displayW = this.cols * this.fontW;
+        const displayH = this.rows * this.fontH;
+
+        this.canvas.width = Math.round(displayW * this.dpr);
+        this.canvas.height = Math.round(displayH * this.dpr);
+        this.canvas.style.width = `${displayW}px`;
+        this.canvas.style.height = `${displayH}px`;
+
+        this.ctx = this.canvas.getContext('2d', { alpha: false });
+        if (this.ctx) {
+            this.ctx.scale(this.dpr, this.dpr);
+            this.ctx.font = '900 6px "Courier New", monospace';
+            this.ctx.textBaseline = 'top';
+        }
     }
 
     /**
@@ -64,7 +79,7 @@ export class CanvasRenderer {
 
         // Mode B: Full Canvas Redraw (Initial load or stage change)
         this.ctx.fillStyle = '#000000';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillRect(0, 0, this.cols * this.fontW, this.rows * this.fontH);
 
         const maxR = Math.min(this.rows, textGrid.length);
         for (let r = 0; r < maxR; r++) {

@@ -76,3 +76,57 @@ test('GameOrchestrator - ignores shave() when session status is not RUNNING', as
 
     orchestrator.stopTimer();
 });
+
+test('HUD - manages drag-over class on dragover and dragleave events', async () => {
+    const { HUD } = await import('../../src/ui/hud.js');
+    const classes = new Set();
+    const mockDropZone = {
+        addEventListener: (event, cb) => { mockDropZone.listeners[event] = cb; },
+        listeners: {},
+        classList: {
+            add: (cls) => classes.add(cls),
+            remove: (cls) => classes.delete(cls)
+        }
+    };
+    const mockInput = { addEventListener: () => {} };
+
+    global.document = {
+        getElementById: (id) => {
+            if (id === 'uploadDropZone') return mockDropZone;
+            if (id === 'photoInput') return mockInput;
+            return null;
+        }
+    };
+
+    const hud = new HUD();
+    mockDropZone.listeners['dragover']({ preventDefault: () => {} });
+    assert.equal(classes.has('drag-over'), true);
+
+    mockDropZone.listeners['dragleave']({ preventDefault: () => {} });
+    assert.equal(classes.has('drag-over'), false);
+});
+
+test('HUD - updates combo streak badge display based on snapshot.comboCount', async () => {
+    const { HUD } = await import('../../src/ui/hud.js');
+    let comboDisplay = 'none';
+    let comboText = '0';
+
+    const mockBadge = { style: { set display(v) { comboDisplay = v; } } };
+    const mockVal = { set textContent(v) { comboText = String(v); } };
+
+    global.document = {
+        getElementById: (id) => {
+            if (id === 'comboBadge') return mockBadge;
+            if (id === 'comboVal') return mockVal;
+            return null;
+        }
+    };
+
+    const hud = new HUD();
+    hud.update({ comboCount: 5 });
+    assert.equal(comboDisplay, 'inline-block');
+    assert.equal(comboText, '5');
+
+    hud.update({ comboCount: 1 });
+    assert.equal(comboDisplay, 'none');
+});

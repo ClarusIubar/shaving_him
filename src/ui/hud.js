@@ -28,6 +28,11 @@ export class HUD {
 
         this.selectedFile = null;
         this.previewUrl = null;
+
+        this.comboBadgeEl = document.getElementById('comboBadge');
+        this.comboValEl = document.getElementById('comboVal');
+        this.loadingEl = document.getElementById('loadingScreen');
+
         this.initStartModalEvents();
     }
 
@@ -44,12 +49,18 @@ export class HUD {
             // Drag and Drop support
             this.dropZoneEl.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                this.dropZoneEl.style.borderColor = '#4ecdc4';
+                this.dropZoneEl.classList.add('drag-over');
+            });
+
+            this.dropZoneEl.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                this.dropZoneEl.classList.remove('drag-over');
             });
 
             this.dropZoneEl.addEventListener('drop', (e) => {
                 e.preventDefault();
-                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                this.dropZoneEl.classList.remove('drag-over');
+                if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
                     this.handleFileSelected(e.dataTransfer.files[0]);
                 }
             });
@@ -82,12 +93,43 @@ export class HUD {
         if (this.startModalEl) this.startModalEl.style.display = 'none';
     }
 
+    showLoading(message = '스테이지 생성 중...') {
+        if (typeof document === 'undefined') return;
+        if (!this.loadingEl) {
+            this.loadingEl = document.createElement('div');
+            this.loadingEl.id = 'loadingScreen';
+            this.loadingEl.className = 'loading-screen';
+            this.loadingEl.innerHTML = `
+                <div class="spinner"></div>
+                <div id="loadingMsg" style="font-weight:bold;color:#4ecdc4;">${message}</div>
+            `;
+            document.body.appendChild(this.loadingEl);
+        } else {
+            const msgNode = document.getElementById('loadingMsg');
+            if (msgNode) msgNode.textContent = message;
+            this.loadingEl.style.display = 'flex';
+        }
+    }
+
+    hideLoading() {
+        if (this.loadingEl) this.loadingEl.style.display = 'none';
+    }
+
     update(snapshot) {
         if (!snapshot) return;
         if (this.scoreEl) this.scoreEl.textContent = snapshot.score;
         if (this.timerEl) this.timerEl.textContent = snapshot.timeLeft;
         if (this.remainEl) this.remainEl.textContent = snapshot.remainingHairs;
         if (this.barFillEl) this.barFillEl.style.width = `${snapshot.percentageCleared}%`;
+
+        if (this.comboBadgeEl) {
+            if (snapshot.comboCount > 1) {
+                if (this.comboValEl) this.comboValEl.textContent = snapshot.comboCount;
+                this.comboBadgeEl.style.display = 'inline-block';
+            } else {
+                this.comboBadgeEl.style.display = 'none';
+            }
+        }
     }
 
     updateBrushSizeUI(radius) {

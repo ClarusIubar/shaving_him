@@ -14,12 +14,18 @@ export class CanvasImageProcessorAdapter extends ImageProcessorPort {
      */
     async processImageSource(source, targetWidth = 280, targetHeight = 219) {
         let img;
-        if (source instanceof HTMLImageElement) {
+        if (typeof HTMLImageElement !== 'undefined' && source instanceof HTMLImageElement) {
             img = source;
         } else if (typeof File !== 'undefined' && source instanceof File) {
             img = await this.loadImageFile(source);
+        } else if (source && typeof source === 'object' && ('naturalWidth' in source || 'src' in source)) {
+            img = source;
         } else {
             throw new Error('Invalid image source type');
+        }
+
+        if (img && typeof img.naturalWidth === 'number' && (img.naturalWidth === 0 || img.naturalHeight === 0)) {
+            throw new Error('이미지 해상도를 읽을 수 없습니다.');
         }
 
         const canvas = typeof document !== 'undefined'
@@ -58,14 +64,29 @@ export class CanvasImageProcessorAdapter extends ImageProcessorPort {
 
     loadImageFile(file) {
         return new Promise((resolve, reject) => {
+            if (!file) {
+                return reject(new Error('파일이 지정되지 않았습니다.'));
+            }
+            if (typeof FileReader === 'undefined') {
+                return reject(new Error('FileReader API가 지원되지 않는 환경입니다.'));
+            }
             const reader = new FileReader();
             reader.onload = (e) => {
+                if (typeof Image === 'undefined') {
+                    return resolve({});
+                }
                 const img = new Image();
-                img.onload = () => resolve(img);
-                img.onerror = reject;
+                img.onload = () => {
+                    if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+                        reject(new Error('이미지 크기가 0px이거나 손상된 파일입니다.'));
+                    } else {
+                        resolve(img);
+                    }
+                };
+                img.onerror = () => reject(new Error('유효하지 않거나 손상된 이미지 파일입니다.'));
                 img.src = e.target.result;
             };
-            reader.onerror = reject;
+            reader.onerror = () => reject(new Error('파일 읽기 과정에서 오류가 발생했습니다.'));
             reader.readAsDataURL(file);
         });
     }

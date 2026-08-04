@@ -80,3 +80,15 @@ test('StagePipeline - ignores transparent pixels (alpha < 128) in skin tone calc
     const avgSkin = pipeline.calculateAverageSkinTone(mockColorsWithAlpha, 80);
     assert.deepEqual(avgSkin, [210, 190, 170]);
 });
+
+test('CanvasImageProcessorAdapter - rejects zero dimension or invalid image sources', async () => {
+    const { CanvasImageProcessorAdapter } = await import('../../src/adapters/canvas-image-processor.js');
+    const adapter = new CanvasImageProcessorAdapter();
+    
+    // Zero dimension mock image
+    const zeroDimImg = { naturalWidth: 0, naturalHeight: 0 };
+    await assert.rejects(
+        () => adapter.processImageSource(zeroDimImg),
+        { message: '이미지 해상도를 읽을 수 없습니다.' }
+    );
+});

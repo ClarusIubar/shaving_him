@@ -39,6 +39,17 @@ window.addEventListener('DOMContentLoaded', () => {
             const radius = parseInt(e.target.getAttribute('data-radius'), 10);
             brushController.setRadius(radius);
         });
+    // Global Keyboard Shortcuts (1-4 for brush radius, R for restart)
+    window.addEventListener('keydown', (e) => {
+        const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        if (tag === 'input' || tag === 'textarea' || (document.activeElement && document.activeElement.isContentEditable)) return;
+
+        const keyMap = { '1': 1, '2': 3, '3': 5, '4': 7 };
+        if (keyMap[e.key] !== undefined) {
+            brushController.setRadius(keyMap[e.key]);
+        } else if (e.key === 'r' || e.key === 'R') {
+            orchestrator.restart();
+        }
     });
 
     // Change Stage Button in HUD
@@ -66,6 +77,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const startStageWithSource = async (source) => {
         try {
+            hud.showLoading('1-Photo 아스키 파이프라인 생성 중...');
             hud.hideStartModal();
             hud.hideOverlay();
             if (gameContainer) gameContainer.style.display = 'flex';
@@ -76,6 +88,8 @@ window.addEventListener('DOMContentLoaded', () => {
             console.error('Stage loading error:', err);
             alert(`스테이지 로드 실패: ${err.message}`);
             hud.showStartModal();
+        } finally {
+            hud.hideLoading();
         }
     };
 
