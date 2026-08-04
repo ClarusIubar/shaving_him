@@ -18,9 +18,13 @@ export class StaticJsonStageAdapter {
         if (typeof source === 'string') {
             try {
                 const resp = await this.fetch(source);
-                rawData = await resp.json();
+                if (resp && resp.ok) {
+                    rawData = await resp.json();
+                } else {
+                    throw new Error(`Fetch failed: ${resp ? resp.status : 'unknown'}`);
+                }
             } catch (err) {
-                // Handle file:// protocol fetch restriction in browsers
+                // Fallback for file:// protocol or HTTP 404 fetch restrictions in browsers
                 if (typeof window !== 'undefined' && window.EMBEDDED_GAME_DATA) {
                     rawData = window.EMBEDDED_GAME_DATA;
                 } else {
@@ -31,13 +35,18 @@ export class StaticJsonStageAdapter {
             rawData = source;
         }
 
+        const textGrid = rawData.text || [];
+        const colorGrid = rawData.colors || [];
+        const rows = rawData.rows || (textGrid ? textGrid.length : 0);
+        const cols = rawData.cols || (textGrid && textGrid[0] ? textGrid[0].length : 0);
+
         return {
-            rows: rawData.rows || (rawData.text ? rawData.text.length : 0),
-            cols: rawData.cols || (rawData.text && rawData.text[0] ? rawData.text[0].length : 0),
-            totalHairCount: rawData.hair ? rawData.hair.length : 0,
+            rows,
+            cols,
+            totalHairCount: rawData.totalHairCount || rawData.hairCount || (rawData.hair ? rawData.hair.length : 0),
             hairPositions: rawData.hair || [],
-            textGrid: rawData.text || [],
-            colorGrid: rawData.colors || []
+            textGrid,
+            colorGrid
         };
     }
 }

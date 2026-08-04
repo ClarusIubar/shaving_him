@@ -62,6 +62,9 @@ export class GameOrchestrator {
                 this.notifyGameOver();
             }
         }, 1000);
+        if (this.timerId && typeof this.timerId.unref === 'function') {
+            this.timerId.unref();
+        }
     }
 
     stopTimer() {

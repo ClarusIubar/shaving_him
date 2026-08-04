@@ -44,6 +44,12 @@ export class CanvasRenderer {
         this.currentStageData = stageData;
         this.currentHairGrid = hairGrid;
 
+        if (stageData && (this.cols !== stageData.cols || this.rows !== stageData.rows)) {
+            this.cols = stageData.cols;
+            this.rows = stageData.rows;
+            this.setupCanvas();
+        }
+
         if (dirtyCells && dirtyCells.length > 0) {
             this.pendingDirtyCells.push(...dirtyCells);
         } else {
@@ -65,6 +71,13 @@ export class CanvasRenderer {
      */
     render(stageData, hairGrid, dirtyCells = null) {
         if (!stageData || !this.ctx) return;
+
+        if (stageData.cols !== this.cols || stageData.rows !== this.rows) {
+            this.cols = stageData.cols;
+            this.rows = stageData.rows;
+            this.setupCanvas();
+        }
+
         const { textGrid, colorGrid } = stageData;
 
         // Mode A: Partial Dirty Cell Redraw (Ultra Fast < 1ms)
@@ -78,6 +91,8 @@ export class CanvasRenderer {
         }
 
         // Mode B: Full Canvas Redraw (Initial load or stage change)
+        this.ctx.font = '900 6px "Courier New", monospace';
+        this.ctx.textBaseline = 'top';
         this.ctx.fillStyle = '#000000';
         this.ctx.fillRect(0, 0, this.cols * this.fontW, this.rows * this.fontH);
 
