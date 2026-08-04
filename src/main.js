@@ -7,7 +7,7 @@ import { CanvasRenderer } from './ui/canvas-renderer.js';
 import { BrushController } from './ui/brush-controller.js';
 import { HUD } from './ui/hud.js';
 
-window.addEventListener('DOMContentLoaded', () => {
+const init = () => {
     const canvas = document.getElementById('gameCanvas');
     const cursor = document.getElementById('razorCursor');
     const gameContainer = document.getElementById('gameContainer');
@@ -39,6 +39,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const radius = parseInt(e.target.getAttribute('data-radius'), 10);
             brushController.setRadius(radius);
         });
+    });
     // Global Keyboard Shortcuts (1-4 for brush radius, R for restart)
     window.addEventListener('keydown', (e) => {
         const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
@@ -113,4 +114,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Show initial Start Modal on launch
     hud.showStartModal();
-});
+};
+
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+}
