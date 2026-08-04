@@ -15,11 +15,15 @@ export class StaticJsonStageAdapter {
      */
     async loadStage(source = 'game_data.json') {
         let rawData;
-        if (typeof source === 'string') {
+        if (typeof window !== 'undefined' && window.EMBEDDED_GAME_DATA && (source === 'game_data.json' || source === 'game_data.js' || !source)) {
+            rawData = window.EMBEDDED_GAME_DATA;
+        } else if (typeof source === 'string') {
             try {
                 const resp = await this.fetch(source);
                 if (resp && resp.ok) {
                     rawData = await resp.json();
+                } else if (typeof window !== 'undefined' && window.EMBEDDED_GAME_DATA) {
+                    rawData = window.EMBEDDED_GAME_DATA;
                 } else {
                     throw new Error(`Fetch failed: ${resp ? resp.status : 'unknown'}`);
                 }

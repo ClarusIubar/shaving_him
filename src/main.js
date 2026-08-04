@@ -83,7 +83,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (gameContainer) gameContainer.style.display = 'flex';
 
             currentStageData = await orchestrator.loadAndStartStage(source, 60);
-            renderer.requestRender(currentStageData, orchestrator.session.hairGrid, null); // Full initial render
+            renderer.render(currentStageData, orchestrator.session.hairGrid, null); // Immediate synchronous initial render
         } catch (err) {
             console.error('Stage loading error:', err);
             alert(`스테이지 로드 실패: ${err.message}`);
