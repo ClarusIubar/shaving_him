@@ -27,6 +27,15 @@ test('StaticJsonStageAdapter - parses raw JSON into StageDataDTO', async () => {
     assert.equal(stageDTO.textGrid.length, 2);
 });
 
+test('DeltaDiffEngineAdapter - extracts dark hair positions and calculates skin tone', async () => {
+    const { DeltaDiffEngineAdapter } = await import('../../src/adapters/delta-diff-engine.js');
+    const engine = new DeltaDiffEngineAdapter();
+    assert.equal(typeof engine.calculateAverageSkinTone, 'function');
+    const colors = [[[200, 150, 100, 255]], [[10, 10, 10, 255]]];
+    const avg = engine.calculateAverageSkinTone(colors, 80);
+    assert.deepEqual(avg, [200, 150, 100]);
+});
+
 test('DeltaDiffEngineAdapter - extracts dark hair positions', () => {
     const originalColors = [
         [[200, 200, 200], [10, 10, 10]],
@@ -180,19 +189,20 @@ test('CanvasRenderer - renders full grid and partial dirty region with particles
 });
 
 test('Abstract Ports - throw unfulfilled contract errors', async () => {
-    const { AsciiConverterPort } = await import('../../src/ports/ascii-converter.port.js');
-    const { DiffEnginePort } = await import('../../src/ports/diff-engine.port.js');
     const { ImageProcessorPort } = await import('../../src/ports/image-processor.port.js');
-
-    const asciiPort = new AsciiConverterPort();
-    assert.throws(() => asciiPort.convertToAsciiGrid(), /not implemented/);
-
-    const diffPort = new DiffEnginePort();
-    assert.throws(() => diffPort.computeHairCoordinates(), /not implemented/);
+    const { DiffEnginePort } = await import('../../src/ports/diff-engine.port.js');
+    const { AsciiConverterPort } = await import('../../src/ports/ascii-converter.port.js');
 
     const imgPort = new ImageProcessorPort();
-    await assert.rejects(() => imgPort.processImageSource(), /not implemented/);
-    assert.throws(() => imgPort.processSkinSmoothing(), /not implemented/);
+    await assert.rejects(() => imgPort.processImageSource(null), /not implemented/);
+    assert.throws(() => imgPort.processSkinSmoothing(null), /not implemented/);
+
+    const diffPort = new DiffEnginePort();
+    assert.throws(() => diffPort.computeHairCoordinates(null, null), /not implemented/);
+    assert.throws(() => diffPort.calculateAverageSkinTone(null), /not implemented/);
+
+    const asciiPort = new AsciiConverterPort();
+    assert.throws(() => asciiPort.convertToAsciiGrid(null), /not implemented/);
 });
 
 test('CanvasImageProcessorAdapter - tests skin smoothing and image loading error guards', async () => {

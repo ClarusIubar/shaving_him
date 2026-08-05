@@ -12,4 +12,13 @@ export class DiffEnginePort {
     computeHairCoordinates(originalColors, skinBaseColors, threshold = 25) {
         throw new Error('DiffEnginePort method not implemented');
     }
+
+    /**
+     * @param {Array<Array<[number, number, number]>>} colors 
+     * @param {number} threshold 
+     * @returns {[number, number, number]}
+     */
+    calculateAverageSkinTone(colors, threshold = 80) {
+        throw new Error('DiffEnginePort calculateAverageSkinTone method not implemented');
+    }
 }

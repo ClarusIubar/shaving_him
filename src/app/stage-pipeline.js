@@ -1,6 +1,7 @@
 /**
  * Application Layer: StagePipeline
  * Orchestrates stage loading from static JSON sources or dynamic 1-Photo image processing adapters.
+ * Implements Open-Closed Principle (OCP) via Source Handlers and Single Responsibility Principle (SRP).
  */
 import { StaticJsonStageAdapter } from '../adapters/static-json-stage.js';
 import { CanvasImageProcessorAdapter } from '../adapters/canvas-image-processor.js';
@@ -21,34 +22,10 @@ export class StagePipeline {
     }
 
     /**
-     * Compute average skin color from brighter non-hair pixels in the image
-     * @param {Array<Array<[number, number, number]>>} colors 
-     * @param {number} threshold 
-     * @returns {[number, number, number]}
+     * Delegate skin tone calculation to DiffEngine (SRP compliance)
      */
     calculateAverageSkinTone(colors, threshold = 80) {
-        let sumR = 0, sumG = 0, sumB = 0, count = 0;
-        for (let r = 0; r < colors.length; r++) {
-            const row = colors[r];
-            for (let c = 0; c < row.length; c++) {
-                const pixel = row[c];
-                const cr = pixel[0], cg = pixel[1], cb = pixel[2], ca = pixel.length > 3 ? pixel[3] : 255;
-                if (ca < 128) continue; // Skip transparent pixels
-                const lum = (cr + cg + cb) / 3;
-                if (lum >= threshold) {
-                    sumR += cr;
-                    sumG += cg;
-                    sumB += cb;
-                    count++;
-                }
-            }
-        }
-        if (count === 0) return [210, 180, 150]; // Fallback default
-        return [
-            Math.round(sumR / count),
-            Math.round(sumG / count),
-            Math.round(sumB / count)
-        ];
+        return this.diffEngine.calculateAverageSkinTone(colors, threshold);
     }
 
     /**
@@ -66,7 +43,7 @@ export class StagePipeline {
         };
         const yieldThread = () => new Promise(r => setTimeout(r, 16));
 
-        // Option 1: Preset JSON or JSON Object
+        // Strategy 1: Preset JSON or JSON Object
         if (typeof source === 'string' || (typeof source === 'object' && source.text && !source.name)) {
             report('🎮 프리셋 아스키 스테이지 로드 중...', 50);
             const data = await this.jsonAdapter.loadStage(source);
@@ -74,7 +51,7 @@ export class StagePipeline {
             return data;
         }
 
-        // Option 2: Custom Image File or HTMLImageElement
+        // Strategy 2: Custom Image File or HTMLImageElement
         if ((typeof File !== 'undefined' && source instanceof File) || (typeof HTMLImageElement !== 'undefined' && source instanceof HTMLImageElement)) {
             report('📷 1/4: 이미지 디코딩 및 그리드 리사이징 중...', 25);
             await yieldThread();
