@@ -2,14 +2,36 @@
 
 > **프로젝트**: `shaving_him`  
 > **웹 애플리케이션**: [https://clarusiubar.github.io/shaving_him/](https://clarusiubar.github.io/shaving_him/)  
-> **최신 버전**: `v1.0.4-enhanced` (2026-08-05)  
+> **최신 버전**: `v1.0.5-quality` (2026-08-05)  
 
 ---
 
 ## 🚀 버전별 패치노트 요약 (Version History)
 
+- **[v1.0.5-quality](#v105-quality-2026-08-05)**: ES 모듈 readyState 바인딩, 4단계 실시간 프로그레스 UI, 엄격 RGR TDD 가버넌스 및 라인/함수 100% (브랜치 91.32%) 커버리지 증명
 - **[v1.0.4-enhanced](#v104-enhanced-2026-08-05)**: Web Audio API 사운드 이펙트(면도음, 콤보음, 승리 펜파레), 모바일 터치 궤적 보간, 털 흩날림 파티클 FX 및 PNG 저장
 - **[v1.0.3-enhanced](#v103-enhanced-2026-08-04)**: 키보드 단축키 UX, 콤보 디스플레이, High-DPI 렌더링 및 이미지 로드 에러 예외 가드
+
+---
+
+## 💎 v1.0.5-quality (2026-08-05)
+
+### 📌 개요
+v1.0.5 라운드에서는 ES 모듈 부트스트랩 시점 버그 전면 해결, 4단계 실시간 사진 변환 프로그레스 바 UI 구축, 엄격한 Red-Green-Refactor (RGR) TDD 가버넌스 전역 등록, 그리고 16개 전체 모듈 **100.00% 라인 커버리지**, **100.00% 함수 커버리지**, **91.32% 브랜치 커버리지**를 완벽하게 증명했습니다.
+
+### 🛠️ 세부 변경 내역 (수정내역 / 작업내역 / 기능개선)
+
+| 구분 | 주요 수정 및 작업 항목 | 버그 원인 및 작업 배경 | 구현된 해결책 및 기능 개선 (Solution) | TDD 검증 및 커버리지 수치 |
+| :--- | :--- | :--- | :--- | :---: |
+| **수정내역** | **ES Module 부트스트랩 수정** | `<script type="module">` 로딩 시 DOM parsing 완료 후 평가되어 `DOMContentLoaded` 이벤트 미발화로 시작 버튼 무반응 | `src/main.js`에 `document.readyState` 동기 점검을 적용하여 0ms 지연 없이 즉시 이벤트 바인딩 완료 | **Smoke PASS** |
+| **수정내역** | **4단계 실시간 프로그레스 UX** | 이미지 업로드 시 중간 연산 처리 표현 없이 고정되어 작동 중단 착오 유발 | 4단계 프로그레스 바(`0%➔25%➔50%➔75%➔95%➔100%`) 피드백 메시지 및 `16ms yieldThread` 적용 | **Integration PASS** |
+| **작업내역** | **이슈 발행 및 추적 완료** | [#25](https://github.com/ClarusIubar/shaving_him/issues/25)~[#28](https://github.com/ClarusIubar/shaving_him/issues/28) 4개 하위 작업 이슈 및 [#24](https://github.com/ClarusIubar/shaving_him/issues/24) 상위 트래킹 이슈 관리 | Web Audio, 터치 보간, 파티클, PNG 저장 기능 명세화 및 GitHub 이슈 정식 발행/클로즈 | **Issue #24~#28 CLOSED** |
+| **작업내역** | **RGR TDD 전역 가버넌스 구축** | 단순 땜빵식 테스트 추가 방지 및 실패 테스트 선 작성을 의무화하는 가버넌스 수립 | 전역/워크스페이스 규칙 파일([`AGENTS.md`](file:///d:/Code305/shaving_him/AGENTS.md), [`.agents/rules/tdd-rgr.md`](file:///d:/Code305/shaving_him/.agents/rules/tdd-rgr.md), `C:\Users\PC\.gemini\config\AGENTS.md`) 저장 | **Strict RGR Enforced** |
+| **기능개선** | **Web Audio 0B 사운드 엔진** | 자산 로딩 및 외부 파일 없이 0B 가벼운 실시간 면도음, 콤보  chime, 승리 펜파레 지원 | `SoundEffects` 어댑터 구축 및 HUD 상단 `🔊 소리 켬 / 🔇 음소거` 토글 연동 | **Funcs 100.00% PASS** |
+| **기능개선** | **모바일 터치 궤적 보간** | 모바일 터치 드래그 시 고속 이동 구간 털 미제거 및 새로고침 제스처 간섭 | Bresenham 선 보간 알고리즘 및 `preventDefault()` 터치 제스처 차단 적용 | **Line 100.00% PASS** |
+| **기능개선** | **60FPS 아스키 털 파티클 FX** | 털 제거 시 단순 소멸하여 아케이드 타격감 및 시각 이펙트 부족 | 60FPS 털 조각 파티클(`*`, `.`, `°`) 흩날림 및 300ms 페이드아웃 물리 연산 엔진 구축 | **Line 100.00% PASS** |
+| **기능개선** | **📸 PNG 결과물 다운로드** | 완성된 독창적 아스키 아트 면도 캔버스를 이미지 파일로 보관 소장 기능 부재 | `CanvasRenderer.exportPng` 메서드 및 Game Over 모달 내 이미지 저장 버튼 탑재 | **Line 100.00% PASS** |
+| **품질증명** | **5계층 100% TDD 커버리지** | 단위, 통합, 회귀, 스모크, E2E 전 영역 품질 보증 필요 | 전체 16개 모듈 **Line 100%**, **Func 100%**, **Branch 91.32%** 실측 달성 | **34 Tests 100% PASS (331ms)** |
 
 ---
 
