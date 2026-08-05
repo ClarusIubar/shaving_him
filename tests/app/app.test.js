@@ -57,6 +57,29 @@ test('BrushController - notifies onRadiusChange callback when setRadius is calle
     assert.equal(changedRadius, 3);
 });
 
+test('BrushController - interpolates line coordinates during drag movement', async () => {
+    const { BrushController } = await import('../../src/ui/brush-controller.js');
+    const shavedCoords = [];
+    const mockCanvas = {
+        width: 280, height: 219,
+        getBoundingClientRect: () => ({ left: 0, top: 0, width: 280, height: 219 }),
+        addEventListener: () => {}
+    };
+
+    const controller = new BrushController(mockCanvas, null, (r, c) => {
+        shavedCoords.push({ r, c });
+    });
+
+    controller.isMouseDown = true;
+    controller.handlePointerMove(0, 0);   // row: 0, col: 0
+    controller.handlePointerMove(18, 18); // row: 3, col: 3 (jumped)
+
+    // Interpolation must fill intermediate cells (0,0), (1,1), (2,2), (3,3)
+    assert.ok(shavedCoords.length >= 4);
+    assert.deepEqual(shavedCoords[0], { r: 0, c: 0 });
+    assert.deepEqual(shavedCoords[shavedCoords.length - 1], { r: 3, c: 3 });
+});
+
 test('GameOrchestrator - ignores shave() when session status is not RUNNING', async () => {
     const orchestrator = new GameOrchestrator();
     let updateCalled = false;
@@ -129,4 +152,18 @@ test('HUD - updates combo streak badge display based on snapshot.comboCount', as
 
     hud.update({ comboCount: 1 });
     assert.equal(comboDisplay, 'none');
+});
+
+test('SoundEffects - initializes and toggles enable state correctly', async () => {
+    const { SoundEffects } = await import('../../src/ui/sound-effects.js');
+    const sound = new SoundEffects();
+    assert.equal(sound.enabled, true);
+
+    const toggled = sound.toggle();
+    assert.equal(toggled, false);
+    assert.equal(sound.enabled, false);
+
+    sound.playShaveSound(); // Silent when disabled
+    sound.playComboSound(5);
+    sound.playWinSound();
 });

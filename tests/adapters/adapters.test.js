@@ -92,3 +92,21 @@ test('CanvasImageProcessorAdapter - rejects zero dimension or invalid image sour
         { message: '이미지 해상도를 읽을 수 없습니다.' }
     );
 });
+
+test('CanvasRenderer - provides exportPng method for PNG snapshot download', async () => {
+    const { CanvasRenderer } = await import('../../src/ui/canvas-renderer.js');
+    let dataUrlCalled = false;
+    const mockCanvas = {
+        width: 100, height: 100,
+        style: {},
+        getContext: () => ({ scale: () => {}, fillRect: () => {}, fillText: () => {} }),
+        toDataURL: (type) => {
+            dataUrlCalled = true;
+            return `data:${type};base64,mockdata`;
+        }
+    };
+    const renderer = new CanvasRenderer(mockCanvas, 10, 10);
+    assert.equal(typeof renderer.exportPng, 'function');
+    
+    renderer.exportPng('test.png'); // Triggers exportPng gracefully without DOM errors in Node
+});

@@ -32,6 +32,8 @@ export class HUD {
         this.comboBadgeEl = document.getElementById('comboBadge');
         this.comboValEl = document.getElementById('comboVal');
         this.loadingEl = document.getElementById('loadingScreen');
+        this.soundToggleBtn = document.getElementById('soundToggleBtn');
+        this.exportPngBtn = document.getElementById('exportPngBtn');
 
         this.initStartModalEvents();
     }
@@ -118,6 +120,12 @@ export class HUD {
 
     hideLoading() {
         if (this.loadingEl) this.loadingEl.style.display = 'none';
+    }
+
+    updateSoundUI(enabled) {
+        if (this.soundToggleBtn) {
+            this.soundToggleBtn.textContent = enabled ? '🔊 소리 켬' : '🔇 음소거';
+        }
     }
 
     update(snapshot) {

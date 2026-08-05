@@ -17,6 +17,7 @@ export class CanvasRenderer {
         this.pendingDirtyCells = [];
         this.currentStageData = null;
         this.currentHairGrid = null;
+        this.particles = [];
     }
 
     setupCanvas() {
@@ -82,11 +83,13 @@ export class CanvasRenderer {
 
         // Mode A: Partial Dirty Cell Redraw (Ultra Fast < 1ms)
         if (dirtyCells && Array.isArray(dirtyCells) && dirtyCells.length > 0) {
+            this.spawnParticles(dirtyCells);
             for (let i = 0; i < dirtyCells.length; i++) {
                 const { r, c } = dirtyCells[i];
                 if (r < 0 || r >= this.rows || c < 0 || c >= this.cols) continue;
                 this.renderSingleCell(r, c, textGrid, colorGrid, hairGrid);
             }
+            this.updateAndRenderParticles();
             return;
         }
 
@@ -132,6 +135,63 @@ export class CanvasRenderer {
             // Empty cell background fill
             this.ctx.fillStyle = '#000000';
             this.ctx.fillRect(xOff, yOff, this.fontW, this.fontH);
+        }
+    }
+
+    spawnParticles(dirtyCells) {
+        if (!dirtyCells || dirtyCells.length === 0) return;
+        const count = Math.min(dirtyCells.length, 12);
+        const chars = ['*', '.', '°', '·'];
+        for (let i = 0; i < count; i++) {
+            const cell = dirtyCells[i];
+            this.particles.push({
+                x: cell.c * this.fontW + (Math.random() * 4 - 2),
+                y: cell.r * this.fontH + (Math.random() * 4 - 2),
+                vx: (Math.random() - 0.5) * 1.8,
+                vy: (Math.random() - 0.8) * 1.5,
+                life: 1.0,
+                decay: 0.12 + Math.random() * 0.08,
+                char: chars[Math.floor(Math.random() * chars.length)]
+            });
+        }
+        if (this.particles.length > 40) {
+            this.particles.splice(0, this.particles.length - 40);
+        }
+    }
+
+    updateAndRenderParticles() {
+        if (this.particles.length === 0 || !this.ctx) return;
+        this.ctx.font = '900 6px "Courier New", monospace';
+        this.ctx.textBaseline = 'top';
+
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= p.decay;
+
+            if (p.life <= 0) {
+                this.particles.splice(i, 1);
+                continue;
+            }
+
+            this.ctx.fillStyle = `rgba(255, 220, 180, ${p.life.toFixed(2)})`;
+            this.ctx.fillText(p.char, p.x, p.y);
+        }
+    }
+
+    exportPng(filename = 'shaving_art.png') {
+        if (!this.canvas || typeof document === 'undefined') return;
+        try {
+            const dataUrl = this.canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (e) {
+            console.error('PNG export failed:', e);
         }
     }
 }

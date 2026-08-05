@@ -83,11 +83,13 @@ export class BrushController {
             this.handlePointerMove(e.clientX, e.clientY);
         });
 
-        window.addEventListener('mouseup', () => {
-            this.isMouseDown = false;
-            this.lastR = -1;
-            this.lastC = -1;
-        });
+        if (typeof window !== 'undefined') {
+            window.addEventListener('mouseup', () => {
+                this.isMouseDown = false;
+                this.lastR = -1;
+                this.lastC = -1;
+            });
+        }
 
         this.canvas.addEventListener('mousemove', (e) => {
             if (this.cursor) {
@@ -98,7 +100,20 @@ export class BrushController {
         });
 
         // Touch Drag Support for Mobile
+        this.canvas.addEventListener('touchstart', (e) => {
+            if (e.cancelable) e.preventDefault();
+            this.isMouseDown = true;
+            this.lastR = -1;
+            this.lastC = -1;
+            if (e.touches.length > 0) {
+                const t = e.touches[0];
+                if (this.cursor) this.cursor.style.opacity = '1';
+                this.handlePointerMove(t.clientX, t.clientY);
+            }
+        }, { passive: false });
+
         this.canvas.addEventListener('touchmove', (e) => {
+            if (e.cancelable) e.preventDefault(); // Prevents mobile pull-to-refresh
             if (e.touches.length > 0) {
                 const t = e.touches[0];
                 if (this.cursor) {
@@ -106,6 +121,13 @@ export class BrushController {
                 }
                 this.handlePointerMove(t.clientX, t.clientY);
             }
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchend', () => {
+            this.isMouseDown = false;
+            this.lastR = -1;
+            this.lastC = -1;
+            if (this.cursor) this.cursor.style.opacity = '0';
         }, { passive: true });
 
         // Mouse Wheel for Dynamic Razor Resizing
@@ -130,12 +152,32 @@ export class BrushController {
 
     handlePointerMove(clientX, clientY) {
         const { row, col } = this.getGridCoords(clientX, clientY);
-        if (row !== this.lastR || col !== this.lastC) {
-            if (this.onShave) {
+
+        if (this.isMouseDown && this.lastR !== -1 && this.lastC !== -1 && (this.lastR !== row || this.lastC !== col)) {
+            // Line interpolation (Bresenham's line algorithm)
+            let r0 = this.lastR, c0 = this.lastC;
+            const r1 = row, c1 = col;
+            const dr = Math.abs(r1 - r0);
+            const dc = Math.abs(c1 - c0);
+            const sr = r0 < r1 ? 1 : -1;
+            const sc = c0 < c1 ? 1 : -1;
+            let err = (dc > dr ? dc : -dr) / 2;
+
+            while (true) {
+                if (this.onShave) {
+                    this.onShave(r0, c0, this.brushRadius);
+                }
+                if (r0 === r1 && c0 === c1) break;
+                const e2 = err;
+                if (e2 > -dc) { err -= dr; c0 += sc; }
+                if (e2 < dr) { err += dc; r0 += sr; }
+            }
+        } else if (this.isMouseDown || (row !== this.lastR || col !== this.lastC)) {
+            if (this.isMouseDown && this.onShave) {
                 this.onShave(row, col, this.brushRadius);
             }
-            this.lastR = row;
-            this.lastC = col;
         }
+        this.lastR = row;
+        this.lastC = col;
     }
 }

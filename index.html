@@ -55,7 +55,8 @@
                 <span class="stat-item">점수 <span class="stat-val" id="scoreVal">0</span></span>
                 <span class="stat-item">⏱ <span class="stat-val" id="timerVal">60</span>초</span>
                 <span class="stat-item">털 <span class="stat-val" id="remainVal">--</span></span>
-                <button class="action-btn" id="changeStageBtn" style="margin-left:8px;">📂 스테이지 변경</button>
+                <button class="action-btn" id="soundToggleBtn" style="margin-left:4px;">🔊 소리 켬</button>
+                <button class="action-btn" id="changeStageBtn" style="margin-left:4px;">📂 스테이지 변경</button>
             </div>
         </div>
 
@@ -87,7 +88,10 @@
             <div class="final-score" id="overlayFinalScore">0</div>
             <div class="msg" id="overlayMsg">결과</div>
             <div class="detail" id="overlayDetail"></div>
-            <button class="btn-primary" id="restartBtn">🔄 다시 하기</button>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+                <button class="btn-primary" id="exportPngBtn" style="flex:1;background:#252a38;color:#4ecdc4;border:1px solid #4ecdc4;">📸 이미지 저장</button>
+                <button class="btn-primary" id="restartBtn" style="flex:1;">🔄 다시 하기</button>
+            </div>
         </div>
     </div>
 

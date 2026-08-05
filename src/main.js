@@ -1,11 +1,13 @@
 /**
  * Application Entry Point: main.js
- * Bootstraps GameOrchestrator, CanvasRenderer, BrushController, and HUD with 60FPS rAF rendering.
+ * Bootstraps GameOrchestrator, CanvasRenderer, BrushController, HUD, and SoundEffects.
  */
 import { GameOrchestrator } from './app/game-orchestrator.js';
 import { CanvasRenderer } from './ui/canvas-renderer.js';
 import { BrushController } from './ui/brush-controller.js';
 import { HUD } from './ui/hud.js';
+import { SoundEffects } from './ui/sound-effects.js';
+import { SessionStatus } from './domain/shave-session.js';
 
 const init = () => {
     const canvas = document.getElementById('gameCanvas');
@@ -18,13 +20,27 @@ const init = () => {
     const orchestrator = new GameOrchestrator();
     const renderer = new CanvasRenderer(canvas);
     const hud = new HUD();
+    const sound = new SoundEffects();
 
     let currentStageData = null;
+    let lastCombo = 1;
 
     // Brush controller for razor mouse/touch drag and size setting
     const brushController = new BrushController(canvas, cursor, (row, col, radius) => {
-        orchestrator.shave(row, col, radius);
+        sound.init();
+        const { removed } = orchestrator.shave(row, col, radius);
+        if (removed > 0) {
+            sound.playShaveSound();
+        }
     });
+
+    // Sound toggle button in HUD
+    if (hud.soundToggleBtn) {
+        hud.soundToggleBtn.addEventListener('click', () => {
+            const enabled = sound.toggle();
+            hud.updateSoundUI(enabled);
+        });
+    }
 
     // Synchronize HUD brush button highlight when brush radius changes (e.g. via mouse wheel)
     brushController.onRadiusChange(radius => {
@@ -40,6 +56,7 @@ const init = () => {
             brushController.setRadius(radius);
         });
     });
+
     // Global Keyboard Shortcuts (1-4 for brush radius, R for restart)
     window.addEventListener('keydown', (e) => {
         const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
@@ -64,6 +81,11 @@ const init = () => {
     // Subscribe to state updates with high-performance rAF partial redraws
     orchestrator.onUpdate((snapshot, dirtyCells, isTimerTick) => {
         hud.update(snapshot);
+        if (snapshot.comboCount > 1 && snapshot.comboCount !== lastCombo) {
+            sound.playComboSound(snapshot.comboCount);
+        }
+        lastCombo = snapshot.comboCount;
+
         if (!isTimerTick && orchestrator.currentStageData && orchestrator.session) {
             renderer.requestRender(orchestrator.currentStageData, orchestrator.session.hairGrid, dirtyCells);
         }
@@ -71,6 +93,9 @@ const init = () => {
 
     // Subscribe to Game Over
     orchestrator.onGameOver(snapshot => {
+        if (snapshot.status === SessionStatus.WON || snapshot.percentageCleared === 100) {
+            sound.playWinSound();
+        }
         hud.showGameOver(snapshot, () => {
             orchestrator.restart();
         });
@@ -109,6 +134,13 @@ const init = () => {
             if (hud.selectedFile) {
                 startStageWithSource(hud.selectedFile);
             }
+        });
+    }
+
+    // Export PNG Image Button in Game Over overlay
+    if (hud.exportPngBtn) {
+        hud.exportPngBtn.addEventListener('click', () => {
+            renderer.exportPng();
         });
     }
 
