@@ -3,7 +3,7 @@
  * Bootstraps GameOrchestrator, CanvasRenderer, BrushController, HUD, and SoundEffects.
  * Fully exported and testable in Node.js test runner suite.
  */
-import { GameOrchestrator } from './app/game-orchestrator.js';
+import { createCompositionRoot } from './app/composition-root.js';
 import { CanvasRenderer } from './ui/canvas-renderer.js';
 import { BrushController } from './ui/brush-controller.js';
 import { HUD } from './ui/hud.js';
@@ -17,7 +17,7 @@ export const KEY_BRUSH_RADIUS_MAP = Object.freeze({
     '4': 7
 });
 
-export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : null, win = typeof window !== 'undefined' ? window : null) => {
+export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : null, win = typeof window !== 'undefined' ? window : null, customAdapters = {}) => {
     if (!doc) return null;
 
     const canvas = doc.getElementById('gameCanvas');
@@ -27,7 +27,8 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
 
     if (!canvas) return null;
 
-    const orchestrator = new GameOrchestrator();
+    const compositionRoot = createCompositionRoot(customAdapters);
+    const orchestrator = compositionRoot.orchestrator;
     const renderer = new CanvasRenderer(canvas);
     const hud = new HUD();
     const sound = new SoundEffects();
