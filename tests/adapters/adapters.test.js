@@ -351,11 +351,15 @@ test('CanvasRenderer - tests resize setupCanvas, empty cell background fill, par
     };
     const renderer = new CanvasRenderer(mockCanvas, 2, 2);
 
-    global.requestAnimationFrame = (cb) => { cb(); return 1; };
+    global.requestAnimationFrame = (cb) => { return 1; }; // Async rAF mock (cb not executed immediately)
 
     // Dynamic dimension resize in requestRender & render (lines 77-80)
     const newStage = { cols: 10, rows: 10, textGrid: ['          '], colorGrid: null };
-    renderer.requestRender(newStage, null, null);
+    renderer.requestRender(newStage, null, null); // Sets pendingDirtyCells = null
+    // Next call with dirtyCells must NOT throw TypeError
+    assert.doesNotThrow(() => {
+        renderer.requestRender(newStage, null, [{ r: 1, c: 1 }]);
+    });
 
     const resizeStage = { cols: 5, rows: 5, textGrid: ['     ', '     ', '     ', '     ', '     '], colorGrid: null };
     renderer.render(resizeStage, null, null);

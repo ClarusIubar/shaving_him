@@ -79,13 +79,7 @@ export class BrushController {
             this.handlePointerMove(e.clientX, e.clientY);
         });
 
-        if (typeof window !== 'undefined') {
-            window.addEventListener('mouseup', () => {
-                this.isMouseDown = false;
-                this.lastR = -1;
-                this.lastC = -1;
-            });
-        }
+
 
         this.canvas.addEventListener('mousemove', (e) => {
             if (this.cursor) {

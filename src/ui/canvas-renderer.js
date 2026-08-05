@@ -52,6 +52,9 @@ export class CanvasRenderer {
         }
 
         if (dirtyCells && dirtyCells.length > 0) {
+            if (!Array.isArray(this.pendingDirtyCells)) {
+                this.pendingDirtyCells = [];
+            }
             this.pendingDirtyCells.push(...dirtyCells);
         } else {
             this.pendingDirtyCells = null; // Forces full redraw
