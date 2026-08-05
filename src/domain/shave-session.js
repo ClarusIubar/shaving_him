@@ -101,16 +101,17 @@ export class ShaveSession {
         const total = this.hairGrid ? this.hairGrid.totalHairCount : 0;
         const clearedPct = this.hairGrid ? this.hairGrid.getClearedPercentage() : 0;
 
-        const result = this.scoreCalculator.calculateFinalScore(
+        const result = this.scoreCalculator ? this.scoreCalculator.calculateFinalScore(
             this.timeLeft,
             remain
-        );
+        ) : { baseScore: 0, timeBonus: 0, allClearBonus: 0, totalScore: 0 };
 
         return {
             status: this.status,
             timeLeft: this.timeLeft,
             maxTime: this.maxTime,
             score: result.baseScore,
+            comboCount: this.scoreCalculator ? this.scoreCalculator.shaveStreak : 0,
             finalResult: result,
             remainingHairs: remain,
             totalHairs: total,

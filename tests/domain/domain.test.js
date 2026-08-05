@@ -60,6 +60,12 @@ test('ShaveSession - state transitions and timer ticks', () => {
     const snapshot = session.getSnapshot();
     assert.equal(snapshot.percentageCleared, 100);
     assert.equal(snapshot.status, SessionStatus.WON);
+    assert.equal(snapshot.comboCount, 1, 'getSnapshot() must include comboCount property');
+
+    // Fallback branch test when scoreCalculator is null
+    session.scoreCalculator = null;
+    const snapNullCalc = session.getSnapshot();
+    assert.equal(snapNullCalc.comboCount, 0);
 });
 
 test('HairGrid - out of bounds coordinates and cleared percentage', () => {
