@@ -2,13 +2,32 @@
 
 > **프로젝트**: `shaving_him`  
 > **웹 애플리케이션**: [https://clarusiubar.github.io/shaving_him/](https://clarusiubar.github.io/shaving_him/)  
-> **최신 버전**: `v1.0.3-enhanced` (2026-08-04)  
+> **최신 버전**: `v1.0.4-enhanced` (2026-08-05)  
 
 ---
 
 ## 🚀 버전별 패치노트 요약 (Version History)
 
+- **[v1.0.4-enhanced](#v104-enhanced-2026-08-05)**: Web Audio API 사운드 이펙트(면도음, 콤보음, 승리 펜파레), 모바일 터치 궤적 보간, 털 흩날림 파티클 FX 및 PNG 저장
 - **[v1.0.3-enhanced](#v103-enhanced-2026-08-04)**: 키보드 단축키 UX, 콤보 디스플레이, High-DPI 렌더링 및 이미지 로드 에러 예외 가드
+
+---
+
+## 💎 v1.0.4-enhanced (2026-08-05)
+
+### 📌 개요
+v1.0.4 라운드에서는 Web Audio API 기반 순수 자바스크립트 사운드 이펙트(면도 소리, 콤보음, 승리 펜파레) 및 HUD 음소거 토글, 모바일 터치 포인터 궤적 Bresenham 보간 및 새로고침 제스처 차단, CanvasRenderer 60FPS 면도 털 파티클 흩날림 시각 이펙트, 완성된 아스키 아트 캔버스 PNG 저장 기능을 완료했습니다.
+
+### 🛠️ 세부 변경 내역
+
+| 구분 | 관련 이슈 | 버그 원인 및 이슈 내용 | 구현된 해결책 (Solution) | 테스트 및 검증 |
+| :--- | :---: | :--- | :--- | :---: |
+| **사운드 FX** | **[#25](https://github.com/ClarusIubar/shaving_him/issues/25)** | 외부 MP3/WAV 파일 의존 시 로딩 지연 및 CORS 오류 발생 가능 | `SoundEffects` 클래스를 작성하여 `Web Audio API` 기반 0B 무부하 이펙트음 및 HUD 토글 버튼 구현 | `app.test.js` |
+| **터치 UX** | **[#26](https://github.com/ClarusIubar/shaving_him/issues/26)** | 모바일 터치 시 빠르게 긁으면 뜸성뜸성 깎이거나 새로고침 제스처 간섭 | `BrushController`에 Bresenham 선 보간 알고리즘 적용 및 `preventDefault()` 제스처 차단 | `app.test.js` |
+| **시각 이펙트**| **[#27](https://github.com/ClarusIubar/shaving_him/issues/27)** | 털 제거 시 단순 소멸하여 아케이드 특유의 타격감 부족 | `CanvasRenderer`에 60FPS 아스키 털 파티클(`*`, `.`) 흩날림 및 페이드아웃 시스템 구축 | 18개 수트 PASS (78ms) |
+| **결과 저장**| **[#28](https://github.com/ClarusIubar/shaving_him/issues/28)** | 완벽 면도 후 완성된 아스키 아트를 이미지로 소장/공유 수단 부재 | `CanvasRenderer.exportPng` 메서드 및 게임 종료 모달 `📸 이미지 저장` 버튼 연동 완료 | `adapters.test.js` |
+
+> **Parent Issue**: [#24](https://github.com/ClarusIubar/shaving_him/issues/24) `[TSK-005-00] v1.0.4 Web Audio 사운드 이펙트, 모바일 터치 보간, 털 파티클 FX 및 PNG 결과 저장` (CLOSED)
 - **[v1.0.2-enhanced](#v102-enhanced-2026-08-01)**: UX 브러시 휠 동기화, PNG/WEBP 알파 채널 가드, 캔버스 fillStyle 렌더링 최적화, 게임 세션 상태 얼리 리턴 가드
 - **[v1.0.1-refactored](#v101-refactored-2026-07-30)**: 게임 리스타트 털 복원, ObjectURL 메모리 누수 방지, Port-Adapter 시그니처 표준화, 동적 피부 톤 추출
 - **[v1.0.0-modular](#v100-modular-2026-07-27)**: 모놀리식 코드 5계층 클린 아키텍처 리팩토링 및 브라우저 실시간 1-Photo 파이프라인 탑재
