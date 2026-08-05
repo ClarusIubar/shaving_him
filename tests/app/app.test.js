@@ -98,9 +98,25 @@ test('GameOrchestrator - ignores shave() when session status is not RUNNING', as
     orchestrator.session.pause(); // Pause session
 
     updateCalled = false;
-    orchestrator.shave(1, 1, 1);
+    const resultWhenPaused = orchestrator.shave(1, 1, 1);
     assert.equal(updateCalled, false);
     assert.equal(orchestrator.session.getSnapshot().remainingHairs, 1);
+    // Contract assertion: must return object with { removed, dirtyCells }
+    assert.ok(resultWhenPaused !== undefined, 'shave() must not return undefined');
+    assert.deepEqual(resultWhenPaused, { removed: 0, dirtyCells: [] });
+
+    orchestrator.session.resume();
+    const resultWhenRunning = orchestrator.shave(1, 1, 1);
+    assert.ok(resultWhenRunning !== undefined);
+    assert.equal(typeof resultWhenRunning.removed, 'number');
+    assert.ok(Array.isArray(resultWhenRunning.dirtyCells));
+
+    // Test session shave returning null fallback
+    const origSessionShave = orchestrator.session.shave;
+    orchestrator.session.shave = () => null;
+    const nullShaveResult = orchestrator.shave(1, 1, 1);
+    assert.deepEqual(nullShaveResult, { removed: 0, dirtyCells: [] });
+    orchestrator.session.shave = origSessionShave;
 
     orchestrator.stopTimer();
 });

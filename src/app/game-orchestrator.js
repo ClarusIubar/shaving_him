@@ -81,15 +81,21 @@ export class GameOrchestrator {
      * @param {number} radius 
      */
     shave(row, col, radius = 1) {
-        if (!this.session || this.session.status !== SessionStatus.RUNNING) return;
-        const { removed, dirtyCells } = this.session.shave(row, col, radius);
-        if (removed > 0 || (dirtyCells && dirtyCells.length > 0)) {
+        if (!this.session || this.session.status !== SessionStatus.RUNNING) {
+            return { removed: 0, dirtyCells: [] };
+        }
+        const result = this.session.shave(row, col, radius);
+        const removed = result ? result.removed : 0;
+        const dirtyCells = result && result.dirtyCells ? result.dirtyCells : [];
+
+        if (removed > 0 || dirtyCells.length > 0) {
             this.notifyUpdate(dirtyCells, false);
             if (this.session.status === SessionStatus.WON) {
                 this.stopTimer();
                 this.notifyGameOver();
             }
         }
+        return { removed, dirtyCells };
     }
 
     restart() {
