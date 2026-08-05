@@ -272,12 +272,27 @@ test('CanvasImageProcessorAdapter - tests skin smoothing and image loading error
     delete global.Image;
 });
 
-test('StaticJsonStageAdapter - window.EMBEDDED_GAME_DATA priority 1 line 19 execution', async () => {
+test('StaticJsonStageAdapter - window.EMBEDDED_GAME_DATA priority 1 line 19 execution and error branches', async () => {
     const adapter = new StaticJsonStageAdapter();
-    global.window = { EMBEDDED_GAME_DATA: { rows: 2, cols: 2, text: ['HI'], colors: [] } };
+    global.window = { EMBEDDED_GAME_DATA: { rows: 2, cols: 2, text: ['HI'], colors: [], hairCount: 1 } };
     const stage = await adapter.loadStage('game_data.json');
     assert.equal(stage.rows, 2);
+
+    const stage2 = await adapter.loadStage('game_data.js');
+    assert.equal(stage2.cols, 2);
+
+    const stage3 = await adapter.loadStage('');
+    assert.equal(stage3.totalHairCount, 1);
+
     delete global.window;
+
+    // Fetch non-ok without window.EMBEDDED_GAME_DATA -> throws
+    const adapterErr = new StaticJsonStageAdapter(async () => ({ ok: false, status: 500 }));
+    await assert.rejects(() => adapterErr.loadStage('fail.json'), /Fetch failed: 500/);
+
+    // Fetch network throw without window.EMBEDDED_GAME_DATA -> re-throws
+    const adapterNetErr = new StaticJsonStageAdapter(async () => { throw new Error('Network error'); });
+    await assert.rejects(() => adapterNetErr.loadStage('fail.json'), /Network error/);
 });
 
 test('CanvasImageProcessorAdapter - tests FileReader onerror, Image onerror, and Image undefined fallback', async () => {

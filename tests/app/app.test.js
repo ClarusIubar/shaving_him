@@ -132,8 +132,27 @@ test('GameOrchestrator - pause, resume, and startTimer interval callback executi
     timerCallback();
     assert.equal(orchestrator.session.status, SessionStatus.TIMEOUT);
 
+    // Execute timer tick when session status is WON
+    orchestrator.session.status = SessionStatus.WON;
+    timerCallback();
+
     global.setInterval = origSetInterval;
     orchestrator.stopTimer();
+
+    // Test orchestrator methods when session is null
+    const emptyOrchestrator = new GameOrchestrator();
+    emptyOrchestrator.notifyUpdate();
+    emptyOrchestrator.notifyGameOver();
+    emptyOrchestrator.shave(0, 0, 1);
+    emptyOrchestrator.restart();
+
+    // Test setInterval callback when session is null
+    let nullSessionCallback = null;
+    global.setInterval = (cb) => { nullSessionCallback = cb; return 456; };
+    emptyOrchestrator.startTimer();
+    if (nullSessionCallback) nullSessionCallback();
+    emptyOrchestrator.stopTimer();
+    global.setInterval = origSetInterval;
 });
 
 test('HUD - manages drag-over class on dragover and dragleave events', async () => {
@@ -227,6 +246,22 @@ test('SoundEffects - initializes and toggles enable state correctly', async () =
     sound.playComboSound(3);
     sound.playWinSound();
 
+    // Re-call init when this.ctx exists
+    sound.init();
+
+    // Test suspended resume rejection catch (line 23)
+    global.window.AudioContext = class {
+        constructor() { this.state = 'suspended'; }
+        createBuffer() { return { getChannelData: () => new Float32Array(10) }; }
+        resume() { return Promise.reject(new Error('Rejected')); }
+    };
+    sound.ctx = null;
+    sound.init();
+
+    // Test when noiseBuffer is null
+    sound.noiseBuffer = null;
+    sound.playShaveSound();
+
     // Test catch error block
     global.window.AudioContext = class {
         constructor() { this.state = 'running'; }
@@ -240,6 +275,15 @@ test('SoundEffects - initializes and toggles enable state correctly', async () =
     sound.playWinSound();
 
     delete global.window;
+
+    // Test init & createNoiseBuffer without window / without ctx
+    sound.ctx = null;
+    sound.init();
+    sound.createNoiseBuffer();
+    sound.enabled = true;
+    sound.playShaveSound();
+    sound.playComboSound();
+    sound.playWinSound();
 });
 
 test('HUD - modal visibility methods showStartModal, hideStartModal, showGameOver, hideOverlay, updateSoundUI, showLoading, hideLoading', async () => {
@@ -431,6 +475,14 @@ test('HUD - tests initStartModalEvents, drop zone file upload, updateBrushSizeUI
 
     const hud = new HUD();
     hud.updateBrushSizeUI(3);
+
+    // Test dropZone click triggers photoInput.click
+    let inputClickCalled = false;
+    mockInput.click = () => { inputClickCalled = true; };
+    if (dropZoneListeners['click']) {
+        dropZoneListeners['click']();
+        assert.equal(inputClickCalled, true);
+    }
 
     // Test Drop Event with File and Image undefined fallback (lines 76-77)
     delete global.Image;
