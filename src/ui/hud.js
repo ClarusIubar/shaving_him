@@ -161,8 +161,8 @@ export class HUD {
     showGameOver(snapshot, onRestart) {
         if (!this.overlayEl) return;
 
-        const { finalResult, remainingHairs, percentageCleared, status } = snapshot;
-        const { totalScore, timeBonus, allClearBonus } = finalResult;
+        const { finalResult, remainingHairs, percentageCleared, status } = snapshot || {};
+        const { totalScore = 0, timeBonus = 0, allClearBonus = 0 } = finalResult || {};
 
         if (this.finalScoreEl) this.finalScoreEl.textContent = totalScore;
 

@@ -142,7 +142,6 @@ test('CanvasRenderer - renders full grid and partial dirty region with particles
         textGrid: ['AB', 'CD'],
         colorGrid: [[ [255, 255, 255], [0, 0, 0] ], [ [100, 100, 100], [200, 200, 200] ]]
     };
-    const hairGrid = new Set(['0,1']);
     const mockHairSet = { has: (r, c) => r === 0 && c === 1 };
 
     // Full render
@@ -153,4 +152,72 @@ test('CanvasRenderer - renders full grid and partial dirty region with particles
     fillTextCount = 0;
     renderer.render(mockStage, mockHairSet, [{ r: 0, c: 1 }]);
     assert.ok(fillTextCount >= 1);
+
+    // Test requestRender batching
+    global.requestAnimationFrame = (cb) => { cb(); return 1; };
+    renderer.requestRender(mockStage, mockHairSet, [{ r: 0, c: 0 }]);
+    delete global.requestAnimationFrame;
+});
+
+test('Abstract Ports - throw unfulfilled contract errors', async () => {
+    const { AsciiConverterPort } = await import('../../src/ports/ascii-converter.port.js');
+    const { DiffEnginePort } = await import('../../src/ports/diff-engine.port.js');
+    const { ImageProcessorPort } = await import('../../src/ports/image-processor.port.js');
+
+    const asciiPort = new AsciiConverterPort();
+    assert.throws(() => asciiPort.convertToAsciiGrid(), /not implemented/);
+
+    const diffPort = new DiffEnginePort();
+    assert.throws(() => diffPort.computeHairCoordinates(), /not implemented/);
+
+    const imgPort = new ImageProcessorPort();
+    await assert.rejects(() => imgPort.processImageSource(), /not implemented/);
+    assert.throws(() => imgPort.processSkinSmoothing(), /not implemented/);
+});
+
+test('CanvasImageProcessorAdapter - tests skin smoothing and image loading error guards', async () => {
+    const { CanvasImageProcessorAdapter } = await import('../../src/adapters/canvas-image-processor.js');
+    const processor = new CanvasImageProcessorAdapter();
+
+    // Invalid source type
+    await assert.rejects(() => processor.processImageSource(123), /Invalid image source type/);
+
+    // Mock ImageData skin smoothing
+    const mockData = {
+        width: 3, height: 3,
+        data: new Uint8ClampedArray([
+            200, 180, 160, 255,   200, 180, 160, 255,   200, 180, 160, 255,
+            200, 180, 160, 255,    10,  10,  10, 255,   200, 180, 160, 255,
+            200, 180, 160, 255,   200, 180, 160, 255,   200, 180, 160, 255
+        ])
+    };
+    const smoothed = processor.processSkinSmoothing(mockData, 80);
+    assert.ok(smoothed.data[12] > 50);
+
+    // loadImageFile file null guard
+    await assert.rejects(() => processor.loadImageFile(null), /파일이 지정되지 않았습니다/);
+
+    // FileReader mock
+    global.FileReader = class {
+        readAsDataURL() {
+            setTimeout(() => { if (this.onload) this.onload({ target: { result: 'data:image/png;base64,mock' } }); }, 5);
+        }
+    };
+    global.File = class {};
+    global.Image = class {
+        constructor() {
+            setTimeout(() => {
+                this.naturalWidth = 10;
+                this.naturalHeight = 10;
+                if (this.onload) this.onload();
+            }, 5);
+        }
+    };
+
+    const loadedImg = await processor.loadImageFile(new global.File());
+    assert.equal(loadedImg.naturalWidth, 10);
+
+    delete global.FileReader;
+    delete global.File;
+    delete global.Image;
 });

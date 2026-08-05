@@ -192,3 +192,42 @@ test('SoundEffects - initializes and toggles enable state correctly', async () =
     sound.playWinSound();
     delete global.window;
 });
+
+test('HUD - modal visibility methods showStartModal, hideStartModal, showGameOver, hideOverlay, updateSoundUI', async () => {
+    const { HUD } = await import('../../src/ui/hud.js');
+    let startModalDisplay = 'none';
+    let overlayDisplay = 'none';
+    let soundText = '';
+
+    global.document = {
+        getElementById: (id) => {
+            if (id === 'startModal') return { style: { set display(v) { startModalDisplay = v; } } };
+            if (id === 'gameOverlay') return { style: { set display(v) { overlayDisplay = v; } } };
+            if (id === 'soundToggleBtn') return { set textContent(v) { soundText = v; } };
+            if (id === 'overlayTitle') return { textContent: '', style: {} };
+            if (id === 'overlayFinalScore') return { textContent: '' };
+            if (id === 'overlayMsg') return { textContent: '' };
+            if (id === 'overlayDetail') return { textContent: '' };
+            return null;
+        }
+    };
+
+    const hud = new HUD();
+    hud.showStartModal();
+    assert.equal(startModalDisplay, 'flex');
+    hud.hideStartModal();
+    assert.equal(startModalDisplay, 'none');
+
+    hud.showGameOver({ status: 'WON', totalScore: 100, remainingHairs: 0, percentageCleared: 100 }, () => {});
+    assert.equal(overlayDisplay, 'flex');
+    hud.hideOverlay();
+    assert.equal(overlayDisplay, 'none');
+
+    hud.updateSoundUI(true);
+    assert.equal(soundText, '🔊 소리 켬');
+
+    hud.updateSoundUI(false);
+    assert.equal(soundText, '🔇 음소거');
+
+    delete global.document;
+});
