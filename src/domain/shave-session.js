@@ -32,8 +32,8 @@ export class ShaveSession {
     }
 
     initStage(stageData) {
-        const { hairPositions = [], rows = 219, cols = 280 } = stageData;
-        this.hairGrid = new HairGrid(rows, cols, hairPositions);
+        const { hairPositions = [], cols = 280, rows = 219 } = stageData;
+        this.hairGrid = new HairGrid(cols, rows, hairPositions);
         this.scoreCalculator.reset();
         this.timeLeft = this.maxTime;
         this.status = SessionStatus.INIT;

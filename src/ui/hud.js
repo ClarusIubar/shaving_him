@@ -132,25 +132,30 @@ export class HUD {
         if (!snapshot) return;
         if (this.scoreEl) this.scoreEl.textContent = snapshot.score;
         if (this.timerEl) this.timerEl.textContent = snapshot.timeLeft;
-        if (this.remainEl) this.remainEl.textContent = snapshot.remainingHairs;
-        if (this.barFillEl) this.barFillEl.style.width = `${snapshot.percentageCleared}%`;
+        if (!this.soundToggleBtn) return;
+        const iconEl = this.soundToggleBtn.querySelector ? this.soundToggleBtn.querySelector('.sound-icon') : null;
+        const textEl = this.soundToggleBtn.querySelector ? this.soundToggleBtn.querySelector('.sound-text') : null;
 
-        if (this.comboBadgeEl) {
-            if (snapshot.comboCount > 1) {
-                if (this.comboValEl) this.comboValEl.textContent = snapshot.comboCount;
-                this.comboBadgeEl.style.display = 'inline-block';
-            } else {
-                this.comboBadgeEl.style.display = 'none';
-            }
+        if (enabled) {
+            this.soundToggleBtn.classList.remove('muted');
+            if (iconEl) iconEl.textContent = '🔊';
+            if (textEl) textEl.textContent = 'Sound ON';
+        } else {
+            this.soundToggleBtn.classList.add('muted');
+            if (iconEl) iconEl.textContent = '🔇';
+            if (textEl) textEl.textContent = 'Sound OFF';
         }
     }
 
     updateBrushSizeUI(radius) {
         if (typeof document === 'undefined') return;
-        const buttons = document.querySelectorAll('.brush-btn');
-        buttons.forEach(btn => {
-            const btnRadius = parseInt(btn.getAttribute('data-radius'), 10);
-            if (btnRadius === radius) {
+        const brushBtns = document.querySelectorAll('.brush-btn');
+        if (!brushBtns || typeof brushBtns.forEach !== 'function') return;
+
+        brushBtns.forEach(btn => {
+            if (!btn || !btn.classList) return;
+            const rAttr = btn.getAttribute('data-radius');
+            if (parseInt(rAttr, 10) === radius) {
                 btn.classList.add('active');
             } else {
                 btn.classList.remove('active');
@@ -158,15 +163,44 @@ export class HUD {
         });
     }
 
+    update(snapshot) {
+        if (!snapshot) return;
+        const { timeLeft, remainingHairs, percentageCleared, comboCount = 1 } = snapshot;
+
+        if (this.timerEl) this.timerEl.textContent = timeLeft;
+        if (this.hairCountEl) this.hairCountEl.textContent = remainingHairs;
+        if (this.clearedPctEl) this.clearedPctEl.textContent = `${percentageCleared.toFixed(1)}%`;
+
+        if (this.comboValEl) this.comboValEl.textContent = comboCount;
+        if (this.comboBadgeEl) {
+            if (this.comboBadgeEl.classList) {
+                if (comboCount > 1) {
+                    this.comboBadgeEl.classList.add('active');
+                } else {
+                    this.comboBadgeEl.classList.remove('active');
+                }
+            }
+            if (this.comboBadgeEl.style) {
+                this.comboBadgeEl.style.display = comboCount > 1 ? 'inline-block' : 'none';
+            }
+        }
+    }
+
     showGameOver(snapshot, onRestart) {
         if (!this.overlayEl) return;
 
-        const { finalResult, remainingHairs, percentageCleared, status } = snapshot || {};
+        const { finalResult, remainingHairs, percentageCleared } = snapshot || {};
         const { totalScore = 0, timeBonus = 0, allClearBonus = 0 } = finalResult || {};
 
         if (this.finalScoreEl) this.finalScoreEl.textContent = totalScore;
+        if (this.timeBonusEl) this.timeBonusEl.textContent = `+${timeBonus}`;
+        if (this.allClearBonusEl) this.allClearBonusEl.textContent = `+${allClearBonus}`;
 
-        if (status === SessionStatus.WON || percentageCleared === 100) {
+        const isWin = (this.gamePolicy && typeof this.gamePolicy.isVictory === 'function')
+            ? this.gamePolicy.isVictory(snapshot)
+            : (snapshot && (snapshot.status === 'WON' || snapshot.percentageCleared === 100));
+
+        if (isWin) {
             if (this.titleEl) {
                 this.titleEl.textContent = '🎉 완벽한 면도!';
                 this.titleEl.style.color = '#4ecdc4';

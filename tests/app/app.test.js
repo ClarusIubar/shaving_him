@@ -11,7 +11,8 @@ global.window = {
 };
 
 test('StagePipeline - loads stage DTO cleanly', async () => {
-    const pipeline = new StagePipeline();
+    const { StaticJsonStageAdapter } = await import('../../src/adapters/static-json-stage.js');
+    const pipeline = new StagePipeline(new StaticJsonStageAdapter());
     const stageData = await pipeline.loadStage({
         rows: 2, cols: 2, hair: [{ r: 0, c: 0 }], text: ['A'], colors: []
     });
@@ -21,7 +22,8 @@ test('StagePipeline - loads stage DTO cleanly', async () => {
 });
 
 test('GameOrchestrator - loadAndStartStage, shave, and callbacks', async () => {
-    const orchestrator = new GameOrchestrator();
+    const { createCompositionRoot } = await import('../../src/app/composition-root.js');
+    const orchestrator = createCompositionRoot().orchestrator;
     let updatedSnapshot = null;
     let gameOverSnapshot = null;
 
@@ -110,7 +112,8 @@ test('BrushController - interpolates line coordinates during drag movement', asy
 });
 
 test('GameOrchestrator - ignores shave() when session status is not RUNNING', async () => {
-    const orchestrator = new GameOrchestrator();
+    const { createCompositionRoot } = await import('../../src/app/composition-root.js');
+    const orchestrator = createCompositionRoot().orchestrator;
     let updateCalled = false;
     orchestrator.onUpdate(() => { updateCalled = true; });
 
@@ -410,8 +413,15 @@ test('BrushController - tests all mouse, touch, wheel, and window events for 100
         addEventListener: (evt, fn) => { eventListeners[evt] = fn; }
     };
 
-    let shaveCount = 0;
-    const controller = new BrushController(mockCanvas, mockCursor, () => { shaveCount++; });
+    let shaveLog = [];
+    const controller = new BrushController(mockCanvas, mockCursor, (r, c) => { shaveLog.push({ r, c }); });
+
+    controller.isMouseDown = true;
+    controller.lastR = 50;
+    controller.lastC = 50;
+    shaveLog = [];
+    controller.handlePointerMove(-100, -100); // Pointer moves out of bounds
+    assert.equal(shaveLog.some(item => item.r < 0 || item.c < 0), false, 'Out of bounds pointer move must NOT trigger shave at sentinel (-1, -1)');
 
     controller.setRadius(4);
     assert.equal(controller.brushRadius, 4);
@@ -443,7 +453,7 @@ test('BrushController - tests all mouse, touch, wheel, and window events for 100
     if (eventListeners['touchmove']) eventListeners['touchmove']({ cancelable: true, preventDefault: () => {}, touches: [{ clientX: 15, clientY: 15 }] });
     if (eventListeners['touchend']) eventListeners['touchend']();
 
-    assert.ok(shaveCount > 0);
+    assert.ok(shaveLog.length > 0);
     delete global.window;
 });
 

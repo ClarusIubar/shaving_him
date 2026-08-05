@@ -2,12 +2,14 @@
  * Application Layer: GameOrchestrator
  * Controls game loop clock, state machine transitions, and UI event command dispatching.
  */
-import { ShaveSession, SessionStatus } from '../domain/shave-session.js';
 import { StagePipeline } from './stage-pipeline.js';
+import { ShaveSession, SessionStatus } from '../domain/shave-session.js';
+import { GridGeometry } from '../domain/grid-geometry.js';
 
 export class GameOrchestrator {
-    constructor(stagePipeline = new StagePipeline()) {
+    constructor(stagePipeline = new StagePipeline(), gridGeometry = new GridGeometry(280, 219, 6, 6)) {
         this.pipeline = stagePipeline;
+        this.geometry = gridGeometry;
         this.session = null;
         this.currentStageData = null;
         this.timerId = null;
@@ -41,7 +43,7 @@ export class GameOrchestrator {
 
     async loadAndStartStage(stageSource = 'game_data.json', maxTime = 60, onProgress = null) {
         this.stopTimer();
-        const stageData = await this.pipeline.loadStage(stageSource, 280, 219, {}, onProgress);
+        const stageData = await this.pipeline.loadStage(stageSource, this.geometry.cols, this.geometry.rows, {}, onProgress);
         this.currentStageData = stageData;
         this.session = new ShaveSession(stageData, maxTime);
         this.session.start();

@@ -12,13 +12,4 @@ export class ImageProcessorPort {
     async processImageSource(source, targetWidth = 280, targetHeight = 219) {
         throw new Error('ImageProcessorPort processImageSource method not implemented');
     }
-
-    /**
-     * @param {Object} imageData 
-     * @param {number} threshold 
-     * @returns {Object} ImageData
-     */
-    processSkinSmoothing(imageData, threshold = 80) {
-        throw new Error('ImageProcessorPort processSkinSmoothing method not implemented');
-    }
 }

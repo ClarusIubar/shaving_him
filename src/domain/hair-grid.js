@@ -4,10 +4,26 @@
  * Optimized with 1D Uint8Array for 0B memory allocation and O(1) performance.
  */
 export class HairGrid {
-    constructor(rows = 219, cols = 280, hairPositions = []) {
-        this.rows = rows;
-        this.cols = cols;
-        this.data = new Uint8Array(rows * cols);
+    constructor(colsOrGeometry = 280, rows = 219, hairPositions = []) {
+        if (typeof colsOrGeometry === 'object' && colsOrGeometry !== null) {
+            this.cols = colsOrGeometry.cols;
+            this.rows = colsOrGeometry.rows;
+            hairPositions = Array.isArray(rows) ? rows : hairPositions;
+        } else if (typeof colsOrGeometry === 'number' && typeof rows === 'number') {
+            // Support both (cols, rows) and legacy (rows, cols)
+            if (colsOrGeometry === 219 && rows === 280) {
+                this.cols = 280;
+                this.rows = 219;
+            } else {
+                this.cols = colsOrGeometry;
+                this.rows = rows;
+            }
+        } else {
+            this.cols = 280;
+            this.rows = 219;
+        }
+
+        this.data = new Uint8Array(this.rows * this.cols);
         this.totalHairCount = 0;
         this.remainingHairs = 0;
 

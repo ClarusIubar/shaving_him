@@ -2,19 +2,31 @@
  * Interface Layer: CanvasRenderer
  * High-performance ASCII grid drawing with Dirty Region partial redraw and rAF batching.
  */
+import { GridGeometry } from '../domain/grid-geometry.js';
+
 export class CanvasRenderer {
-    constructor(canvasElement, cols = 280, rows = 219, fontW = 6, fontH = 6) {
+    constructor(canvasElement, colsOrGeometry = 280, rows = 219, fontW = 6, fontH = 6) {
         this.canvas = canvasElement;
-        this.cols = cols;
-        this.rows = rows;
-        this.fontW = fontW;
-        this.fontH = fontH;
+        if (typeof colsOrGeometry === 'object' && colsOrGeometry !== null) {
+            this.geometry = colsOrGeometry;
+            this.cols = colsOrGeometry.cols;
+            this.rows = colsOrGeometry.rows;
+            this.fontW = colsOrGeometry.cellWidth;
+            this.fontH = colsOrGeometry.cellHeight;
+        } else {
+            this.geometry = new GridGeometry(colsOrGeometry, rows, fontW, fontH);
+            this.cols = colsOrGeometry;
+            this.rows = rows;
+            this.fontW = fontW;
+            this.fontH = fontH;
+        }
 
         this.dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
 
         this.setupCanvas();
         this.rafId = null;
         this.pendingDirtyCells = [];
+        this.needsFullRedraw = false;
         this.currentStageData = null;
         this.currentHairGrid = null;
         this.particles = [];
@@ -52,18 +64,16 @@ export class CanvasRenderer {
         }
 
         if (dirtyCells && dirtyCells.length > 0) {
-            if (!Array.isArray(this.pendingDirtyCells)) {
-                this.pendingDirtyCells = [];
-            }
             this.pendingDirtyCells.push(...dirtyCells);
         } else {
-            this.pendingDirtyCells = null; // Forces full redraw
+            this.needsFullRedraw = true; // Signal full redraw required
         }
 
         if (!this.rafId) {
             this.rafId = requestAnimationFrame(() => {
                 this.rafId = null;
-                const dirty = this.pendingDirtyCells;
+                const dirty = this.needsFullRedraw ? null : this.pendingDirtyCells;
+                this.needsFullRedraw = false;
                 this.pendingDirtyCells = [];
                 this.render(this.currentStageData, this.currentHairGrid, dirty);
             });

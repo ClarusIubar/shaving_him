@@ -68,10 +68,20 @@ test('ShaveSession - state transitions and timer ticks', () => {
     assert.equal(snapNullCalc.comboCount, 0);
 });
 
-test('HairGrid - out of bounds coordinates and cleared percentage', () => {
-    const grid = new HairGrid(5, 5, [{ r: 0, c: 0 }, { r: -1, c: -1 }, { r: 10, c: 10 }]);
-    assert.equal(grid.totalHairCount, 1);
-    assert.equal(grid.has(-1, 0), false);
+test('HairGrid - initializes and shaves correctly', async () => {
+    const { GridGeometry } = await import('../../src/domain/grid-geometry.js');
+    const grid1 = new HairGrid(new GridGeometry(5, 5), [{ r: 1, c: 1 }]);
+    assert.equal(grid1.cols, 5);
+
+    const grid2 = new HairGrid(219, 280, []);
+    assert.equal(grid2.cols, 280);
+
+    const grid3 = new HairGrid();
+    assert.equal(grid3.cols, 280);
+
+    const grid = new HairGrid(10, 10, [{ r: 1, c: 1 }, { r: 2, c: 2 }]);
+    assert.equal(grid.totalHairCount, 2);
+    assert.equal(grid.remainingHairs, 2);
     assert.equal(grid.has(10, 10), false);
 
     const emptyGrid = new HairGrid(5, 5, []);

@@ -1,20 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { bootstrapApp, KEY_BRUSH_RADIUS_MAP } from '../../src/main.js';
+import { ShaveSession } from '../../src/domain/shave-session.js';
 
-test('main.js - bootstrapApp returns null when doc or canvas is missing', () => {
-    assert.equal(bootstrapApp(null, null), null);
-
-    const mockDocNoCanvas = {
-        getElementById: () => null
-    };
-    assert.equal(bootstrapApp(mockDocNoCanvas, null), null);
-});
-
-test('main.js - bootstrapApp wires orchestrator, HUD, sound, renderer, and event listeners', async () => {
+test('main.js - bootstrapApp full execution and 100% coverage test', async () => {
     const docListeners = {};
     const winListeners = {};
-    const elements = {};
 
     const mockCanvas = {
         id: 'gameCanvas',
@@ -26,37 +16,33 @@ test('main.js - bootstrapApp wires orchestrator, HUD, sound, renderer, and event
 
     const mockSoundBtn = { addEventListener: (evt, fn) => { docListeners['soundBtn_' + evt] = fn; } };
     const mockChangeStageBtn = { addEventListener: (evt, fn) => { docListeners['changeStage_' + evt] = fn; } };
-    const mockPresetBtn = { addEventListener: (evt, fn) => { docListeners['preset_' + evt] = fn; } };
-    const mockCustomBtn = { addEventListener: (evt, fn) => { docListeners['custom_' + evt] = fn; } };
     const mockExportBtn = { addEventListener: (evt, fn) => { docListeners['export_' + evt] = fn; } };
-
-    let classRemoved = false;
-    let classAdded = false;
     const mockBrushBtn = {
-        classList: {
-            remove: () => { classRemoved = true; },
-            add: () => { classAdded = true; }
-        },
+        classList: { remove: () => {}, add: () => {} },
         getAttribute: () => '3',
         addEventListener: (evt, fn) => { docListeners['brushBtn_' + evt] = fn; }
     };
+    const mockPresetCard = { getAttribute: () => 'preset1', addEventListener: (evt, fn) => { docListeners['preset_' + evt] = fn; } };
+    const mockPhotoInput = { addEventListener: (evt, fn) => { docListeners['photo_' + evt] = fn; } };
 
     const mockDoc = {
-        readyState: 'complete',
+        readyState: 'loading',
+        body: { appendChild: () => {} },
         getElementById: (id) => {
             if (id === 'gameCanvas') return mockCanvas;
             if (id === 'razorCursor') return { style: {} };
             if (id === 'gameContainer') return { style: {} };
             if (id === 'changeStageBtn') return mockChangeStageBtn;
             if (id === 'soundToggleBtn') return mockSoundBtn;
-            if (id === 'startPresetBtn') return mockPresetBtn;
-            if (id === 'startCustomBtn') return mockCustomBtn;
+            if (id === 'startModal') return { style: {} };
+            if (id === 'photoInput') return mockPhotoInput;
             if (id === 'exportPngBtn') return mockExportBtn;
-            if (id === 'loadingOverlay') return { style: {}, appendChild: () => {}, querySelector: () => null };
+            if (id === 'loadingOverlay') return { style: {}, appendChild: () => {}, querySelector: () => ({ style: {}, textContent: '' }) };
             return null;
         },
         querySelectorAll: (selector) => {
             if (selector === '.brush-btn') return [mockBrushBtn];
+            if (selector === '.preset-card') return [mockPresetCard];
             return [];
         },
         createElement: () => ({ style: {}, classList: { add: () => {}, remove: () => {} }, appendChild: () => {}, textContent: '' }),
@@ -66,13 +52,23 @@ test('main.js - bootstrapApp wires orchestrator, HUD, sound, renderer, and event
 
     const mockWin = {
         requestAnimationFrame: (cb) => { cb(); return 1; },
-        addEventListener: (evt, fn) => { winListeners[evt] = fn; }
+        addEventListener: (evt, fn) => {
+            winListeners[evt] = fn;
+            if (evt === 'DOMContentLoaded') fn();
+        }
     };
     global.requestAnimationFrame = mockWin.requestAnimationFrame;
-
     global.document = mockDoc;
     global.window = mockWin;
 
+    const { bootstrapApp, initAutoBootstrap } = await import('../../src/main.js');
+
+    // Test null doc or missing canvas
+    assert.equal(bootstrapApp(null, null), null);
+    assert.equal(bootstrapApp({ getElementById: () => null }, null), null);
+    assert.equal(initAutoBootstrap(null, null), null);
+
+    // Test full bootstrapApp initialization
     const app = bootstrapApp(mockDoc, mockWin);
     assert.ok(app !== null);
 
@@ -100,9 +96,8 @@ test('main.js - bootstrapApp wires orchestrator, HUD, sound, renderer, and event
         assert.equal(exportCalled, true);
     }
 
-    // Test keydown shortcuts (input activeElement skip, number 2 -> radius 3, R -> restart)
+    // Test keydown shortcuts
     if (winListeners['keydown']) {
-        // Active input tag -> skipped
         mockDoc.activeElement = { tagName: 'input' };
         winListeners['keydown']({ key: '2' });
 
@@ -119,31 +114,49 @@ test('main.js - bootstrapApp wires orchestrator, HUD, sound, renderer, and event
     app.brushController.onShave(0, 0, 1);
 
     // Test orchestrator update notification & combo sound
+    let comboSoundPlayed = false;
+    app.sound.playComboSound = () => { comboSoundPlayed = true; };
     app.orchestrator.currentStageData = { cols: 10, rows: 10, textGrid: [] };
-    app.orchestrator.session = { hairGrid: {}, getSnapshot: () => ({ comboCount: 3 }) };
-    app.orchestrator.notifyUpdate(app.orchestrator.session.getSnapshot(), false);
+    app.orchestrator.session = new ShaveSession({ cols: 10, rows: 10, hairPositions: [{ r: 0, c: 0 }] }, 60);
+    app.orchestrator.session.start();
+    app.orchestrator.notifyUpdate(null, false);
 
-    let restartCalled = false;
-    app.orchestrator.restart = () => { restartCalled = true; };
-    app.hud.showGameOver = (snap, cb) => { cb(); };
-    app.orchestrator.notifyGameOver({ status: 'WON', percentageCleared: 80 });
-    assert.equal(restartCalled, true);
+    // Trigger update with comboCount > 1 via scoreCalculator.shaveStreak
+    app.orchestrator.session.scoreCalculator.shaveStreak = 3;
+    app.orchestrator.notifyUpdate(null, false);
+    assert.equal(comboSoundPlayed, true);
 
-    // Test preset button click with mock loadAndStartStage
+    // Test successful startStageWithSource
+    let winSoundPlayed = false;
+    app.sound.playWinSound = () => { winSoundPlayed = true; };
     app.orchestrator.loadAndStartStage = async (src, sec, cb) => {
         if (cb) cb('Loading...', 50);
-        return { cols: 10, rows: 10, textGrid: [] };
+        const stageData = { cols: 10, rows: 10, textGrid: [] };
+        app.orchestrator.currentStageData = stageData;
+        app.orchestrator.session = new ShaveSession(stageData, 60);
+        app.orchestrator.session.start();
+        return stageData;
     };
     await app.startStageWithSource('game_data.json');
 
+    // Test Game Over victory branch
+    let restartCalled = false;
+    app.orchestrator.restart = () => { restartCalled = true; };
+    app.hud.showGameOver = (snap, cb) => { if (cb) cb(); };
+
+    // Shave the only hair cell to achieve WON status
+    app.orchestrator.session.shave(0, 0, 1);
+    app.orchestrator.notifyGameOver();
+    assert.equal(winSoundPlayed, true);
+    assert.equal(restartCalled, true);
+
+    // Test preset card click & photo input change
     if (docListeners['preset_click']) {
-        docListeners['preset_click']();
+        docListeners['preset_click']({ currentTarget: mockPresetCard });
     }
 
-    // Test custom photo button click
-    app.hud.selectedFile = { name: 'photo.jpg' };
-    if (docListeners['custom_click']) {
-        docListeners['custom_click']();
+    if (docListeners['photo_change']) {
+        docListeners['photo_change']({ target: { files: [{ name: 'test.png' }] } });
     }
 
     // Test startStageWithSource error branch
@@ -151,34 +164,10 @@ test('main.js - bootstrapApp wires orchestrator, HUD, sound, renderer, and event
     global.alert = () => {};
     await app.startStageWithSource('invalid');
 
-    app.orchestrator.notifyGameOver({ status: 'WON', percentageCleared: 100 });
-    assert.equal(restartCalled, true);
-});
-
-test('main.js - auto bootstrap on DOMContentLoaded or ready state', async () => {
-    const docListeners = {};
-    const winListeners = {};
-    const mockCanvas = {
-        id: 'gameCanvas',
-        width: 1680, height: 1314, style: {},
-        getContext: () => ({ scale: () => {}, fillRect: () => {}, fillText: () => {} }),
-        getBoundingClientRect: () => ({ left: 0, top: 0, width: 1680, height: 1314 }),
-        addEventListener: () => {}
-    };
-
-    global.document = {
-        readyState: 'loading',
-        getElementById: (id) => id === 'gameCanvas' ? mockCanvas : null,
-        querySelectorAll: () => [],
-        activeElement: { tagName: 'div' },
-        addEventListener: (evt, fn) => { docListeners[evt] = fn; }
-    };
-    global.window = {
-        addEventListener: (evt, fn) => { winListeners[evt] = fn; }
-    };
-
-    // Fast-forward DOMContentLoaded registration
-    if (winListeners['DOMContentLoaded']) winListeners['DOMContentLoaded']();
+    // Test initAutoBootstrap with readyState complete
+    mockDoc.readyState = 'complete';
+    const appComplete = initAutoBootstrap(mockDoc, mockWin);
+    assert.ok(appComplete !== null);
 
     delete global.document;
     delete global.window;

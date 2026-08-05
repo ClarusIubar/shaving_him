@@ -11,7 +11,19 @@ export class DeltaDiffEngineAdapter extends DiffEnginePort {
      * @param {Array<Array<{r:number, g:number, b:number}>>} skinBaseColors 
      * @param {number} threshold - Minimum brightness difference to count as hair
      */
-    computeHairCoordinates(originalColors, skinBaseColors, threshold = 25) {
+    computeHairCoordinates(originalColors, skinBaseColors = null, threshold = 25, skinLumThreshold = 80) {
+        if (!originalColors || !Array.isArray(originalColors)) return { hairPositions: [], skinBaseColors: [] };
+
+        if (!skinBaseColors) {
+            const avgSkinColor = this.calculateAverageSkinTone(originalColors, skinLumThreshold);
+            skinBaseColors = originalColors.map(row =>
+                row.map(([r, g, b]) => {
+                    const lum = (r + g + b) / 3;
+                    return lum < skinLumThreshold ? avgSkinColor : [r, g, b];
+                })
+            );
+        }
+
         const hairPositions = [];
         const rows = Math.min(originalColors.length, skinBaseColors.length);
 
@@ -32,6 +44,11 @@ export class DeltaDiffEngineAdapter extends DiffEnginePort {
                     hairPositions.push({ r, c });
                 }
             }
+        }
+
+        if (Array.isArray(hairPositions)) {
+            hairPositions.hairPositions = hairPositions;
+            hairPositions.skinBaseColors = skinBaseColors;
         }
 
         return hairPositions;

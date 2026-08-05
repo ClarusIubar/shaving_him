@@ -4,12 +4,12 @@
  */
 export class AsciiConverterPort {
     /**
-     * @param {Object} imageData 
+     * @param {Array<Array<[number, number, number]>>} colors 
      * @param {number} targetCols 
      * @param {number} targetRows 
      * @returns {{ textGrid: string[], colorGrid: Array<Array<[number, number, number]>> }}
      */
-    convertToAsciiGrid(imageData, targetCols = 280, targetRows = 219) {
+    convertToAsciiGrid(colors, targetCols = 280, targetRows = 219) {
         throw new Error('AsciiConverterPort method not implemented');
     }
 }

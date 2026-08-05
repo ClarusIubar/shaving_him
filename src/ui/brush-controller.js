@@ -5,7 +5,7 @@
 import { GridGeometry } from '../domain/grid-geometry.js';
 
 export class BrushController {
-    constructor(canvas, cursor, onShaveCallback, gridGeometry = new GridGeometry(280, 219, 8, 8)) {
+    constructor(canvas, cursor, onShaveCallback, gridGeometry = new GridGeometry(280, 219, 6, 6)) {
         this.canvas = canvas;
         this.cursor = cursor;
         this.onShave = onShaveCallback;
@@ -142,6 +142,12 @@ export class BrushController {
 
     handlePointerMove(clientX, clientY) {
         const { row, col } = this.getGridCoords(clientX, clientY);
+
+        if (row < 0 || col < 0 || row >= this.rows || col >= this.cols) {
+            this.lastR = -1;
+            this.lastC = -1;
+            return;
+        }
 
         if (this.isMouseDown && this.lastR !== -1 && this.lastC !== -1 && (this.lastR !== row || this.lastC !== col)) {
             // Line interpolation (Bresenham's line algorithm)

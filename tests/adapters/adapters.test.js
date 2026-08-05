@@ -70,7 +70,11 @@ test('CanvasAsciiConverterAdapter - maps color matrix to ASCII grid', () => {
 
 test('StagePipeline - computes dynamic average skin tone and loads custom HTMLImageElement source', async () => {
     const { StagePipeline } = await import('../../src/app/stage-pipeline.js');
-    const pipeline = new StagePipeline();
+    const { StaticJsonStageAdapter } = await import('../../src/adapters/static-json-stage.js');
+    const { CanvasImageProcessorAdapter } = await import('../../src/adapters/canvas-image-processor.js');
+    const { DeltaDiffEngineAdapter } = await import('../../src/adapters/delta-diff-engine.js');
+    const { CanvasAsciiConverterAdapter } = await import('../../src/adapters/canvas-ascii-converter.js');
+    const pipeline = new StagePipeline(new StaticJsonStageAdapter(), new CanvasImageProcessorAdapter(), new DeltaDiffEngineAdapter(), new CanvasAsciiConverterAdapter());
     const mockColors = [
         [[10, 10, 10], [200, 180, 160]],
         [[220, 200, 180], [10, 10, 10]]
@@ -101,7 +105,8 @@ test('StagePipeline - computes dynamic average skin tone and loads custom HTMLIm
 
 test('StagePipeline - ignores transparent pixels (alpha < 128) in skin tone calculation', async () => {
     const { StagePipeline } = await import('../../src/app/stage-pipeline.js');
-    const pipeline = new StagePipeline();
+    const { DeltaDiffEngineAdapter } = await import('../../src/adapters/delta-diff-engine.js');
+    const pipeline = new StagePipeline(null, null, new DeltaDiffEngineAdapter(), null);
     const mockColorsWithAlpha = [
         [[255, 255, 255, 0], [200, 180, 160, 255]], // First pixel is transparent white (alpha=0)
         [[220, 200, 180, 255], [0, 0, 0, 0]]        // Fourth pixel is transparent black (alpha=0)
@@ -195,7 +200,6 @@ test('Abstract Ports - throw unfulfilled contract errors', async () => {
 
     const imgPort = new ImageProcessorPort();
     await assert.rejects(() => imgPort.processImageSource(null), /not implemented/);
-    assert.throws(() => imgPort.processSkinSmoothing(null), /not implemented/);
 
     const diffPort = new DiffEnginePort();
     assert.throws(() => diffPort.computeHairCoordinates(null, null), /not implemented/);
@@ -213,17 +217,6 @@ test('CanvasImageProcessorAdapter - tests skin smoothing and image loading error
     await assert.rejects(() => processor.processImageSource(123), /Invalid image source type/);
 
     // Mock ImageData skin smoothing
-    const mockData = {
-        width: 3, height: 3,
-        data: new Uint8ClampedArray([
-            200, 180, 160, 255,   200, 180, 160, 255,   200, 180, 160, 255,
-            200, 180, 160, 255,    10,  10,  10, 255,   200, 180, 160, 255,
-            200, 180, 160, 255,   200, 180, 160, 255,   200, 180, 160, 255
-        ])
-    };
-    const smoothed = processor.processSkinSmoothing(mockData, 80);
-    assert.ok(smoothed.data[12] > 50);
-
     // loadImageFile file null guard
     await assert.rejects(() => processor.loadImageFile(null), /파일이 지정되지 않았습니다/);
 
@@ -361,15 +354,19 @@ test('CanvasRenderer - tests resize setupCanvas, empty cell background fill, par
     };
     const renderer = new CanvasRenderer(mockCanvas, 2, 2);
 
-    global.requestAnimationFrame = (cb) => { return 1; }; // Async rAF mock (cb not executed immediately)
+    let rafCb = null;
+    global.requestAnimationFrame = (cb) => { rafCb = cb; return 1; };
 
-    // Dynamic dimension resize in requestRender & render (lines 77-80)
+    let capturedDirty = undefined;
+    renderer.render = (sd, hg, dirty) => { capturedDirty = dirty; };
+
     const newStage = { cols: 10, rows: 10, textGrid: ['          '], colorGrid: null };
-    renderer.requestRender(newStage, null, null); // Sets pendingDirtyCells = null
-    // Next call with dirtyCells must NOT throw TypeError
-    assert.doesNotThrow(() => {
-        renderer.requestRender(newStage, null, [{ r: 1, c: 1 }]);
-    });
+    renderer.requestRender(newStage, null, null); // Full redraw requested (needsFullRedraw = true)
+    renderer.requestRender(newStage, null, [{ r: 1, c: 1 }]); // Partial dirty cell request in same frame
+
+    // Execute rAF callback
+    rafCb();
+    assert.equal(capturedDirty, null, 'Full redraw signal (null) must NOT be overwritten by subsequent dirty cells before rAF');
 
     const resizeStage = { cols: 5, rows: 5, textGrid: ['     ', '     ', '     ', '     ', '     '], colorGrid: null };
     renderer.render(resizeStage, null, null);

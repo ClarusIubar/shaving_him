@@ -9,6 +9,7 @@ import { BrushController } from './ui/brush-controller.js';
 import { HUD } from './ui/hud.js';
 import { SoundEffects } from './ui/sound-effects.js';
 import { SessionStatus } from './domain/shave-session.js';
+import { GamePolicy } from './domain/game-policy.js';
 
 export const KEY_BRUSH_RADIUS_MAP = Object.freeze({
     '1': 1,
@@ -29,7 +30,8 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
 
     const compositionRoot = createCompositionRoot(customAdapters);
     const orchestrator = compositionRoot.orchestrator;
-    const renderer = new CanvasRenderer(canvas);
+    const geometry = compositionRoot.geometry;
+    const renderer = new CanvasRenderer(canvas, geometry);
     const hud = new HUD();
     const sound = new SoundEffects();
 
@@ -43,7 +45,7 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
         if (removed > 0) {
             sound.playShaveSound();
         }
-    });
+    }, geometry);
 
     // Sound toggle button in HUD
     if (hud.soundToggleBtn) {
@@ -109,9 +111,11 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
         }
     });
 
+    const gamePolicy = new GamePolicy();
+
     // Subscribe to Game Over
     orchestrator.onGameOver(snapshot => {
-        if (snapshot.status === SessionStatus.WON || snapshot.percentageCleared === 100) {
+        if (gamePolicy.isVictory(snapshot)) {
             sound.playWinSound();
         }
         hud.showGameOver(snapshot, () => {
@@ -139,21 +143,11 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
         }
     };
 
-    // Preset Stage Button Click
-    if (hud.startPresetBtn) {
-        hud.startPresetBtn.addEventListener('click', () => {
-            startStageWithSource('game_data.json');
-        });
-    }
-
-    // Custom Photo Stage Button Click
-    if (hud.startCustomBtn) {
-        hud.startCustomBtn.addEventListener('click', () => {
-            if (hud.selectedFile) {
-                startStageWithSource(hud.selectedFile);
-            }
-        });
-    }
+    // Start Modal Preset & Custom Photo File Selection
+    hud.initStartModalEvents(
+        (preset) => startStageWithSource(preset === 'preset1' ? 'game_data.json' : preset),
+        (file) => startStageWithSource(file)
+    );
 
     // Export PNG Image Button in Game Over overlay
     if (hud.exportPngBtn) {
@@ -175,10 +169,17 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
     };
 };
 
-if (typeof document !== 'undefined') {
-    if (document.readyState === 'loading') {
-        window.addEventListener('DOMContentLoaded', () => bootstrapApp(document, window));
-    } else {
-        bootstrapApp(document, window);
+export function initAutoBootstrap(doc = (typeof document !== 'undefined' ? document : null), win = (typeof window !== 'undefined' ? window : null)) {
+    if (!doc) return null;
+    if (doc.readyState === 'loading') {
+        if (win && typeof win.addEventListener === 'function') {
+            win.addEventListener('DOMContentLoaded', () => bootstrapApp(doc, win));
+        }
+        return null;
     }
+    return bootstrapApp(doc, win);
+}
+
+if (typeof document !== 'undefined') {
+    initAutoBootstrap(document, window);
 }
