@@ -2,23 +2,29 @@
  * Interface Layer: BrushController
  * Optimized with cached getBoundingClientRect and GPU transform translate3d positioning.
  */
+import { GridGeometry } from '../domain/grid-geometry.js';
+
 export class BrushController {
-    constructor(canvasElement, cursorElement, onShaveCallback) {
-        this.canvas = canvasElement;
-        this.cursor = cursorElement;
+    constructor(canvas, cursor, onShaveCallback, gridGeometry = new GridGeometry(280, 219, 8, 8)) {
+        this.canvas = canvas;
+        this.cursor = cursor;
         this.onShave = onShaveCallback;
-        
-        this.brushRadius = 1; // Default: 3x3 (radius 1)
+        this.geometry = gridGeometry;
+        this.cols = gridGeometry.cols;
+        this.rows = gridGeometry.rows;
+        this.fontW = gridGeometry.cellWidth;
+        this.fontH = gridGeometry.cellHeight;
+        this.brushRadius = 1;
         this.isMouseDown = false;
-        this.fontW = 6;
-        this.fontH = 6;
         this.lastR = -1;
         this.lastC = -1;
         this.rect = null;
         this.radiusChangeCallbacks = [];
 
-        this.updateRect();
-        this.initEvents();
+        if (this.canvas) {
+            this.updateRect();
+            this.initEvents();
+        }
     }
 
     updateRect() {
@@ -27,15 +33,11 @@ export class BrushController {
         }
     }
 
-    setRadius(radius) {
-        const newRadius = Math.max(1, Math.min(7, radius)); // Radius 1~7
-        const changed = this.brushRadius !== newRadius;
-        this.brushRadius = newRadius;
+    setRadius(newRadius) {
+        this.brushRadius = Math.max(1, Math.min(5, newRadius));
         this.updateCursorSize();
-        if (changed) {
-            for (let i = 0; i < this.radiusChangeCallbacks.length; i++) {
-                this.radiusChangeCallbacks[i](this.brushRadius);
-            }
+        for (let i = 0; i < this.radiusChangeCallbacks.length; i++) {
+            this.radiusChangeCallbacks[i](this.brushRadius);
         }
     }
 
@@ -53,13 +55,7 @@ export class BrushController {
 
     getGridCoords(clientX, clientY) {
         if (!this.rect) this.updateRect();
-        const scaleX = this.canvas.width / this.rect.width;
-        const scaleY = this.canvas.height / this.rect.height;
-        const mx = (clientX - this.rect.left) * scaleX;
-        const my = (clientY - this.rect.top) * scaleY;
-        const col = Math.floor(mx / this.fontW);
-        const row = Math.floor(my / this.fontH);
-        return { row, col };
+        return this.geometry.clientToGrid(clientX, clientY, this.rect);
     }
 
     initEvents() {

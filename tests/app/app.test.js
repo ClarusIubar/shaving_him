@@ -5,6 +5,11 @@ import { GameOrchestrator } from '../../src/app/game-orchestrator.js';
 import { StagePipeline } from '../../src/app/stage-pipeline.js';
 import { SessionStatus } from '../../src/domain/shave-session.js';
 
+const globalWindowListeners = {};
+global.window = {
+    addEventListener: (evt, fn) => { globalWindowListeners[evt] = fn; }
+};
+
 test('StagePipeline - loads stage DTO cleanly', async () => {
     const pipeline = new StagePipeline();
     const stageData = await pipeline.loadStage({
@@ -46,11 +51,26 @@ test('GameOrchestrator - loadAndStartStage, shave, and callbacks', async () => {
 
 test('BrushController - notifies onRadiusChange callback when setRadius is called', async () => {
     let mouseUpCb = null;
-    global.window = { addEventListener: (evt, fn) => { if (evt === 'mouseup') mouseUpCb = fn; } };
+    let resizeCb = null;
+    let scrollCb = null;
+    global.window = {
+        addEventListener: (evt, fn) => {
+            if (evt === 'mouseup') mouseUpCb = fn;
+            if (evt === 'resize') resizeCb = fn;
+            if (evt === 'scroll') scrollCb = fn;
+        }
+    };
+    const mockCanvas1 = {
+        width: 1680, height: 1314,
+        getBoundingClientRect: () => ({ left: 0, top: 0, width: 1680, height: 1314 }),
+        addEventListener: () => {}
+    };
     const { BrushController } = await import('../../src/ui/brush-controller.js');
-    const controller = new BrushController(null, null, () => {});
+    const controller = new BrushController(mockCanvas1, null, () => {});
 
     if (mouseUpCb) mouseUpCb();
+    if (resizeCb) resizeCb();
+    if (scrollCb) scrollCb();
 
     let changedRadius = null;
     controller.onRadiusChange((newRadius) => {
@@ -66,14 +86,16 @@ test('BrushController - interpolates line coordinates during drag movement', asy
     const { BrushController } = await import('../../src/ui/brush-controller.js');
     const shavedCoords = [];
     const mockCanvas = {
-        width: 280, height: 219,
-        getBoundingClientRect: () => ({ left: 0, top: 0, width: 280, height: 219 }),
+        width: 1680, height: 1314,
+        getBoundingClientRect: () => ({ left: 0, top: 0, width: 1680, height: 1314 }),
         addEventListener: () => {}
     };
 
     const controller = new BrushController(mockCanvas, null, (r, c) => {
         shavedCoords.push({ r, c });
     });
+
+    if (globalWindowListeners['mouseup']) globalWindowListeners['mouseup']();
 
     controller.isMouseDown = true;
     controller.handlePointerMove(0, 0);   // row: 0, col: 0
@@ -373,18 +395,17 @@ test('HUD - modal visibility methods showStartModal, hideStartModal, showGameOve
 });
 
 test('BrushController - tests all mouse, touch, wheel, and window events for 100% UI coverage', async () => {
+    const windowListeners = {};
+    global.window = {
+        addEventListener: (evt, fn) => { windowListeners[evt] = fn; }
+    };
     const { BrushController } = await import('../../src/ui/brush-controller.js');
     const eventListeners = {};
     const mockCursor = { style: { transform: '', opacity: '', fontSize: '' } };
     const mockCanvas = {
-        width: 280, height: 219,
-        getBoundingClientRect: () => ({ left: 0, top: 0, width: 280, height: 219 }),
+        width: 1680, height: 1314,
+        getBoundingClientRect: () => ({ left: 0, top: 0, width: 1680, height: 1314 }),
         addEventListener: (evt, fn) => { eventListeners[evt] = fn; }
-    };
-
-    const windowListeners = {};
-    global.window = {
-        addEventListener: (evt, fn) => { windowListeners[evt] = fn; }
     };
 
     let shaveCount = 0;
