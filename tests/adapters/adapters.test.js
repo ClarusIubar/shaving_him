@@ -110,3 +110,47 @@ test('CanvasRenderer - provides exportPng method for PNG snapshot download', asy
     
     renderer.exportPng('test.png'); // Triggers exportPng gracefully without DOM errors in Node
 });
+
+test('StaticJsonStageAdapter - handles fetch status non-ok and falls back to window.EMBEDDED_GAME_DATA', async () => {
+    const adapter = new StaticJsonStageAdapter(async (url) => {
+        return { ok: false, status: 404 };
+    });
+
+    global.window = { EMBEDDED_GAME_DATA: { rows: 1, cols: 1, text: ['X'], colors: [] } };
+    const stage = await adapter.loadStage('nonexistent.json');
+    assert.equal(stage.rows, 1);
+    assert.equal(stage.textGrid[0], 'X');
+    delete global.window;
+});
+
+test('CanvasRenderer - renders full grid and partial dirty region with particles', async () => {
+    const { CanvasRenderer } = await import('../../src/ui/canvas-renderer.js');
+    let fillTextCount = 0;
+    const mockCanvas = {
+        width: 20, height: 20,
+        style: {},
+        getContext: () => ({
+            scale: () => {},
+            fillRect: () => {},
+            fillText: () => { fillTextCount++; }
+        })
+    };
+
+    const renderer = new CanvasRenderer(mockCanvas, 2, 2);
+    const mockStage = {
+        cols: 2, rows: 2,
+        textGrid: ['AB', 'CD'],
+        colorGrid: [[ [255, 255, 255], [0, 0, 0] ], [ [100, 100, 100], [200, 200, 200] ]]
+    };
+    const hairGrid = new Set(['0,1']);
+    const mockHairSet = { has: (r, c) => r === 0 && c === 1 };
+
+    // Full render
+    renderer.render(mockStage, mockHairSet, null);
+    assert.ok(fillTextCount >= 4);
+
+    // Dirty partial render
+    fillTextCount = 0;
+    renderer.render(mockStage, mockHairSet, [{ r: 0, c: 1 }]);
+    assert.ok(fillTextCount >= 1);
+});

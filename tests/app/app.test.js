@@ -166,4 +166,29 @@ test('SoundEffects - initializes and toggles enable state correctly', async () =
     sound.playShaveSound(); // Silent when disabled
     sound.playComboSound(5);
     sound.playWinSound();
+
+    // Re-enable and test audio context synthesis with mock AudioContext
+    sound.toggle();
+    global.window = {
+        AudioContext: class {
+            constructor() {
+                this.sampleRate = 44100;
+                this.currentTime = 0;
+                this.destination = {};
+                this.state = 'running';
+            }
+            createBuffer() { return { getChannelData: () => new Float32Array(100) }; }
+            createBufferSource() { return { buffer: null, connect: () => {}, start: () => {}, stop: () => {} }; }
+            createBiquadFilter() { return { type: '', frequency: { setValueAtTime: () => {} }, Q: { setValueAtTime: () => {} }, connect: () => {} }; }
+            createOscillator() { return { type: '', frequency: { setValueAtTime: () => {} }, connect: () => {}, start: () => {}, stop: () => {} }; }
+            createGain() { return { gain: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} }, connect: () => {} }; }
+            resume() { return Promise.resolve(); }
+        }
+    };
+
+    sound.init();
+    sound.playShaveSound();
+    sound.playComboSound(3);
+    sound.playWinSound();
+    delete global.window;
 });
