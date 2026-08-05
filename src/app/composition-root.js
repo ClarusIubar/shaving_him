@@ -16,7 +16,7 @@ export const createCompositionRoot = (customAdapters = {}) => {
     const imageProcessor = customAdapters.imageProcessor || new CanvasImageProcessorAdapter();
     const diffEngine = customAdapters.diffEngine || new DeltaDiffEngineAdapter();
     const asciiConverter = customAdapters.asciiConverter || new CanvasAsciiConverterAdapter();
-    const geometry = customAdapters.geometry || new GridGeometry(280, 219, 6, 6);
+    const geometry = customAdapters.geometry || GridGeometry.default();
 
     const stagePipeline = new StagePipeline(jsonAdapter, imageProcessor, diffEngine, asciiConverter);
     const orchestrator = new GameOrchestrator(stagePipeline, geometry);

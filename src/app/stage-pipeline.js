@@ -8,29 +8,17 @@ import { JsonSourceHandler, ImageSourceHandler, StageSourceRegistry } from './st
 
 export class StagePipeline {
     constructor(jsonAdapter, imageProcessor, diffEngine, asciiConverter, registry = null) {
-        this.jsonAdapter = jsonAdapter;
-        this.imageProcessor = imageProcessor;
-        this.diffEngine = diffEngine;
-        this.asciiConverter = asciiConverter;
-
         if (registry) {
             this.registry = registry;
-        } else {
-            this.registry = new StageSourceRegistry([
-                new JsonSourceHandler(jsonAdapter),
-                new ImageSourceHandler(imageProcessor, diffEngine, asciiConverter)
-            ]);
+            return;
         }
-    }
-
-    /**
-     * Delegate skin tone calculation to DiffEngine (SRP compliance)
-     */
-    calculateAverageSkinTone(colors, threshold = 80) {
-        if (this.diffEngine && typeof this.diffEngine.calculateAverageSkinTone === 'function') {
-            return this.diffEngine.calculateAverageSkinTone(colors, threshold);
+        if (!jsonAdapter || !imageProcessor || !diffEngine || !asciiConverter) {
+            throw new Error('StagePipeline requires a source registry or a full adapter set (json, image, diff, ascii)');
         }
-        return [210, 180, 150];
+        this.registry = new StageSourceRegistry([
+            new JsonSourceHandler(jsonAdapter),
+            new ImageSourceHandler(imageProcessor, diffEngine, asciiConverter)
+        ]);
     }
 
     /**

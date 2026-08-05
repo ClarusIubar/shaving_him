@@ -4,6 +4,28 @@
  * 0% DOM/Canvas dependency. Immutable.
  */
 export class GridGeometry {
+    /**
+     * Canonical stage geometry. The single source of truth for default grid
+     * dimensions and cell size - no other module may restate these numbers.
+     */
+    static default() {
+        return new GridGeometry(280, 219, 6, 6);
+    }
+
+    /**
+     * Build a geometry from a stage DTO, falling back to the canonical default
+     * for any dimension the stage does not declare.
+     */
+    static fromStageData(stageData = {}) {
+        const base = GridGeometry.default();
+        return new GridGeometry(
+            stageData.cols || base.cols,
+            stageData.rows || base.rows,
+            base.cellWidth,
+            base.cellHeight
+        );
+    }
+
     constructor(cols = 280, rows = 219, cellWidth = 6, cellHeight = 6) {
         this.cols = Math.max(1, cols);
         this.rows = Math.max(1, rows);

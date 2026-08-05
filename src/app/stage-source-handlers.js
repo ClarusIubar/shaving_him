@@ -7,6 +7,9 @@ import { StageSourcePort } from '../ports/stage-source.port.js';
 export class JsonSourceHandler extends StageSourcePort {
     constructor(jsonAdapter) {
         super();
+        if (!jsonAdapter || typeof jsonAdapter.loadStage !== 'function') {
+            throw new Error('JsonSourceHandler requires a stage source adapter exposing loadStage()');
+        }
         this.jsonAdapter = jsonAdapter;
     }
 
@@ -16,9 +19,7 @@ export class JsonSourceHandler extends StageSourcePort {
 
     async loadStage(source, targetCols, targetRows, options = {}, onProgress = null) {
         if (typeof onProgress === 'function') onProgress('🎮 프리셋 아스키 스테이지 로드 중...', 50);
-        const data = (this.jsonAdapter && typeof this.jsonAdapter.loadStage === 'function')
-            ? await this.jsonAdapter.loadStage(source, targetCols, targetRows)
-            : { cols: targetCols || 280, rows: targetRows || 219, totalHairCount: 0, hairPositions: [], textGrid: [], colorGrid: [] };
+        const data = await this.jsonAdapter.loadStage(source, targetCols, targetRows);
         if (typeof onProgress === 'function') onProgress('✨ 스테이지 준비 완료!', 100);
         return data;
     }
@@ -27,6 +28,15 @@ export class JsonSourceHandler extends StageSourcePort {
 export class ImageSourceHandler extends StageSourcePort {
     constructor(imageProcessor, diffEngine, asciiConverter) {
         super();
+        if (!imageProcessor || typeof imageProcessor.processImageSource !== 'function') {
+            throw new Error('ImageSourceHandler requires an image processor exposing processImageSource()');
+        }
+        if (!diffEngine || typeof diffEngine.computeHairCoordinates !== 'function') {
+            throw new Error('ImageSourceHandler requires a diff engine exposing computeHairCoordinates()');
+        }
+        if (!asciiConverter || typeof asciiConverter.convertToAsciiGrid !== 'function') {
+            throw new Error('ImageSourceHandler requires an ascii converter exposing convertToAsciiGrid()');
+        }
         this.imageProcessor = imageProcessor;
         this.diffEngine = diffEngine;
         this.asciiConverter = asciiConverter;
