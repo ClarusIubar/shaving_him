@@ -59,7 +59,7 @@ test('CanvasAsciiConverterAdapter - maps color matrix to ASCII grid', () => {
     assert.deepEqual(colorGrid[0][0], [0, 0, 0]);
 });
 
-test('StagePipeline - computes dynamic average skin tone correctly', async () => {
+test('StagePipeline - computes dynamic average skin tone and loads custom HTMLImageElement source', async () => {
     const { StagePipeline } = await import('../../src/app/stage-pipeline.js');
     const pipeline = new StagePipeline();
     const mockColors = [
@@ -68,6 +68,26 @@ test('StagePipeline - computes dynamic average skin tone correctly', async () =>
     ];
     const avgSkin = pipeline.calculateAverageSkinTone(mockColors, 80);
     assert.deepEqual(avgSkin, [210, 190, 170]);
+
+    // HTMLImageElement custom image load
+    global.HTMLImageElement = class {};
+    const mockImg = new global.HTMLImageElement();
+    mockImg.naturalWidth = 10;
+    mockImg.naturalHeight = 10;
+
+    let reportedPct = 0;
+    const stage = await pipeline.loadStage(mockImg, 5, 5, {}, (msg, pct) => {
+        reportedPct = pct;
+    });
+
+    assert.equal(stage.rows, 5);
+    assert.equal(stage.cols, 5);
+    assert.equal(reportedPct, 100);
+
+    // Unsupported format error guard
+    await assert.rejects(() => pipeline.loadStage(12345), /Unsupported stage source format/);
+
+    delete global.HTMLImageElement;
 });
 
 test('StagePipeline - ignores transparent pixels (alpha < 128) in skin tone calculation', async () => {
@@ -198,13 +218,13 @@ test('CanvasImageProcessorAdapter - tests skin smoothing and image loading error
     await assert.rejects(() => processor.loadImageFile(null), /파일이 지정되지 않았습니다/);
 
     // FileReader mock
-    global.FileReader = class {
+    class MockFileReader {
         readAsDataURL() {
             setTimeout(() => { if (this.onload) this.onload({ target: { result: 'data:image/png;base64,mock' } }); }, 5);
         }
-    };
-    global.File = class {};
-    global.Image = class {
+    }
+    class MockFile {}
+    class MockImage {
         constructor() {
             setTimeout(() => {
                 this.naturalWidth = 10;
@@ -212,12 +232,145 @@ test('CanvasImageProcessorAdapter - tests skin smoothing and image loading error
                 if (this.onload) this.onload();
             }, 5);
         }
-    };
+    }
 
-    const loadedImg = await processor.loadImageFile(new global.File());
+    global.FileReader = MockFileReader;
+    global.File = MockFile;
+    global.Image = MockImage;
+
+    const loadedImg = await processor.loadImageFile(new MockFile());
     assert.equal(loadedImg.naturalWidth, 10);
 
+    // Canvas 2D ImageData processing branch with File instance (line 20)
+    global.document = {
+        createElement: (tag) => {
+            if (tag === 'canvas') {
+                return {
+                    width: 0, height: 0,
+                    getContext: () => ({
+                        drawImage: () => {},
+                        getImageData: (x, y, w, h) => ({
+                            width: w, height: h,
+                            data: new Uint8ClampedArray(w * h * 4)
+                        })
+                    })
+                };
+            }
+            return null;
+        }
+    };
+    const imgObj = new MockFile();
+    imgObj.naturalWidth = 4;
+    imgObj.naturalHeight = 4;
+
+    const procRes = await processor.processImageSource(imgObj, 4, 4);
+    assert.equal(procRes.colors.length, 4);
+
+    delete global.document;
     delete global.FileReader;
     delete global.File;
     delete global.Image;
+});
+
+test('StaticJsonStageAdapter - window.EMBEDDED_GAME_DATA priority 1 line 19 execution', async () => {
+    const adapter = new StaticJsonStageAdapter();
+    global.window = { EMBEDDED_GAME_DATA: { rows: 2, cols: 2, text: ['HI'], colors: [] } };
+    const stage = await adapter.loadStage('game_data.json');
+    assert.equal(stage.rows, 2);
+    delete global.window;
+});
+
+test('CanvasImageProcessorAdapter - tests FileReader onerror, Image onerror, and Image undefined fallback', async () => {
+    const { CanvasImageProcessorAdapter } = await import('../../src/adapters/canvas-image-processor.js');
+    const processor = new CanvasImageProcessorAdapter();
+
+    // Test FileReader onerror
+    global.FileReader = class {
+        readAsDataURL() {
+            setTimeout(() => { if (this.onerror) this.onerror(); }, 5);
+        }
+    };
+    global.File = class {};
+    await assert.rejects(() => processor.loadImageFile(new global.File()), /파일 읽기 과정에서 오류가 발생했습니다/);
+
+    // Test Image onerror
+    global.FileReader = class {
+        readAsDataURL() {
+            setTimeout(() => { if (this.onload) this.onload({ target: { result: 'data:image/png;base64,mock' } }); }, 5);
+        }
+    };
+    global.Image = class {
+        constructor() {
+            setTimeout(() => { if (this.onerror) this.onerror(); }, 5);
+        }
+    };
+    await assert.rejects(() => processor.loadImageFile(new global.File()), /유효하지 않거나 손상된 이미지 파일입니다/);
+
+    // Test Image zero dimension error
+    global.Image = class {
+        constructor() {
+            setTimeout(() => {
+                this.naturalWidth = 0;
+                this.naturalHeight = 0;
+                if (this.onload) this.onload();
+            }, 5);
+        }
+    };
+    await assert.rejects(() => processor.loadImageFile(new global.File()), /이미지 크기가 0px이거나 손상된 파일입니다/);
+
+    // Test Image undefined
+    delete global.Image;
+    const resNoImg = await processor.loadImageFile(new global.File());
+    assert.deepEqual(resNoImg, {});
+
+    delete global.FileReader;
+    delete global.File;
+});
+
+test('CanvasRenderer - tests resize setupCanvas, empty cell background fill, particle decay limit, and exportPng exception handling', async () => {
+    const { CanvasRenderer } = await import('../../src/ui/canvas-renderer.js');
+    const mockCanvas = {
+        width: 10, height: 10, style: {},
+        getContext: () => ({ scale: () => {}, fillRect: () => {}, fillText: () => {} }),
+        toDataURL: () => { throw new Error('Canvas security error'); }
+    };
+    const renderer = new CanvasRenderer(mockCanvas, 2, 2);
+
+    global.requestAnimationFrame = (cb) => { cb(); return 1; };
+
+    // Dynamic dimension resize in requestRender & render (lines 77-80)
+    const newStage = { cols: 10, rows: 10, textGrid: ['          '], colorGrid: null };
+    renderer.requestRender(newStage, null, null);
+
+    const resizeStage = { cols: 5, rows: 5, textGrid: ['     ', '     ', '     ', '     ', '     '], colorGrid: null };
+    renderer.render(resizeStage, null, null);
+
+    // Particle cap > 40 (lines 158-159) and decay <= 0 (lines 174-176)
+    renderer.particles = new Array(39).fill({ x: 0, y: 0, vx: 0, vy: 0, life: 1, decay: 0.1, char: '*' });
+    const dirty50 = [{ r: 0, c: 0 }, { r: 1, c: 1 }, { r: 2, c: 2 }];
+    renderer.spawnParticles(dirty50);
+    assert.ok(renderer.particles.length <= 40);
+
+    renderer.particles.push({ x: 0, y: 0, vx: 0, vy: 0, life: 0.05, decay: 0.1, char: '*' });
+    renderer.updateAndRenderParticles(); // Triggers particle splice (life <= 0)
+
+    // Empty cell background fill
+    renderer.renderSingleCell(0, 0, [' '], null, null);
+
+    // exportPng error catch block
+    global.document = { body: { appendChild: () => {} } };
+    renderer.exportPng();
+    delete global.document;
+    delete global.requestAnimationFrame;
+});
+
+test('CanvasImageProcessorAdapter - tests FileReader undefined error', async () => {
+    const { CanvasImageProcessorAdapter } = await import('../../src/adapters/canvas-image-processor.js');
+    const processor = new CanvasImageProcessorAdapter();
+    const origFileReader = global.FileReader;
+    delete global.FileReader;
+    global.File = class {};
+    await assert.rejects(() => processor.loadImageFile(new global.File()), /FileReader API가 지원되지 않는 환경입니다/);
+    delete global.File;
+    global.FileReader = origFileReader;
 });

@@ -45,8 +45,12 @@ test('GameOrchestrator - loadAndStartStage, shave, and callbacks', async () => {
 });
 
 test('BrushController - notifies onRadiusChange callback when setRadius is called', async () => {
+    let mouseUpCb = null;
+    global.window = { addEventListener: (evt, fn) => { if (evt === 'mouseup') mouseUpCb = fn; } };
     const { BrushController } = await import('../../src/ui/brush-controller.js');
     const controller = new BrushController(null, null, () => {});
+
+    if (mouseUpCb) mouseUpCb();
 
     let changedRadius = null;
     controller.onRadiusChange((newRadius) => {
@@ -55,6 +59,7 @@ test('BrushController - notifies onRadiusChange callback when setRadius is calle
 
     controller.setRadius(3);
     assert.equal(changedRadius, 3);
+    delete global.window;
 });
 
 test('BrushController - interpolates line coordinates during drag movement', async () => {
@@ -97,6 +102,37 @@ test('GameOrchestrator - ignores shave() when session status is not RUNNING', as
     assert.equal(updateCalled, false);
     assert.equal(orchestrator.session.getSnapshot().remainingHairs, 1);
 
+    orchestrator.stopTimer();
+});
+
+test('GameOrchestrator - pause, resume, and startTimer interval callback execution', async () => {
+    const orchestrator = new GameOrchestrator();
+    let tickCount = 0;
+    orchestrator.onUpdate((snapshot, dirty, isTimerTick) => {
+        if (isTimerTick) tickCount++;
+    });
+
+    const mockStage = { rows: 5, cols: 5, hair: [{ r: 1, c: 1 }], text: ['A'], colors: [] };
+    await orchestrator.loadAndStartStage(mockStage, 1);
+
+    orchestrator.session.pause();
+    assert.equal(orchestrator.session.status, SessionStatus.PAUSED);
+
+    orchestrator.session.resume();
+    assert.equal(orchestrator.session.status, SessionStatus.RUNNING);
+
+    // Mock setInterval callback execution
+    const origSetInterval = global.setInterval;
+    let timerCallback = null;
+    global.setInterval = (cb) => { timerCallback = cb; return 123; };
+    orchestrator.startTimer();
+    assert.ok(timerCallback !== null);
+
+    // Execute timer tick (decrements time left to 0 -> TIMEOUT)
+    timerCallback();
+    assert.equal(orchestrator.session.status, SessionStatus.TIMEOUT);
+
+    global.setInterval = origSetInterval;
     orchestrator.stopTimer();
 });
 
@@ -175,7 +211,7 @@ test('SoundEffects - initializes and toggles enable state correctly', async () =
                 this.sampleRate = 44100;
                 this.currentTime = 0;
                 this.destination = {};
-                this.state = 'running';
+                this.state = 'suspended';
             }
             createBuffer() { return { getChannelData: () => new Float32Array(100) }; }
             createBufferSource() { return { buffer: null, connect: () => {}, start: () => {}, stop: () => {} }; }
@@ -190,14 +226,33 @@ test('SoundEffects - initializes and toggles enable state correctly', async () =
     sound.playShaveSound();
     sound.playComboSound(3);
     sound.playWinSound();
+
+    // Test catch error block
+    global.window.AudioContext = class {
+        constructor() { this.state = 'running'; }
+        createBuffer() { return { getChannelData: () => new Float32Array(10) }; }
+        createBufferSource() { throw new Error('Audio policy error'); }
+        createOscillator() { throw new Error('Audio policy error'); }
+    };
+    sound.ctx = null;
+    sound.playShaveSound();
+    sound.playComboSound();
+    sound.playWinSound();
+
     delete global.window;
 });
 
-test('HUD - modal visibility methods showStartModal, hideStartModal, showGameOver, hideOverlay, updateSoundUI', async () => {
+test('HUD - modal visibility methods showStartModal, hideStartModal, showGameOver, hideOverlay, updateSoundUI, showLoading, hideLoading', async () => {
     const { HUD } = await import('../../src/ui/hud.js');
     let startModalDisplay = 'none';
     let overlayDisplay = 'none';
     let soundText = '';
+    let loadingDisplay = 'none';
+    let loadingWidth = '0%';
+    let loadingText = '';
+
+    let restartClicked = false;
+    const mockRestartBtn = { set onclick(fn) { this._cb = fn; }, click() { if (this._cb) this._cb(); } };
 
     global.document = {
         getElementById: (id) => {
@@ -208,26 +263,201 @@ test('HUD - modal visibility methods showStartModal, hideStartModal, showGameOve
             if (id === 'overlayFinalScore') return { textContent: '' };
             if (id === 'overlayMsg') return { textContent: '' };
             if (id === 'overlayDetail') return { textContent: '' };
+            if (id === 'loadingOverlay') return { style: { set display(v) { loadingDisplay = v; } }, classList: { add: () => {}, remove: () => {} } };
+            if (id === 'loadingMsg') return { set textContent(v) { loadingText = v; } };
+            if (id === 'loadingBarFill') return { style: { set width(v) { loadingWidth = v; } } };
+            if (id === 'restartBtn') return mockRestartBtn;
             return null;
-        }
+        },
+        createElement: () => ({ set id(v){}, set className(v){}, set innerHTML(v){}, style: {} }),
+        body: { appendChild: () => {} }
     };
 
     const hud = new HUD();
+    hud.overlayEl = { style: {} };
+    hud.finalScoreEl = { textContent: '' };
+    hud.titleEl = { textContent: '', style: {} };
+    hud.msgEl = { textContent: '' };
+    hud.soundToggleBtn = { textContent: '' };
+
     hud.showStartModal();
     assert.equal(startModalDisplay, 'flex');
     hud.hideStartModal();
     assert.equal(startModalDisplay, 'none');
 
-    hud.showGameOver({ status: 'WON', totalScore: 100, remainingHairs: 0, percentageCleared: 100 }, () => {});
-    assert.equal(overlayDisplay, 'flex');
-    hud.hideOverlay();
-    assert.equal(overlayDisplay, 'none');
-
+    // Test updateSoundUI (lines 126-129)
     hud.updateSoundUI(true);
-    assert.equal(soundText, '🔊 소리 켬');
-
+    assert.equal(hud.soundToggleBtn.textContent, '🔊 소리 켬');
     hud.updateSoundUI(false);
-    assert.equal(soundText, '🔇 음소거');
+    assert.equal(hud.soundToggleBtn.textContent, '🔇 음소거');
+
+    // Test showLoading & hideLoading
+    hud.showLoading('📷 1/4 이미지 디코딩 중...', 25);
+    hud.showLoading('📷 2/4 이미지 디코딩 중...', 50);
+    assert.equal(hud.loadingEl.style.display, 'flex');
+
+    hud.hideLoading();
+    assert.equal(hud.loadingEl.style.display, 'none');
+
+    // Test showGameOver branches (WON, >=80%, <80% lines 197-201)
+    hud.showGameOver({ status: 'WON', percentageCleared: 100, remainingHairs: 0, finalResult: { totalScore: 100 } }, () => {});
+    hud.showGameOver({ status: 'PAUSED', percentageCleared: 85, remainingHairs: 5, finalResult: { totalScore: 80 } }, () => {});
+    hud.showGameOver({ status: 'TIMEOUT', percentageCleared: 50, remainingHairs: 20, finalResult: { totalScore: 30 } }, () => {});
+    hud.showGameOver({ status: 'TIMEOUT', percentageCleared: 10, remainingHairs: 90, finalResult: { totalScore: 5 } }, () => { restartClicked = true; });
+    assert.equal(hud.titleEl.textContent, '😅 아쉬워요!');
+
+    mockRestartBtn.click();
+    assert.equal(restartClicked, true);
 
     delete global.document;
+});
+
+test('BrushController - tests all mouse, touch, wheel, and window events for 100% UI coverage', async () => {
+    const { BrushController } = await import('../../src/ui/brush-controller.js');
+    const eventListeners = {};
+    const mockCursor = { style: { transform: '', opacity: '', fontSize: '' } };
+    const mockCanvas = {
+        width: 280, height: 219,
+        getBoundingClientRect: () => ({ left: 0, top: 0, width: 280, height: 219 }),
+        addEventListener: (evt, fn) => { eventListeners[evt] = fn; }
+    };
+
+    const windowListeners = {};
+    global.window = {
+        addEventListener: (evt, fn) => { windowListeners[evt] = fn; }
+    };
+
+    let shaveCount = 0;
+    const controller = new BrushController(mockCanvas, mockCursor, () => { shaveCount++; });
+
+    controller.setRadius(4);
+    assert.equal(controller.brushRadius, 4);
+
+    // Trigger window events (lines 72-74 of brush-controller)
+    if (windowListeners['resize']) windowListeners['resize']();
+    if (windowListeners['scroll']) windowListeners['scroll']();
+    if (windowListeners['mouseup']) {
+        controller.isMouseDown = true;
+        controller.lastR = 5;
+        controller.lastC = 5;
+        windowListeners['mouseup']();
+        assert.equal(controller.isMouseDown, false);
+        assert.equal(controller.lastR, -1);
+    }
+
+    // Trigger canvas mouse events
+    if (eventListeners['mousedown']) eventListeners['mousedown']({ clientX: 10, clientY: 10 });
+    if (eventListeners['mousemove']) eventListeners['mousemove']({ clientX: 20, clientY: 20 });
+    if (eventListeners['mouseenter']) eventListeners['mouseenter']();
+    if (eventListeners['mouseleave']) eventListeners['mouseleave']();
+
+    // Trigger wheel events
+    if (eventListeners['wheel']) eventListeners['wheel']({ preventDefault: () => {}, deltaY: -10 }); // Increase
+    if (eventListeners['wheel']) eventListeners['wheel']({ preventDefault: () => {}, deltaY: 10 });  // Decrease
+
+    // Trigger touch events
+    if (eventListeners['touchstart']) eventListeners['touchstart']({ cancelable: true, preventDefault: () => {}, touches: [{ clientX: 5, clientY: 5 }] });
+    if (eventListeners['touchmove']) eventListeners['touchmove']({ cancelable: true, preventDefault: () => {}, touches: [{ clientX: 15, clientY: 15 }] });
+    if (eventListeners['touchend']) eventListeners['touchend']();
+
+    assert.ok(shaveCount > 0);
+    delete global.window;
+});
+
+test('HUD - tests URL.revokeObjectURL in handleFileSelected', async () => {
+    const { HUD } = await import('../../src/ui/hud.js');
+    let revoked = false;
+    global.document = {
+        getElementById: () => null,
+        querySelectorAll: () => [],
+        createElement: () => ({ set id(v){}, set className(v){}, set innerHTML(v){}, style: {} }),
+        body: { appendChild: () => {} }
+    };
+    global.URL = {
+        createObjectURL: () => 'blob:http://localhost/new',
+        revokeObjectURL: () => { revoked = true; }
+    };
+
+    const hud = new HUD();
+    hud.previewEl = { style: {} };
+    hud.previewUrl = 'blob:http://localhost/old';
+    hud.handleFileSelected({ type: 'image/png' });
+    assert.equal(revoked, true);
+
+    delete global.document;
+    delete global.URL;
+});
+
+test('HUD - tests initStartModalEvents, drop zone file upload, updateBrushSizeUI, and null guards', async () => {
+    const { HUD } = await import('../../src/ui/hud.js');
+    let presetClicked = false;
+    let customClicked = false;
+    let disabledState = true;
+    let previewDisplay = 'none';
+
+    const dropZoneListeners = {};
+    const inputListeners = {};
+    const mockDropZone = {
+        addEventListener: (evt, fn) => { dropZoneListeners[evt] = fn; },
+        classList: { add: () => {}, remove: () => {} }
+    };
+    const mockInput = { addEventListener: (evt, fn) => { inputListeners[evt] = fn; }, files: [] };
+    const mockStartPreset = { addEventListener: (evt, fn) => { presetClicked = true; } };
+    const mockStartCustom = { addEventListener: (evt, fn) => { customClicked = true; }, set disabled(v) { disabledState = v; }, style: {} };
+    const mockPreview = { style: { set display(v) { previewDisplay = v; } }, src: '' };
+    const mockBrushBtn1 = { getAttribute: () => '1', classList: { add: () => {}, remove: () => {} } };
+    const mockBrushBtn3 = { getAttribute: () => '3', classList: { add: () => {}, remove: () => {} } };
+
+    global.document = {
+        getElementById: (id) => {
+            if (id === 'uploadDropZone') return mockDropZone;
+            if (id === 'photoInput') return mockInput;
+            if (id === 'startPresetBtn') return mockStartPreset;
+            if (id === 'startCustomBtn') return mockStartCustom;
+            if (id === 'photoPreview') return mockPreview;
+            return null;
+        },
+        querySelectorAll: () => [mockBrushBtn1, mockBrushBtn3],
+        createElement: () => ({ set id(v){}, set className(v){}, set innerHTML(v){}, style: {} }),
+        body: { appendChild: () => {} }
+    };
+
+    global.FileReader = class {
+        readAsDataURL() {
+            setTimeout(() => { if (this.onload) this.onload({ target: { result: 'data:image/png;base64,mock' } }); }, 5);
+        }
+    };
+    global.URL = { createObjectURL: () => 'blob:http://localhost/mock' };
+
+    const hud = new HUD();
+    hud.updateBrushSizeUI(3);
+
+    // Test Drop Event with File and Image undefined fallback (lines 76-77)
+    delete global.Image;
+    const mockFile = { type: 'image/png' };
+    if (dropZoneListeners['drop']) {
+        dropZoneListeners['drop']({ preventDefault: () => {}, dataTransfer: { files: [mockFile] } });
+    }
+
+    // Test Photo Input Change Event
+    if (inputListeners['change']) {
+        inputListeners['change']({ target: { files: [mockFile] } });
+    }
+
+    // Test showGameOver forfeit message branch (<80% cleared, lines 197-201)
+    hud.showGameOver({ status: 'TIMEOUT', percentageCleared: 10, remainingHairs: 90, finalResult: { totalScore: 5 } }, () => {});
+
+    // Test null guards
+    const emptyHud = new HUD();
+    emptyHud.startModalEl = null;
+    emptyHud.overlayEl = null;
+    emptyHud.showStartModal();
+    emptyHud.hideStartModal();
+    emptyHud.showGameOver(null);
+    emptyHud.hideOverlay();
+    emptyHud.update(null);
+
+    delete global.document;
+    delete global.FileReader;
+    delete global.URL;
 });

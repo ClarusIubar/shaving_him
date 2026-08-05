@@ -61,3 +61,51 @@ test('ShaveSession - state transitions and timer ticks', () => {
     assert.equal(snapshot.percentageCleared, 100);
     assert.equal(snapshot.status, SessionStatus.WON);
 });
+
+test('HairGrid - out of bounds coordinates and cleared percentage', () => {
+    const grid = new HairGrid(5, 5, [{ r: 0, c: 0 }, { r: -1, c: -1 }, { r: 10, c: 10 }]);
+    assert.equal(grid.totalHairCount, 1);
+    assert.equal(grid.has(-1, 0), false);
+    assert.equal(grid.has(10, 10), false);
+
+    const emptyGrid = new HairGrid(5, 5, []);
+    assert.equal(emptyGrid.getClearedPercentage(), 100);
+});
+
+test('ScoreCalculator - addShave zero count resets streak', () => {
+    const calc = new ScoreCalculator();
+    calc.addShave(5);
+    assert.ok(calc.shaveStreak > 0);
+
+    calc.addShave(0); // Resets streak
+    assert.equal(calc.shaveStreak, 0);
+});
+
+test('ShaveSession - pause, resume, tick timeout, and uninitialized start error', () => {
+    const uninitSession = new ShaveSession();
+    assert.throws(() => uninitSession.start(), /Stage not initialized/);
+
+    const snapshotEmpty = uninitSession.getSnapshot();
+    assert.equal(snapshotEmpty.remainingHairs, 0);
+
+    const stageData = { rows: 5, cols: 5, hairPositions: [{ r: 1, c: 1 }] };
+    const session = new ShaveSession(stageData, 2);
+    
+    // Shave when IDLE returns 0
+    const idleShave = session.shave(1, 1, 1);
+    assert.equal(idleShave.removed, 0);
+
+    // Tick when IDLE returns false
+    assert.equal(session.tick(), false);
+
+    session.start();
+    session.pause();
+    assert.equal(session.status, SessionStatus.PAUSED);
+    session.resume();
+    assert.equal(session.status, SessionStatus.RUNNING);
+
+    // Tick down to 0
+    assert.equal(session.tick(), false); // 1s remaining
+    assert.equal(session.tick(), true);  // 0s remaining -> TIMEOUT
+    assert.equal(session.status, SessionStatus.TIMEOUT);
+});
