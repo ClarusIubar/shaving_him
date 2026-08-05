@@ -41,6 +41,8 @@ test('GameOrchestrator - loadAndStartStage, shave, and callbacks', async () => {
     assert.equal(updatedSnapshot.status, SessionStatus.WON);
     assert.notEqual(gameOverSnapshot, null);
 
+    assert.ok(orchestrator.getCurrentHairGrid() !== null);
+
     // Test restart functionality: stage must restore initial hair count (1) after winning
     orchestrator.restart();
     assert.equal(orchestrator.session.status, SessionStatus.RUNNING);

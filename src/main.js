@@ -1,6 +1,7 @@
 /**
  * Application Entry Point: main.js
  * Bootstraps GameOrchestrator, CanvasRenderer, BrushController, HUD, and SoundEffects.
+ * Fully exported and testable in Node.js test runner suite.
  */
 import { GameOrchestrator } from './app/game-orchestrator.js';
 import { CanvasRenderer } from './ui/canvas-renderer.js';
@@ -9,13 +10,22 @@ import { HUD } from './ui/hud.js';
 import { SoundEffects } from './ui/sound-effects.js';
 import { SessionStatus } from './domain/shave-session.js';
 
-const init = () => {
-    const canvas = document.getElementById('gameCanvas');
-    const cursor = document.getElementById('razorCursor');
-    const gameContainer = document.getElementById('gameContainer');
-    const changeStageBtn = document.getElementById('changeStageBtn');
+export const KEY_BRUSH_RADIUS_MAP = Object.freeze({
+    '1': 1,
+    '2': 3,
+    '3': 5,
+    '4': 7
+});
 
-    if (!canvas) return;
+export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : null, win = typeof window !== 'undefined' ? window : null) => {
+    if (!doc) return null;
+
+    const canvas = doc.getElementById('gameCanvas');
+    const cursor = doc.getElementById('razorCursor');
+    const gameContainer = doc.getElementById('gameContainer');
+    const changeStageBtn = doc.getElementById('changeStageBtn');
+
+    if (!canvas) return null;
 
     const orchestrator = new GameOrchestrator();
     const renderer = new CanvasRenderer(canvas);
@@ -42,33 +52,40 @@ const init = () => {
         });
     }
 
-    // Synchronize HUD brush button highlight when brush radius changes (e.g. via mouse wheel)
+    // Synchronize HUD brush button highlight when brush radius changes
     brushController.onRadiusChange(radius => {
         hud.updateBrushSizeUI(radius);
     });
 
     // Brush size selector buttons
-    document.querySelectorAll('.brush-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.brush-btn').forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            const radius = parseInt(e.target.getAttribute('data-radius'), 10);
-            brushController.setRadius(radius);
+    const brushBtns = doc.querySelectorAll('.brush-btn');
+    if (brushBtns && typeof brushBtns.forEach === 'function') {
+        brushBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                brushBtns.forEach(b => b.classList && b.classList.remove('active'));
+                if (e.target && e.target.classList) e.target.classList.add('active');
+                const radiusAttr = e.target ? e.target.getAttribute('data-radius') : '1';
+                const radius = parseInt(radiusAttr, 10) || 1;
+                brushController.setRadius(radius);
+            });
         });
-    });
+    }
 
-    // Global Keyboard Shortcuts (1-4 for brush radius, R for restart)
-    window.addEventListener('keydown', (e) => {
-        const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-        if (tag === 'input' || tag === 'textarea' || (document.activeElement && document.activeElement.isContentEditable)) return;
+    // Global Keyboard Shortcuts
+    if (win && typeof win.addEventListener === 'function') {
+        win.addEventListener('keydown', (e) => {
+            const activeEl = doc.activeElement;
+            const tag = activeEl ? activeEl.tagName.toLowerCase() : '';
+            if (tag === 'input' || tag === 'textarea' || (activeEl && activeEl.isContentEditable)) return;
 
-        const keyMap = { '1': 1, '2': 3, '3': 5, '4': 7 };
-        if (keyMap[e.key] !== undefined) {
-            brushController.setRadius(keyMap[e.key]);
-        } else if (e.key === 'r' || e.key === 'R') {
-            orchestrator.restart();
-        }
-    });
+            const radius = KEY_BRUSH_RADIUS_MAP[e.key];
+            if (radius !== undefined) {
+                brushController.setRadius(radius);
+            } else if (e.key === 'r' || e.key === 'R') {
+                orchestrator.restart();
+            }
+        });
+    }
 
     // Change Stage Button in HUD
     if (changeStageBtn) {
@@ -78,7 +95,7 @@ const init = () => {
         });
     }
 
-    // Subscribe to state updates with high-performance rAF partial redraws
+    // Subscribe to state updates with Law of Demeter fix (getCurrentHairGrid)
     orchestrator.onUpdate((snapshot, dirtyCells, isTimerTick) => {
         hud.update(snapshot);
         if (snapshot.comboCount > 1 && snapshot.comboCount !== lastCombo) {
@@ -87,7 +104,7 @@ const init = () => {
         lastCombo = snapshot.comboCount;
 
         if (!isTimerTick && orchestrator.currentStageData && orchestrator.session) {
-            renderer.requestRender(orchestrator.currentStageData, orchestrator.session.hairGrid, dirtyCells);
+            renderer.requestRender(orchestrator.currentStageData, orchestrator.getCurrentHairGrid(), dirtyCells);
         }
     });
 
@@ -106,15 +123,15 @@ const init = () => {
             hud.showLoading('1-Photo 아스키 파이프라인 생성 중...', 10);
             hud.hideStartModal();
             hud.hideOverlay();
-            if (gameContainer) gameContainer.style.display = 'flex';
+            if (gameContainer && gameContainer.style) gameContainer.style.display = 'flex';
 
             currentStageData = await orchestrator.loadAndStartStage(source, 60, (msg, pct) => {
                 hud.showLoading(msg, pct);
             });
-            renderer.render(currentStageData, orchestrator.session.hairGrid, null); // Immediate synchronous initial render
+            renderer.render(currentStageData, orchestrator.getCurrentHairGrid(), null);
         } catch (err) {
-            console.error('Stage loading error:', err);
-            alert(`스테이지 로드 실패: ${err.message}`);
+            if (typeof console !== 'undefined' && console.error) console.error('Stage loading error:', err);
+            if (typeof alert === 'function') alert(`스테이지 로드 실패: ${err ? err.message : '알 수 없는 오류'}`);
             hud.showStartModal();
         } finally {
             hud.hideLoading();
@@ -146,12 +163,21 @@ const init = () => {
 
     // Show initial Start Modal on launch
     hud.showStartModal();
+
+    return {
+        orchestrator,
+        renderer,
+        hud,
+        sound,
+        brushController,
+        startStageWithSource
+    };
 };
 
 if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') {
-        window.addEventListener('DOMContentLoaded', init);
+        window.addEventListener('DOMContentLoaded', () => bootstrapApp(document, window));
     } else {
-        init();
+        bootstrapApp(document, window);
     }
 }

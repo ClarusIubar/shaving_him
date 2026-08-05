@@ -106,4 +106,8 @@ export class GameOrchestrator {
             this.notifyUpdate(null, false);
         }
     }
+
+    getCurrentHairGrid() {
+        return this.session ? this.session.hairGrid : null;
+    }
 }
