@@ -2,10 +2,11 @@
  * Interface Layer: HUD
  * Updates score, timer, progress bar, razor size label, result overlays, and stage start modal.
  */
-import { SessionStatus } from '../domain/shave-session.js';
+import { GamePolicy } from '../domain/game-policy.js';
 
 export class HUD {
-    constructor() {
+    constructor(gamePolicy = new GamePolicy()) {
+        this.gamePolicy = gamePolicy;
         this.scoreEl = document.getElementById('scoreVal');
         this.timerEl = document.getElementById('timerVal');
         this.remainEl = document.getElementById('remainVal');
@@ -38,7 +39,25 @@ export class HUD {
         this.initStartModalEvents();
     }
 
-    initStartModalEvents() {
+    /**
+     * @param {Function} onPresetSelected - invoked with the preset id when the preset button is pressed
+     * @param {Function} onCustomFileSelected - invoked with the chosen File when the custom button is pressed
+     */
+    initStartModalEvents(onPresetSelected = null, onCustomFileSelected = null) {
+        if (this.startPresetBtn) {
+            this.startPresetBtn.addEventListener('click', () => {
+                if (typeof onPresetSelected === 'function') onPresetSelected('preset1');
+            });
+        }
+
+        if (this.startCustomBtn) {
+            this.startCustomBtn.addEventListener('click', () => {
+                if (this.selectedFile && typeof onCustomFileSelected === 'function') {
+                    onCustomFileSelected(this.selectedFile);
+                }
+            });
+        }
+
         if (this.dropZoneEl && this.photoInputEl) {
             this.dropZoneEl.addEventListener('click', () => this.photoInputEl.click());
 
@@ -128,25 +147,6 @@ export class HUD {
         }
     }
 
-    update(snapshot) {
-        if (!snapshot) return;
-        if (this.scoreEl) this.scoreEl.textContent = snapshot.score;
-        if (this.timerEl) this.timerEl.textContent = snapshot.timeLeft;
-        if (!this.soundToggleBtn) return;
-        const iconEl = this.soundToggleBtn.querySelector ? this.soundToggleBtn.querySelector('.sound-icon') : null;
-        const textEl = this.soundToggleBtn.querySelector ? this.soundToggleBtn.querySelector('.sound-text') : null;
-
-        if (enabled) {
-            this.soundToggleBtn.classList.remove('muted');
-            if (iconEl) iconEl.textContent = '🔊';
-            if (textEl) textEl.textContent = 'Sound ON';
-        } else {
-            this.soundToggleBtn.classList.add('muted');
-            if (iconEl) iconEl.textContent = '🔇';
-            if (textEl) textEl.textContent = 'Sound OFF';
-        }
-    }
-
     updateBrushSizeUI(radius) {
         if (typeof document === 'undefined') return;
         const brushBtns = document.querySelectorAll('.brush-btn');
@@ -165,8 +165,9 @@ export class HUD {
 
     update(snapshot) {
         if (!snapshot) return;
-        const { timeLeft, remainingHairs, percentageCleared, comboCount = 1 } = snapshot;
+        const { score, timeLeft, remainingHairs, percentageCleared, comboCount = 1 } = snapshot;
 
+        if (this.scoreEl) this.scoreEl.textContent = score;
         if (this.timerEl) this.timerEl.textContent = timeLeft;
         if (this.hairCountEl) this.hairCountEl.textContent = remainingHairs;
         if (this.clearedPctEl) this.clearedPctEl.textContent = `${percentageCleared.toFixed(1)}%`;
@@ -196,9 +197,7 @@ export class HUD {
         if (this.timeBonusEl) this.timeBonusEl.textContent = `+${timeBonus}`;
         if (this.allClearBonusEl) this.allClearBonusEl.textContent = `+${allClearBonus}`;
 
-        const isWin = (this.gamePolicy && typeof this.gamePolicy.isVictory === 'function')
-            ? this.gamePolicy.isVictory(snapshot)
-            : (snapshot && (snapshot.status === 'WON' || snapshot.percentageCleared === 100));
+        const isWin = this.gamePolicy.isVictory(snapshot);
 
         if (isWin) {
             if (this.titleEl) {

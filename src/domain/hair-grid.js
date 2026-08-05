@@ -3,24 +3,24 @@
  * Represents character canvas hair cell matrix.
  * Optimized with 1D Uint8Array for 0B memory allocation and O(1) performance.
  */
+import { GridGeometry } from './grid-geometry.js';
+
 export class HairGrid {
-    constructor(colsOrGeometry = 280, rows = 219, hairPositions = []) {
-        if (typeof colsOrGeometry === 'object' && colsOrGeometry !== null) {
-            this.cols = colsOrGeometry.cols;
-            this.rows = colsOrGeometry.rows;
-            hairPositions = Array.isArray(rows) ? rows : hairPositions;
-        } else if (typeof colsOrGeometry === 'number' && typeof rows === 'number') {
-            // Support both (cols, rows) and legacy (rows, cols)
-            if (colsOrGeometry === 219 && rows === 280) {
-                this.cols = 280;
-                this.rows = 219;
-            } else {
-                this.cols = colsOrGeometry;
-                this.rows = rows;
-            }
+    /**
+     * @param {GridGeometry|number} geometryOrCols - GridGeometry, or an explicit column count
+     * @param {Array|number} rowsOrHairPositions - row count when the first argument is a column count
+     * @param {Array} hairPositions
+     */
+    constructor(geometryOrCols, rowsOrHairPositions, hairPositions = []) {
+        if (geometryOrCols instanceof GridGeometry) {
+            this.cols = geometryOrCols.cols;
+            this.rows = geometryOrCols.rows;
+            hairPositions = Array.isArray(rowsOrHairPositions) ? rowsOrHairPositions : hairPositions;
+        } else if (Number.isFinite(geometryOrCols) && Number.isFinite(rowsOrHairPositions)) {
+            this.cols = geometryOrCols;
+            this.rows = rowsOrHairPositions;
         } else {
-            this.cols = 280;
-            this.rows = 219;
+            throw new Error('HairGrid requires a GridGeometry or an explicit (cols, rows) pair');
         }
 
         this.data = new Uint8Array(this.rows * this.cols);

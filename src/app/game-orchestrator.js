@@ -2,12 +2,14 @@
  * Application Layer: GameOrchestrator
  * Controls game loop clock, state machine transitions, and UI event command dispatching.
  */
-import { StagePipeline } from './stage-pipeline.js';
 import { ShaveSession, SessionStatus } from '../domain/shave-session.js';
 import { GridGeometry } from '../domain/grid-geometry.js';
 
 export class GameOrchestrator {
-    constructor(stagePipeline = new StagePipeline(), gridGeometry = new GridGeometry(280, 219, 6, 6)) {
+    constructor(stagePipeline, gridGeometry = GridGeometry.default()) {
+        if (!stagePipeline || typeof stagePipeline.loadStage !== 'function') {
+            throw new Error('GameOrchestrator requires a stage pipeline exposing loadStage()');
+        }
         this.pipeline = stagePipeline;
         this.geometry = gridGeometry;
         this.session = null;

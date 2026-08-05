@@ -1,3 +1,6 @@
 .local/
 .agent-governance-local/
 node_modules/
+
+# Scratch / one-shot generator artifacts (stale wiki snapshots caused doc loss - see #34)
+scratch/

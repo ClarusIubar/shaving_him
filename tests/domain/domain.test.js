@@ -73,11 +73,12 @@ test('HairGrid - initializes and shaves correctly', async () => {
     const grid1 = new HairGrid(new GridGeometry(5, 5), [{ r: 1, c: 1 }]);
     assert.equal(grid1.cols, 5);
 
+    // Explicit (cols, rows) is honoured verbatim - no legacy value-pair coercion.
     const grid2 = new HairGrid(219, 280, []);
-    assert.equal(grid2.cols, 280);
+    assert.equal(grid2.cols, 219);
+    assert.equal(grid2.rows, 280);
 
-    const grid3 = new HairGrid();
-    assert.equal(grid3.cols, 280);
+    assert.throws(() => new HairGrid(), /HairGrid requires/);
 
     const grid = new HairGrid(10, 10, [{ r: 1, c: 1 }, { r: 2, c: 2 }]);
     assert.equal(grid.totalHairCount, 2);

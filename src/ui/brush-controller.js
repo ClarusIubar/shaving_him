@@ -5,7 +5,7 @@
 import { GridGeometry } from '../domain/grid-geometry.js';
 
 export class BrushController {
-    constructor(canvas, cursor, onShaveCallback, gridGeometry = new GridGeometry(280, 219, 6, 6)) {
+    constructor(canvas, cursor, onShaveCallback, gridGeometry = GridGeometry.default()) {
         this.canvas = canvas;
         this.cursor = cursor;
         this.onShave = onShaveCallback;

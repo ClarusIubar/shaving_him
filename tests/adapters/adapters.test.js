@@ -74,13 +74,15 @@ test('StagePipeline - computes dynamic average skin tone and loads custom HTMLIm
     const { CanvasImageProcessorAdapter } = await import('../../src/adapters/canvas-image-processor.js');
     const { DeltaDiffEngineAdapter } = await import('../../src/adapters/delta-diff-engine.js');
     const { CanvasAsciiConverterAdapter } = await import('../../src/adapters/canvas-ascii-converter.js');
-    const pipeline = new StagePipeline(new StaticJsonStageAdapter(), new CanvasImageProcessorAdapter(), new DeltaDiffEngineAdapter(), new CanvasAsciiConverterAdapter());
+    const diffEngine = new DeltaDiffEngineAdapter();
+    const pipeline = new StagePipeline(new StaticJsonStageAdapter(), new CanvasImageProcessorAdapter(), diffEngine, new CanvasAsciiConverterAdapter());
     const mockColors = [
         [[10, 10, 10], [200, 180, 160]],
         [[220, 200, 180], [10, 10, 10]]
     ];
-    const avgSkin = pipeline.calculateAverageSkinTone(mockColors, 80);
-    assert.deepEqual(avgSkin, [210, 190, 170]);
+    // Skin tone is a DiffEngine responsibility (SRP) - the pipeline exposes no pixel operations.
+    assert.equal(pipeline.calculateAverageSkinTone, undefined);
+    assert.deepEqual(diffEngine.calculateAverageSkinTone(mockColors, 80), [210, 190, 170]);
 
     // HTMLImageElement custom image load
     global.HTMLImageElement = class {};
@@ -106,12 +108,12 @@ test('StagePipeline - computes dynamic average skin tone and loads custom HTMLIm
 test('StagePipeline - ignores transparent pixels (alpha < 128) in skin tone calculation', async () => {
     const { StagePipeline } = await import('../../src/app/stage-pipeline.js');
     const { DeltaDiffEngineAdapter } = await import('../../src/adapters/delta-diff-engine.js');
-    const pipeline = new StagePipeline(null, null, new DeltaDiffEngineAdapter(), null);
+    const diffEngine = new DeltaDiffEngineAdapter();
     const mockColorsWithAlpha = [
         [[255, 255, 255, 0], [200, 180, 160, 255]], // First pixel is transparent white (alpha=0)
         [[220, 200, 180, 255], [0, 0, 0, 0]]        // Fourth pixel is transparent black (alpha=0)
     ];
-    const avgSkin = pipeline.calculateAverageSkinTone(mockColorsWithAlpha, 80);
+    const avgSkin = diffEngine.calculateAverageSkinTone(mockColorsWithAlpha, 80);
     assert.deepEqual(avgSkin, [210, 190, 170]);
 });
 

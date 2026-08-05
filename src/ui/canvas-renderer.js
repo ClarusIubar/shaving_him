@@ -5,21 +5,13 @@
 import { GridGeometry } from '../domain/grid-geometry.js';
 
 export class CanvasRenderer {
-    constructor(canvasElement, colsOrGeometry = 280, rows = 219, fontW = 6, fontH = 6) {
+    constructor(canvasElement, gridGeometry = GridGeometry.default()) {
         this.canvas = canvasElement;
-        if (typeof colsOrGeometry === 'object' && colsOrGeometry !== null) {
-            this.geometry = colsOrGeometry;
-            this.cols = colsOrGeometry.cols;
-            this.rows = colsOrGeometry.rows;
-            this.fontW = colsOrGeometry.cellWidth;
-            this.fontH = colsOrGeometry.cellHeight;
-        } else {
-            this.geometry = new GridGeometry(colsOrGeometry, rows, fontW, fontH);
-            this.cols = colsOrGeometry;
-            this.rows = rows;
-            this.fontW = fontW;
-            this.fontH = fontH;
-        }
+        this.geometry = gridGeometry;
+        this.cols = gridGeometry.cols;
+        this.rows = gridGeometry.rows;
+        this.fontW = gridGeometry.cellWidth;
+        this.fontH = gridGeometry.cellHeight;
 
         this.dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
 

@@ -12,7 +12,9 @@ global.window = {
 
 test('StagePipeline - loads stage DTO cleanly', async () => {
     const { StaticJsonStageAdapter } = await import('../../src/adapters/static-json-stage.js');
-    const pipeline = new StagePipeline(new StaticJsonStageAdapter());
+    const { JsonSourceHandler, StageSourceRegistry } = await import('../../src/app/stage-source-handlers.js');
+    const pipeline = new StagePipeline(null, null, null, null,
+        new StageSourceRegistry([new JsonSourceHandler(new StaticJsonStageAdapter())]));
     const stageData = await pipeline.loadStage({
         rows: 2, cols: 2, hair: [{ r: 0, c: 0 }], text: ['A'], colors: []
     });
@@ -149,7 +151,8 @@ test('GameOrchestrator - ignores shave() when session status is not RUNNING', as
 });
 
 test('GameOrchestrator - pause, resume, and startTimer interval callback execution', async () => {
-    const orchestrator = new GameOrchestrator();
+    const { createCompositionRoot } = await import('../../src/app/composition-root.js');
+    const orchestrator = createCompositionRoot().orchestrator;
     let tickCount = 0;
     orchestrator.onUpdate((snapshot, dirty, isTimerTick) => {
         if (isTimerTick) tickCount++;
@@ -183,7 +186,7 @@ test('GameOrchestrator - pause, resume, and startTimer interval callback executi
     orchestrator.stopTimer();
 
     // Test orchestrator methods when session is null
-    const emptyOrchestrator = new GameOrchestrator();
+    const emptyOrchestrator = createCompositionRoot().orchestrator;
     emptyOrchestrator.notifyUpdate();
     emptyOrchestrator.notifyGameOver();
     emptyOrchestrator.shave(0, 0, 1);
