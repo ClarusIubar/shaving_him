@@ -34,7 +34,7 @@ export class BrushController {
     }
 
     setRadius(newRadius) {
-        this.brushRadius = Math.max(1, Math.min(5, newRadius));
+        this.brushRadius = Math.max(1, Math.min(7, newRadius));
         this.updateCursorSize();
         for (let i = 0; i < this.radiusChangeCallbacks.length; i++) {
             this.radiusChangeCallbacks[i](this.brushRadius);
