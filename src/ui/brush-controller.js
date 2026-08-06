@@ -58,6 +58,22 @@ export class BrushController {
         return this.geometry.clientToGrid(clientX, clientY, this.rect);
     }
 
+    /**
+     * Force the next pointer event to recompute the canvas bounding rect.
+     *
+     * BrushController is constructed while the canvas may still sit inside a
+     * display:none container (before a stage has been started), so the rect
+     * cached at construction time is all-zero. That cache is only refreshed
+     * on 'resize', 'scroll', or 'mouseenter' - none of which fire when a
+     * container is toggled from display:none to visible via script. Callers
+     * that reveal the canvas (e.g. main.js when a stage starts) must call
+     * this afterwards so the very first pointer interaction resolves to a
+     * real cell instead of being silently dropped.
+     */
+    invalidateRect() {
+        this.updateRect();
+    }
+
     initEvents() {
         if (typeof window !== 'undefined') {
             // Cache canvas bounding box on resize / scroll to eliminate layout thrashing
@@ -92,6 +108,10 @@ export class BrushController {
         // Touch Drag Support for Mobile
         this.canvas.addEventListener('touchstart', (e) => {
             if (e.cancelable) e.preventDefault();
+            // Touch devices never fire 'mouseenter', so this is the only
+            // chance to catch a rect that went stale while the canvas was
+            // hidden (see invalidateRect() above).
+            this.updateRect();
             this.isMouseDown = true;
             this.lastR = -1;
             this.lastC = -1;
