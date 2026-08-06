@@ -5,7 +5,8 @@
 ![Version](https://img.shields.io/badge/version-v1.0.6--hardened-brightgreen?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
 ![Coverage](https://img.shields.io/badge/coverage-100%25%20Line%20%7C%20100%25%20Func-success?style=for-the-badge)
-![Branch Coverage](https://img.shields.io/badge/branch-90.72%25-green?style=for-the-badge)
+![Branch Coverage](https://img.shields.io/badge/branch-93.25%25-green?style=for-the-badge)
+![CI](https://img.shields.io/badge/CI-node--test%20coverage%20gate-blue?style=for-the-badge)
 
 **사진 1장으로 즐기는 브라우저 실시간 아스키(ASCII) 면도 게임**  
 [🌐 라이브 웹 앱 플레이](https://clarusiubar.github.io/shaving_him/) • [📦 GitHub 저장소](https://github.com/ClarusIubar/shaving_him) • [📋 패치노트](Release-Patch-Notes)
@@ -46,11 +47,11 @@
 
 ## 🧪 품질 및 자동화 테스트 현황 (Strict RGR TDD & 100% Coverage)
 
-- **Node.js 공식 테스트 통과율**: **100% (64 / 64 Cases PASS)**
+- **Node.js 공식 테스트 통과율**: **100% (88 / 88 Cases PASS)**
 - **라인 커버리지 (Line %)**: **100.00%** (18개 전체 소스 파일)
 - **함수 커버리지 (Funcs %)**: **100.00%** (18개 전체 소스 파일)
-- **브랜치 커버리지 (Branch %)**: **90.72%** (도메인/어댑터/포트/UI 전 계층 통과)
-- **품질 게이트**: AGENTS.md 규정(Line 100% / Func 100% / Branch >= 90%) **전 항목 충족**
+- **브랜치 커버리지 (Branch %)**: **93.25%** (도메인/어댑터/포트/UI 전 계층 통과)
+- **품질 게이트**: AGENTS.md 규정(Line 100% / Func 100% / Branch >= 90%) **전 항목 충족, GitHub Actions CI에서 모든 PR에 자동 강제**
 
 ```text
 ✔ StaticJsonStageAdapter - parses raw JSON into StageDataDTO
