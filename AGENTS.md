@@ -4,11 +4,13 @@
 
 Every feature, enhancement, and bug fix MUST strictly adhere to the **Red-Green-Refactor (RGR)** TDD lifecycle:
 
-1. 🔴 **RED**: Always write failing unit/integration/E2E test cases FIRST before touching production code. Execute `node --test` and confirm test failure.
+1. 🔴 **RED**: Always write failing unit/integration/E2E test cases FIRST before touching production code. Execute `npm test` (equivalent to `node --test`) and confirm test failure.
 2. 🟢 **GREEN**: Write minimal production code necessary to pass the test. Confirm test passes.
-3. 🔵 **REFACTOR**: Clean up production and test code while maintaining **100% Line Coverage**, **100% Function Coverage**, and **>=90% Branch Coverage**.
+3. 🔵 **REFACTOR**: Clean up production and test code while maintaining **100% Line Coverage**, **100% Function Coverage**, and **>=90% Branch Coverage**. Verify with `npm run coverage` — this fails the process (non-zero exit) if any threshold is missed, so it is safe to rely on as a pass/fail gate.
 
 **Writing implementation code first and patching tests later ("땜빵 방식") is strictly prohibited.**
+
+This gate is enforced automatically in CI (`.github/workflows/test.yml`) on every push and pull request against `main` — a PR cannot merge if `npm run coverage` fails.
 
 ## Mandatory Git Branching & PR Workflow: Strict Worktree/Branch & Pull Request Enforced
 
