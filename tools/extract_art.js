@@ -1,3 +1,6 @@
+// One-time analysis script over before.html/after.html. Those source dumps
+// are gitignored (~2.7MB each, not needed to run or test the game) - place
+// local copies at the repo root before running this script.
 const fs = require('fs');
 const path = require('path');
 

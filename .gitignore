@@ -4,3 +4,11 @@ node_modules/
 
 # Scratch / one-shot generator artifacts (stale wiki snapshots caused doc loss - see #34)
 scratch/
+
+# One-time source dumps for tools/preprocess.js and tools/extract_art.js
+# (2.7MB each, not read by the app or tests - see #48). Re-fetch/re-export
+# them locally if you need to regenerate game_data.json/game_data.js from
+# scratch; they are not required to run or test the game.
+after.html
+before.html
+tools/analysis.json
