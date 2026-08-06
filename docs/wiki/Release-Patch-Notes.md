@@ -2,16 +2,41 @@
 
 > **프로젝트**: `shaving_him`  
 > **웹 애플리케이션**: [https://clarusiubar.github.io/shaving_him/](https://clarusiubar.github.io/shaving_him/)  
-> **최신 버전**: `v1.0.6-hardened` (2026-08-06)  
+> **최신 버전**: `v1.0.7-stabilized` (2026-08-06)  
 
 ---
 
 ## 🚀 버전별 패치노트 요약 (Version History)
 
+- **[v1.0.7-stabilized](#v107-stabilized-2026-08-06)**: HUD 잔여 표시 결함 수정, CI 품질 게이트 자동 강제, package.json 표준화, 옵서버 해지 경로, 파티클 잔상/정지 해소, 모바일 첫 터치 무시 및 브러시 반경 상한 회귀 수정, 저장소 위생 정리
 - **[v1.0.6-hardened](#v106-hardened-2026-08-06)**: 코드 리뷰 기반 정합성 결함 수정, GridGeometry 기하 통합, 포트/어댑터 경계 강화(DIP·OCP·SRP·ISP·LSP), Fail-Closed 배선 및 라인/함수 100% (브랜치 90.72%) 커버리지 회복
 - **[v1.0.5-quality](#v105-quality-2026-08-05)**: ES 모듈 readyState 바인딩, 4단계 실시간 프로그레스 UI, 엄격 RGR TDD 가버넌스 및 라인/함수 100% (브랜치 91.32%) 커버리지 증명
 - **[v1.0.4-enhanced](#v104-enhanced-2026-08-05)**: Web Audio API 사운드 이펙트(면도음, 콤보음, 승리 펜파레), 모바일 터치 궤적 보간, 털 흩날림 파티클 FX 및 PNG 저장
 - **[v1.0.3-enhanced](#v103-enhanced-2026-08-04)**: 키보드 단축키 UX, 콤보 디스플레이, High-DPI 렌더링 및 이미지 로드 에러 예외 가드
+
+---
+
+## 💎 v1.0.7-stabilized (2026-08-06)
+
+### 📌 개요
+v1.0.6-hardened 머지 후 `origin/main`을 재검증하는 과정에서 발견된 잔여 결함과 인프라 공백을 처리한 라운드입니다. HUD의 남은 털/진행률 표시가 필드명 불일치로 죽어 있던 문제를 고쳤고, 그동안 사람 기억에만 의존하던 AGENTS.md 품질 게이트(Line 100% / Func 100% / Branch >= 90%)를 GitHub Actions CI로 자동 강제하도록 만들었습니다. 파티클 잔상·정지, 모바일 첫 터치 무시, 옵서버 해지 불가, 저장소에 남아있던 기계-로컬 산출물과 5.5MB 아티팩트를 모두 정리했고, 검증 막바지에 GridGeometry 도입 당시 조용히 좁아졌던 브러시 반경 상한(7→5) 회귀도 추가로 발견해 복구했습니다.
+
+### 🛠️ 세부 변경 내역
+
+| 구분 | 관련 이슈 | 버그 원인 및 이슈 내용 | 구현된 해결책 (Solution) | 테스트 및 검증 |
+| :--- | :---: | :--- | :--- | :---: |
+| **HUD 표시 결함** | **[#45](https://github.com/ClarusIubar/shaving_him/issues/45)** | 생성자가 할당하는 `remainEl`/`barFillEl`과 `update()`가 참조하는 `hairCountEl`/`clearedPctEl`이 서로 다른 이름이라, 남은 털 개수와 진행률 바가 갱신되지 않음 | 렌더 메서드가 실제 할당된 필드(`remainEl`, `barFillEl`)를 참조하도록 정정, DOM 반영 회귀 테스트 고정 | 실제 세션 스냅샷 기반 DOM 반영 테스트 PASS |
+| **CI 품질 게이트 부재** | **[#46](https://github.com/ClarusIubar/shaving_him/issues/46)** | `.github/workflows` 부재로 `node --test`가 CI에서 한 번도 실행되지 않아, 커버리지 게이트가 사람 기억에만 의존. 직전 라운드가 3개 게이트 모두 미달인 채 머지된 전례 | `.github/workflows/test.yml` 신설, `npm run coverage`가 임계값 미달 시 non-zero 종료하여 PR을 자동 차단 | CI 통과가 모든 후속 PR의 필수 조건으로 강제됨 |
+| **표준 실행 명령 부재** | **[#47](https://github.com/ClarusIubar/shaving_him/issues/47)** | `package.json`이 없어 `npm test` 표준 진입점이 없고 검증 명령 표기가 문서마다 갈림 | `package.json` 신설(`type: module`, `test`/`coverage` 스크립트) | `npm test`, `npm run coverage` 통과 |
+| **저장소 위생** | **[#48](https://github.com/ClarusIubar/shaving_him/issues/48)** | 기계-로컬 거버넌스 산출물 16개와 `after.html`/`before.html`(각 2.7MB) 등 5.5MB 아티팩트가 추적됨. 위키 저장소 오염 사고의 원인이었던 바로 그 파일들 | `.agent-governance-local/`, `.local/`, `after.html`, `before.html`, `tools/analysis.json` 추적 해제 및 gitignore 등록 | `git ls-files` 대상 0건 확인 |
+| **옵서버 해지 불가** | **[#49](https://github.com/ClarusIubar/shaving_him/issues/49)** | `onUpdate`/`onGameOver`가 등록만 가능하고 해지 수단이 없어 향후 재부트스트랩 시 구독 누적 위험 | `GameOrchestrator.offUpdate()`/`offGameOver()` 추가 | 해지 후 미호출 테스트 PASS |
+| **파티클 잔상/정지** | **[#50](https://github.com/ClarusIubar/shaving_him/issues/50)** | 파티클 갱신·렌더가 더티 셀 렌더 경로에서만 호출되어, 드래그를 멈추면 애니메이션이 정지하고 이전 위치가 지워지지 않아 잔상이 누적 | 파티클 전용 rAF 루프(`ensureParticleLoop`)로 입력과 무관하게 수명 진행, 셀별 마지막 위치를 기억해 다음 프레임에 복원 | 입력 없는 프레임 진행 시 파티클 소멸 테스트 PASS |
+| **main.js 브랜치 커버리지 · 디미터** | **[#51](https://github.com/ClarusIubar/shaving_him/issues/51)** | 부트스트랩 분기 상당수가 미실행(Branch 75.93%)이었고, 사용자 영향 결함 3건이 전부 이 경로에서 유출. `orchestrator.currentStageData`/`.session` 직접 참조 잔존 | DOM 요소 부재 경로별 테스트 보강(Branch 91.94%↑), `notifyUpdate` 페이로드에 stageData/hairGrid 포함시켜 내부 참조 제거 | `main.js` Branch >= 90% 달성 |
+| **모바일 첫 터치 무시** | **[#52](https://github.com/ClarusIubar/shaving_him/issues/52)** | 캔버스가 `display:none`일 때 캐시된 `getBoundingClientRect()`가 스테이지 시작 후에도 갱신되지 않아, `touchstart`(mouseenter 미발동)로 시작하는 모바일 첫 면도가 항상 무시됨 | `BrushController.invalidateRect()` 도입, `touchstart`에서도 rect 강제 갱신, `main.js`가 스테이지 시작 시 호출 | 모바일 첫 터치 좌표 해석 테스트 PASS |
+| **브러시 반경 상한 회귀** | **[#61](https://github.com/ClarusIubar/shaving_him/issues/61)** | `#37`(GridGeometry 도입)에서 `setRadius()` 상한이 7에서 5로 조용히 좁아짐. "15x15" 버튼과 키보드 `4`는 여전히 반경 7을 요청하나 실제로는 11x11로 clamp | clamp 상한을 7로 복원 | 브라우저 실측: 커서 font-size 72px(반경 7) 확인 |
+| **품질 게이트** | **[#44](https://github.com/ClarusIubar/shaving_him/issues/44)** | 직전 라운드 종료 시 Line 100% / Func 100% / Branch 93.25%였으나 CI 미강제로 재발 가능 상태 | 전 항목 CI 자동 강제로 전환 | **88 Tests 100% PASS** |
+
+> **Parent Issues**: [#44](https://github.com/ClarusIubar/shaving_him/issues/44) `[TSK-008-00]`, [#60](https://github.com/ClarusIubar/shaving_him/issues/60) `[TSK-009-00]`
 
 ---
 
