@@ -22,6 +22,7 @@ export class CanvasRenderer {
         this.currentStageData = null;
         this.currentHairGrid = null;
         this.particles = [];
+        this.particleRafId = null;
     }
 
     setupCanvas() {
@@ -78,6 +79,12 @@ export class CanvasRenderer {
     render(stageData, hairGrid, dirtyCells = null) {
         if (!stageData || !this.ctx) return;
 
+        // Kept in sync here too (not just in requestRender()) so a direct
+        // render() call - e.g. main.js's initial synchronous paint - still
+        // leaves enough state for the particle loop to restore cells from.
+        this.currentStageData = stageData;
+        this.currentHairGrid = hairGrid;
+
         if (stageData.cols !== this.cols || stageData.rows !== this.rows) {
             this.cols = stageData.cols;
             this.rows = stageData.rows;
@@ -88,13 +95,15 @@ export class CanvasRenderer {
 
         // Mode A: Partial Dirty Cell Redraw (Ultra Fast < 1ms)
         if (dirtyCells && Array.isArray(dirtyCells) && dirtyCells.length > 0) {
-            this.spawnParticles(dirtyCells);
             for (let i = 0; i < dirtyCells.length; i++) {
                 const { r, c } = dirtyCells[i];
                 if (r < 0 || r >= this.rows || c < 0 || c >= this.cols) continue;
                 this.renderSingleCell(r, c, textGrid, colorGrid, hairGrid);
             }
-            this.updateAndRenderParticles();
+            // spawnParticles() starts (or refills) a self-scheduling animation
+            // loop, so particles keep moving/decaying even after this render
+            // call - they must not freeze the instant shaving stops.
+            this.spawnParticles(dirtyCells);
             return;
         }
 
@@ -156,16 +165,60 @@ export class CanvasRenderer {
                 vy: (Math.random() - 0.8) * 1.5,
                 life: 1.0,
                 decay: 0.12 + Math.random() * 0.08,
-                char: chars[Math.floor(Math.random() * chars.length)]
+                char: chars[Math.floor(Math.random() * chars.length)],
+                // Grid cell this particle last painted into, so the NEXT
+                // frame can repaint it from real stage data before the
+                // particle moves on - otherwise the glyph is left behind as
+                // a permanent trail.
+                lastCellR: null,
+                lastCellC: null
             });
         }
         if (this.particles.length > 40) {
             this.particles.splice(0, this.particles.length - 40);
         }
+        this.ensureParticleLoop();
+    }
+
+    /**
+     * Keep animating particles on their own schedule, independent of shave
+     * input. Without this, a particle spawned by the last shave before the
+     * user stops dragging never gets another updateAndRenderParticles()
+     * call (that only used to happen inside the dirty-cell render path) and
+     * freezes on screen mid-flight.
+     */
+    ensureParticleLoop() {
+        if (this.particleRafId || this.particles.length === 0) return;
+        if (typeof requestAnimationFrame !== 'function') return;
+        const tick = () => {
+            this.particleRafId = null;
+            this.updateAndRenderParticles();
+            if (this.particles.length > 0) {
+                this.particleRafId = requestAnimationFrame(tick);
+            }
+        };
+        this.particleRafId = requestAnimationFrame(tick);
+    }
+
+    /** Repaint the grid cell at (r, c) from the last known stage/hair data,
+     *  used to erase a particle's previous position before it moves on. */
+    restoreParticleCell(r, c) {
+        if (r < 0 || r >= this.rows || c < 0 || c >= this.cols) return;
+        if (!this.currentStageData) return;
+        const { textGrid, colorGrid } = this.currentStageData;
+        this.renderSingleCell(r, c, textGrid, colorGrid, this.currentHairGrid);
     }
 
     updateAndRenderParticles() {
         if (this.particles.length === 0 || !this.ctx) return;
+
+        for (let i = 0; i < this.particles.length; i++) {
+            const p = this.particles[i];
+            if (p.lastCellR !== null) {
+                this.restoreParticleCell(p.lastCellR, p.lastCellC);
+            }
+        }
+
         this.ctx.font = '900 6px "Courier New", monospace';
         this.ctx.textBaseline = 'top';
 
@@ -182,6 +235,9 @@ export class CanvasRenderer {
 
             this.ctx.fillStyle = `rgba(255, 220, 180, ${p.life.toFixed(2)})`;
             this.ctx.fillText(p.char, p.x, p.y);
+
+            p.lastCellR = Math.floor(p.y / this.fontH);
+            p.lastCellC = Math.floor(p.x / this.fontW);
         }
     }
 
