@@ -169,8 +169,8 @@ export class HUD {
 
         if (this.scoreEl) this.scoreEl.textContent = score;
         if (this.timerEl) this.timerEl.textContent = timeLeft;
-        if (this.hairCountEl) this.hairCountEl.textContent = remainingHairs;
-        if (this.clearedPctEl) this.clearedPctEl.textContent = `${percentageCleared.toFixed(1)}%`;
+        if (this.remainEl) this.remainEl.textContent = remainingHairs;
+        if (this.barFillEl) this.barFillEl.style.width = `${percentageCleared}%`;
 
         if (this.comboValEl) this.comboValEl.textContent = comboCount;
         if (this.comboBadgeEl) {
@@ -194,8 +194,8 @@ export class HUD {
         const { totalScore = 0, timeBonus = 0, allClearBonus = 0 } = finalResult || {};
 
         if (this.finalScoreEl) this.finalScoreEl.textContent = totalScore;
-        if (this.timeBonusEl) this.timeBonusEl.textContent = `+${timeBonus}`;
-        if (this.allClearBonusEl) this.allClearBonusEl.textContent = `+${allClearBonus}`;
+        // Time/all-clear bonuses are surfaced via detailEl below; there are no
+        // dedicated #timeBonus / #allClearBonus elements in index.html.
 
         const isWin = this.gamePolicy.isVictory(snapshot);
 
