@@ -1,3 +1,7 @@
+// One-time preprocessing script that regenerates game_data.json/game_data.js
+// from before.html/after.html. Those two source dumps are gitignored (~2.7MB
+// each, not needed to run or test the game) - place local copies at the repo
+// root before running this script.
 const fs = require('fs');
 const path = require('path');
 
