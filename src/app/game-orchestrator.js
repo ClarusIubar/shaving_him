@@ -23,8 +23,18 @@ export class GameOrchestrator {
         this.updateCallbacks.push(callback);
     }
 
+    offUpdate(callback) {
+        const idx = this.updateCallbacks.indexOf(callback);
+        if (idx !== -1) this.updateCallbacks.splice(idx, 1);
+    }
+
     onGameOver(callback) {
         this.gameOverCallbacks.push(callback);
+    }
+
+    offGameOver(callback) {
+        const idx = this.gameOverCallbacks.indexOf(callback);
+        if (idx !== -1) this.gameOverCallbacks.splice(idx, 1);
     }
 
     notifyUpdate(dirtyCells = null, isTimerTick = false) {
