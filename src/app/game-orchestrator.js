@@ -31,7 +31,10 @@ export class GameOrchestrator {
         if (!this.session) return;
         const snapshot = this.session.getSnapshot();
         for (let i = 0; i < this.updateCallbacks.length; i++) {
-            this.updateCallbacks[i](snapshot, dirtyCells, isTimerTick);
+            // stageData/hairGrid are included so UI subscribers never need to
+            // reach into orchestrator.currentStageData / orchestrator.session
+            // directly (Law of Demeter).
+            this.updateCallbacks[i](snapshot, dirtyCells, isTimerTick, this.currentStageData, this.session.hairGrid);
         }
     }
 

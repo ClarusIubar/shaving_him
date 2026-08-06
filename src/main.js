@@ -98,16 +98,18 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
         });
     }
 
-    // Subscribe to state updates with Law of Demeter fix (getCurrentHairGrid)
-    orchestrator.onUpdate((snapshot, dirtyCells, isTimerTick) => {
+    // Subscribe to state updates. The orchestrator hands over everything the
+    // UI needs (snapshot, stageData, hairGrid) so main.js never reaches into
+    // its internals (Law of Demeter).
+    orchestrator.onUpdate((snapshot, dirtyCells, isTimerTick, stageData, hairGrid) => {
         hud.update(snapshot);
         if (snapshot.comboCount > 1 && snapshot.comboCount !== lastCombo) {
             sound.playComboSound(snapshot.comboCount);
         }
         lastCombo = snapshot.comboCount;
 
-        if (!isTimerTick && orchestrator.currentStageData && orchestrator.session) {
-            renderer.requestRender(orchestrator.currentStageData, orchestrator.getCurrentHairGrid(), dirtyCells);
+        if (!isTimerTick && stageData && hairGrid) {
+            renderer.requestRender(stageData, hairGrid, dirtyCells);
         }
     });
 
@@ -186,5 +188,5 @@ export function initAutoBootstrap(doc = (typeof document !== 'undefined' ? docum
 }
 
 if (typeof document !== 'undefined') {
-    initAutoBootstrap(document, window);
+    initAutoBootstrap(document, typeof window !== 'undefined' ? window : null);
 }
