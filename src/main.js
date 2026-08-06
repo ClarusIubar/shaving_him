@@ -129,6 +129,11 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
             hud.hideStartModal();
             hud.hideOverlay();
             if (gameContainer && gameContainer.style) gameContainer.style.display = 'flex';
+            // The canvas was hidden (display:none) when BrushController cached its
+            // bounding rect at construction time; that cache never refreshes on its
+            // own from a script-driven visibility change. Force a fresh read now so
+            // the very first pointer/touch interaction resolves to a real cell.
+            brushController.invalidateRect();
 
             currentStageData = await orchestrator.loadAndStartStage(source, 60, (msg, pct) => {
                 hud.showLoading(msg, pct);
