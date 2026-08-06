@@ -9,6 +9,6 @@
   },
   "scripts": {
     "test": "node --test",
-    "coverage": "node --test --experimental-test-coverage --test-coverage-lines=100 --test-coverage-functions=100 --test-coverage-branches=90"
+    "coverage": "node --test --experimental-test-coverage --test-coverage-exclude=tests/** --test-coverage-lines=100 --test-coverage-functions=100 --test-coverage-branches=90"
   }
 }
