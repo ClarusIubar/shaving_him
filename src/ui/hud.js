@@ -120,21 +120,25 @@ export class HUD {
             this.loadingEl = document.createElement('div');
             this.loadingEl.id = 'loadingScreen';
             this.loadingEl.className = 'loading-screen';
+            // Only static markup goes through innerHTML - message/percentage
+            // are never interpolated into an HTML string, so they can never
+            // be parsed as markup no matter where they end up coming from.
             this.loadingEl.innerHTML = `
                 <div class="spinner"></div>
-                <div id="loadingMsg" style="font-weight:bold;color:#4ecdc4;font-size:15px;">${message}</div>
+                <div id="loadingMsg" style="font-weight:bold;color:#4ecdc4;font-size:15px;"></div>
                 <div style="width:280px;height:8px;background:#252a38;border-radius:4px;overflow:hidden;margin-top:4px;">
-                    <div id="loadingBarFill" style="width:${percentage}%;height:100%;background:linear-gradient(90deg, #ff6b6b, #4ecdc4);transition:width 0.2s;"></div>
+                    <div id="loadingBarFill" style="height:100%;background:linear-gradient(90deg, #ff6b6b, #4ecdc4);transition:width 0.2s;"></div>
                 </div>
             `;
             document.body.appendChild(this.loadingEl);
         } else {
-            const msgNode = document.getElementById('loadingMsg');
-            const fillNode = document.getElementById('loadingBarFill');
-            if (msgNode) msgNode.textContent = message;
-            if (fillNode) fillNode.style.width = `${percentage}%`;
             this.loadingEl.style.display = 'flex';
         }
+
+        const msgNode = document.getElementById('loadingMsg');
+        const fillNode = document.getElementById('loadingBarFill');
+        if (msgNode) msgNode.textContent = message;
+        if (fillNode) fillNode.style.width = `${percentage}%`;
     }
 
     hideLoading() {
