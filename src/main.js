@@ -9,7 +9,6 @@ import { BrushController } from './ui/brush-controller.js';
 import { HUD } from './ui/hud.js';
 import { SoundEffects } from './ui/sound-effects.js';
 import { SessionStatus } from './domain/shave-session.js';
-import { GamePolicy } from './domain/game-policy.js';
 
 export const KEY_BRUSH_RADIUS_MAP = Object.freeze({
     '1': 1,
@@ -31,9 +30,10 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
     const compositionRoot = createCompositionRoot(customAdapters);
     const orchestrator = compositionRoot.orchestrator;
     const geometry = compositionRoot.geometry;
+    const gamePolicy = compositionRoot.gamePolicy;
     const renderer = new CanvasRenderer(canvas, geometry);
-    const hud = new HUD();
-    const sound = new SoundEffects();
+    const hud = new HUD(gamePolicy, doc);
+    const sound = new SoundEffects(win);
 
     let currentStageData = null;
     let lastCombo = 1;
@@ -112,8 +112,6 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
             renderer.requestRender(stageData, hairGrid, dirtyCells);
         }
     });
-
-    const gamePolicy = new GamePolicy();
 
     // Subscribe to Game Over
     orchestrator.onGameOver(snapshot => {

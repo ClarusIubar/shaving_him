@@ -10,6 +10,7 @@ import { CanvasAsciiConverterAdapter } from '../adapters/canvas-ascii-converter.
 import { StagePipeline } from './stage-pipeline.js';
 import { GameOrchestrator } from './game-orchestrator.js';
 import { GridGeometry } from '../domain/grid-geometry.js';
+import { GamePolicy } from '../domain/game-policy.js';
 
 export const createCompositionRoot = (customAdapters = {}) => {
     const jsonAdapter = customAdapters.jsonAdapter || new StaticJsonStageAdapter();
@@ -17,6 +18,7 @@ export const createCompositionRoot = (customAdapters = {}) => {
     const diffEngine = customAdapters.diffEngine || new DeltaDiffEngineAdapter();
     const asciiConverter = customAdapters.asciiConverter || new CanvasAsciiConverterAdapter();
     const geometry = customAdapters.geometry || GridGeometry.default();
+    const gamePolicy = customAdapters.gamePolicy || new GamePolicy();
 
     const stagePipeline = new StagePipeline(jsonAdapter, imageProcessor, diffEngine, asciiConverter);
     const orchestrator = new GameOrchestrator(stagePipeline, geometry);
@@ -27,6 +29,7 @@ export const createCompositionRoot = (customAdapters = {}) => {
         diffEngine,
         asciiConverter,
         geometry,
+        gamePolicy,
         stagePipeline,
         orchestrator
     };
