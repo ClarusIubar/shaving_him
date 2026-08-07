@@ -98,18 +98,19 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
         });
     }
 
-    // Subscribe to state updates. The orchestrator hands over everything the
-    // UI needs (snapshot, stageData, hairGrid) so main.js never reaches into
-    // its internals (Law of Demeter).
-    orchestrator.onUpdate((snapshot, dirtyCells, isTimerTick, stageData, hairGrid) => {
+    // Subscribe to state updates. The orchestrator hands over a single event
+    // object carrying everything the UI needs (snapshot, stageData,
+    // hairView) so main.js never reaches into its internals (Law of
+    // Demeter). hairView is read-only (see HairGrid.toReadOnlyView).
+    orchestrator.onUpdate(({ snapshot, dirtyCells, isTimerTick, stageData, hairView }) => {
         hud.update(snapshot);
         if (snapshot.comboCount > 1 && snapshot.comboCount !== lastCombo) {
             sound.playComboSound(snapshot.comboCount);
         }
         lastCombo = snapshot.comboCount;
 
-        if (!isTimerTick && stageData && hairGrid) {
-            renderer.requestRender(stageData, hairGrid, dirtyCells);
+        if (!isTimerTick && stageData && hairView) {
+            renderer.requestRender(stageData, hairView, dirtyCells);
         }
     });
 
@@ -138,7 +139,7 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
             currentStageData = await orchestrator.loadAndStartStage(source, 60, (msg, pct) => {
                 hud.showLoading(msg, pct);
             });
-            renderer.render(currentStageData, orchestrator.getCurrentHairGrid(), null);
+            renderer.render(currentStageData, orchestrator.getCurrentHairView(), null);
         } catch (err) {
             if (typeof console !== 'undefined' && console.error) console.error('Stage loading error:', err);
             if (typeof alert === 'function') alert(`스테이지 로드 실패: ${err ? err.message : '알 수 없는 오류'}`);

@@ -88,6 +88,17 @@ export class HairGrid {
         return this.remainingHairs;
     }
 
+    /**
+     * A read-only view exposing only the query a rendering consumer needs
+     * (has) - never shave() or the backing Uint8Array, so a UI subscriber
+     * cannot mutate session state through it.
+     */
+    toReadOnlyView() {
+        return Object.freeze({
+            has: (r, c) => this.has(r, c)
+        });
+    }
+
     getClearedPercentage() {
         if (this.totalHairCount === 0) return 100;
         const cleared = this.totalHairCount - this.remainingHairs;

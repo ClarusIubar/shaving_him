@@ -29,7 +29,7 @@ test('GameOrchestrator - loadAndStartStage, shave, and callbacks', async () => {
     let updatedSnapshot = null;
     let gameOverSnapshot = null;
 
-    orchestrator.onUpdate(snapshot => { updatedSnapshot = snapshot; });
+    orchestrator.onUpdate(event => { updatedSnapshot = event.snapshot; });
     orchestrator.onGameOver(snapshot => { gameOverSnapshot = snapshot; });
 
     const mockStage = {
@@ -45,7 +45,7 @@ test('GameOrchestrator - loadAndStartStage, shave, and callbacks', async () => {
     assert.equal(updatedSnapshot.status, SessionStatus.WON);
     assert.notEqual(gameOverSnapshot, null);
 
-    assert.ok(orchestrator.getCurrentHairGrid() !== null);
+    assert.ok(orchestrator.getCurrentHairView() !== null);
 
     // Test restart functionality: stage must restore initial hair count (1) after winning
     orchestrator.restart();
@@ -154,7 +154,7 @@ test('GameOrchestrator - pause, resume, and startTimer interval callback executi
     const { createCompositionRoot } = await import('../../src/app/composition-root.js');
     const orchestrator = createCompositionRoot().orchestrator;
     let tickCount = 0;
-    orchestrator.onUpdate((snapshot, dirty, isTimerTick) => {
+    orchestrator.onUpdate(({ isTimerTick }) => {
         if (isTimerTick) tickCount++;
     });
 
