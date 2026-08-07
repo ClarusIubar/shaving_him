@@ -48,7 +48,7 @@ test('DeltaDiffEngineAdapter - extracts dark hair positions', () => {
     ];
 
     const diffEngine = new DeltaDiffEngineAdapter();
-    const hairPositions = diffEngine.computeHairCoordinates(originalColors, skinBaseColors, 25);
+    const { hairPositions } = diffEngine.computeHairCoordinates(originalColors, skinBaseColors, 25);
 
     assert.equal(hairPositions.length, 1);
     assert.deepEqual(hairPositions[0], { r: 0, c: 1 });
@@ -68,7 +68,7 @@ test('DeltaDiffEngineAdapter - excludes transparent pixels (alpha < 128) from ha
     ];
 
     const diffEngine = new DeltaDiffEngineAdapter();
-    const hairPositions = diffEngine.computeHairCoordinates(originalColors, skinBaseColors, 25);
+    const { hairPositions } = diffEngine.computeHairCoordinates(originalColors, skinBaseColors, 25);
 
     assert.equal(hairPositions.length, 1);
     assert.deepEqual(hairPositions[0], { r: 0, c: 0 });
@@ -87,7 +87,7 @@ test('DeltaDiffEngineAdapter - alpha-less (3-channel) input is treated as fully 
     ];
 
     const diffEngine = new DeltaDiffEngineAdapter();
-    const hairPositions = diffEngine.computeHairCoordinates(originalColors, skinBaseColors, 25);
+    const { hairPositions } = diffEngine.computeHairCoordinates(originalColors, skinBaseColors, 25);
 
     assert.equal(hairPositions.length, 1);
     assert.deepEqual(hairPositions[0], { r: 0, c: 1 });
@@ -102,10 +102,42 @@ test('DeltaDiffEngineAdapter - dynamic skin-base generation also excludes transp
     ];
 
     const diffEngine = new DeltaDiffEngineAdapter();
-    const hairPositions = diffEngine.computeHairCoordinates(originalColors, null, 25, 80);
+    const { hairPositions } = diffEngine.computeHairCoordinates(originalColors, null, 25, 80);
 
     assert.equal(hairPositions.length, 1);
     assert.deepEqual(hairPositions[0], { r: 0, c: 0 });
+});
+
+test('DeltaDiffEngineAdapter - computeHairCoordinates returns a plain, non-self-referential object on every path', () => {
+    // The port declares an Array<{r,c}> return, but the only caller
+    // (ImageSourceHandler) destructures { hairPositions, skinBaseColors }.
+    // The adapter used to satisfy both by bolting properties onto the
+    // array itself, which produced a self-referencing structure on the
+    // happy path and a genuinely different (plain-object) shape on the
+    // defensive null-input path. Both must return the same plain shape.
+    const diffEngine = new DeltaDiffEngineAdapter();
+
+    const originalColors = [
+        [[200, 200, 200], [10, 10, 10]],
+        [[200, 200, 200], [200, 200, 200]]
+    ];
+    const skinBaseColors = [
+        [[200, 200, 200], [180, 180, 180]],
+        [[200, 200, 200], [200, 200, 200]]
+    ];
+
+    const normal = diffEngine.computeHairCoordinates(originalColors, skinBaseColors, 25);
+    assert.equal(Array.isArray(normal), false);
+    assert.notEqual(normal.hairPositions, normal);
+    assert.deepEqual(normal.hairPositions, [{ r: 0, c: 1 }]);
+    assert.ok(Array.isArray(normal.skinBaseColors));
+
+    const defensive = diffEngine.computeHairCoordinates(null, null);
+    assert.equal(Array.isArray(defensive), false);
+    assert.deepEqual(Object.keys(defensive).sort(), Object.keys(normal).sort());
+
+    // A circular reference (result.hairPositions === result) would throw here.
+    assert.doesNotThrow(() => JSON.stringify(normal));
 });
 
 test('CanvasAsciiConverterAdapter - maps color matrix to ASCII grid', () => {

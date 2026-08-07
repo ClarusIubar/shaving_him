@@ -52,12 +52,7 @@ export class DeltaDiffEngineAdapter extends DiffEnginePort {
             }
         }
 
-        if (Array.isArray(hairPositions)) {
-            hairPositions.hairPositions = hairPositions;
-            hairPositions.skinBaseColors = skinBaseColors;
-        }
-
-        return hairPositions;
+        return { hairPositions, skinBaseColors };
     }
 
     /**
