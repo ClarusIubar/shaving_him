@@ -56,11 +56,13 @@ export class CanvasRenderer {
             this.setupCanvas();
         }
 
-        if (dirtyCells && dirtyCells.length > 0) {
+        if (dirtyCells === null || dirtyCells === undefined) {
+            this.needsFullRedraw = true; // No dirty-cell info at all: signal full redraw required
+        } else if (dirtyCells.length > 0) {
             this.pendingDirtyCells.push(...dirtyCells);
-        } else {
-            this.needsFullRedraw = true; // Signal full redraw required
         }
+        // An empty dirtyCells array means nothing on screen changed - nothing
+        // to schedule beyond what may already be pending.
 
         if (!this.rafId) {
             this.rafId = requestAnimationFrame(() => {
@@ -94,7 +96,8 @@ export class CanvasRenderer {
         const { textGrid, colorGrid } = stageData;
 
         // Mode A: Partial Dirty Cell Redraw (Ultra Fast < 1ms)
-        if (dirtyCells && Array.isArray(dirtyCells) && dirtyCells.length > 0) {
+        if (Array.isArray(dirtyCells)) {
+            if (dirtyCells.length === 0) return; // Nothing changed - nothing to draw
             for (let i = 0; i < dirtyCells.length; i++) {
                 const { r, c } = dirtyCells[i];
                 if (r < 0 || r >= this.rows || c < 0 || c >= this.cols) continue;
@@ -107,7 +110,7 @@ export class CanvasRenderer {
             return;
         }
 
-        // Mode B: Full Canvas Redraw (Initial load or stage change)
+        // Mode B: Full Canvas Redraw (dirtyCells is null/undefined - initial load or stage change)
         this.ctx.font = '900 6px "Courier New", monospace';
         this.ctx.textBaseline = 'top';
         this.ctx.fillStyle = '#000000';
@@ -116,7 +119,6 @@ export class CanvasRenderer {
         const maxR = Math.min(this.rows, textGrid.length);
         for (let r = 0; r < maxR; r++) {
             const rowText = textGrid[r];
-            const rowColors = colorGrid ? colorGrid[r] : null;
 
             for (let c = 0; c < this.cols && c < rowText.length; c++) {
                 this.renderSingleCell(r, c, textGrid, colorGrid, hairGrid);
