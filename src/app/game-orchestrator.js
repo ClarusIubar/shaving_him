@@ -39,12 +39,20 @@ export class GameOrchestrator {
 
     notifyUpdate(dirtyCells = null, isTimerTick = false) {
         if (!this.session) return;
-        const snapshot = this.session.getSnapshot();
+        // stageData/hairView are included so UI subscribers never need to
+        // reach into orchestrator.currentStageData / orchestrator.session
+        // directly (Law of Demeter). hairView is a read-only projection of
+        // the session's HairGrid (see HairGrid.toReadOnlyView) - a UI
+        // subscriber has no business mutating session state through it.
+        const event = {
+            snapshot: this.session.getSnapshot(),
+            dirtyCells,
+            isTimerTick,
+            stageData: this.currentStageData,
+            hairView: this.session.hairGrid.toReadOnlyView()
+        };
         for (let i = 0; i < this.updateCallbacks.length; i++) {
-            // stageData/hairGrid are included so UI subscribers never need to
-            // reach into orchestrator.currentStageData / orchestrator.session
-            // directly (Law of Demeter).
-            this.updateCallbacks[i](snapshot, dirtyCells, isTimerTick, this.currentStageData, this.session.hairGrid);
+            this.updateCallbacks[i](event);
         }
     }
 
@@ -124,7 +132,7 @@ export class GameOrchestrator {
         }
     }
 
-    getCurrentHairGrid() {
-        return this.session ? this.session.hairGrid : null;
+    getCurrentHairView() {
+        return this.session ? this.session.hairGrid.toReadOnlyView() : null;
     }
 }
