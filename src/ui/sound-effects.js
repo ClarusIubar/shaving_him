@@ -4,16 +4,17 @@
  * Zero external audio file dependencies (0B asset load).
  */
 export class SoundEffects {
-    constructor() {
+    constructor(win = typeof window !== 'undefined' ? window : null) {
+        this.win = win;
         this.ctx = null;
         this.enabled = true;
         this.noiseBuffer = null;
     }
 
     init() {
-        if (typeof window === 'undefined') return;
+        if (!this.win) return;
         if (!this.ctx) {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            const AudioCtx = this.win.AudioContext || this.win.webkitAudioContext;
             if (AudioCtx) {
                 this.ctx = new AudioCtx();
                 this.createNoiseBuffer();

@@ -5,36 +5,37 @@
 import { GamePolicy } from '../domain/game-policy.js';
 
 export class HUD {
-    constructor(gamePolicy = new GamePolicy()) {
+    constructor(gamePolicy = new GamePolicy(), doc = typeof document !== 'undefined' ? document : null) {
         this.gamePolicy = gamePolicy;
-        this.scoreEl = document.getElementById('scoreVal');
-        this.timerEl = document.getElementById('timerVal');
-        this.remainEl = document.getElementById('remainVal');
-        this.barFillEl = document.getElementById('progressBarFill');
+        this.doc = doc;
+        this.scoreEl = this.doc.getElementById('scoreVal');
+        this.timerEl = this.doc.getElementById('timerVal');
+        this.remainEl = this.doc.getElementById('remainVal');
+        this.barFillEl = this.doc.getElementById('progressBarFill');
 
         // Game Over Overlay
-        this.overlayEl = document.getElementById('gameOverlay');
-        this.titleEl = document.getElementById('overlayTitle');
-        this.finalScoreEl = document.getElementById('overlayFinalScore');
-        this.msgEl = document.getElementById('overlayMsg');
-        this.detailEl = document.getElementById('overlayDetail');
+        this.overlayEl = this.doc.getElementById('gameOverlay');
+        this.titleEl = this.doc.getElementById('overlayTitle');
+        this.finalScoreEl = this.doc.getElementById('overlayFinalScore');
+        this.msgEl = this.doc.getElementById('overlayMsg');
+        this.detailEl = this.doc.getElementById('overlayDetail');
 
         // Start Modal Elements
-        this.startModalEl = document.getElementById('startModal');
-        this.photoInputEl = document.getElementById('photoInput');
-        this.dropZoneEl = document.getElementById('uploadDropZone');
-        this.previewEl = document.getElementById('photoPreview');
-        this.startPresetBtn = document.getElementById('startPresetBtn');
-        this.startCustomBtn = document.getElementById('startCustomBtn');
+        this.startModalEl = this.doc.getElementById('startModal');
+        this.photoInputEl = this.doc.getElementById('photoInput');
+        this.dropZoneEl = this.doc.getElementById('uploadDropZone');
+        this.previewEl = this.doc.getElementById('photoPreview');
+        this.startPresetBtn = this.doc.getElementById('startPresetBtn');
+        this.startCustomBtn = this.doc.getElementById('startCustomBtn');
 
         this.selectedFile = null;
         this.previewUrl = null;
 
-        this.comboBadgeEl = document.getElementById('comboBadge');
-        this.comboValEl = document.getElementById('comboVal');
-        this.loadingEl = document.getElementById('loadingScreen');
-        this.soundToggleBtn = document.getElementById('soundToggleBtn');
-        this.exportPngBtn = document.getElementById('exportPngBtn');
+        this.comboBadgeEl = this.doc.getElementById('comboBadge');
+        this.comboValEl = this.doc.getElementById('comboVal');
+        this.loadingEl = this.doc.getElementById('loadingScreen');
+        this.soundToggleBtn = this.doc.getElementById('soundToggleBtn');
+        this.exportPngBtn = this.doc.getElementById('exportPngBtn');
 
         this.initStartModalEvents();
     }
@@ -115,9 +116,9 @@ export class HUD {
     }
 
     showLoading(message = '스테이지 생성 중...', percentage = 0) {
-        if (typeof document === 'undefined') return;
+        if (!this.doc) return;
         if (!this.loadingEl) {
-            this.loadingEl = document.createElement('div');
+            this.loadingEl = this.doc.createElement('div');
             this.loadingEl.id = 'loadingScreen';
             this.loadingEl.className = 'loading-screen';
             // Only static markup goes through innerHTML - message/percentage
@@ -130,13 +131,13 @@ export class HUD {
                     <div id="loadingBarFill" style="height:100%;background:linear-gradient(90deg, #ff6b6b, #4ecdc4);transition:width 0.2s;"></div>
                 </div>
             `;
-            document.body.appendChild(this.loadingEl);
+            this.doc.body.appendChild(this.loadingEl);
         } else {
             this.loadingEl.style.display = 'flex';
         }
 
-        const msgNode = document.getElementById('loadingMsg');
-        const fillNode = document.getElementById('loadingBarFill');
+        const msgNode = this.doc.getElementById('loadingMsg');
+        const fillNode = this.doc.getElementById('loadingBarFill');
         if (msgNode) msgNode.textContent = message;
         if (fillNode) fillNode.style.width = `${percentage}%`;
     }
@@ -152,8 +153,8 @@ export class HUD {
     }
 
     updateBrushSizeUI(radius) {
-        if (typeof document === 'undefined') return;
-        const brushBtns = document.querySelectorAll('.brush-btn');
+        if (!this.doc) return;
+        const brushBtns = this.doc.querySelectorAll('.brush-btn');
         if (!brushBtns || typeof brushBtns.forEach !== 'function') return;
 
         brushBtns.forEach(btn => {
@@ -229,7 +230,7 @@ export class HUD {
 
         this.overlayEl.style.display = 'flex';
 
-        const restartBtn = document.getElementById('restartBtn');
+        const restartBtn = this.doc.getElementById('restartBtn');
         if (restartBtn) {
             restartBtn.onclick = () => {
                 this.hideOverlay();

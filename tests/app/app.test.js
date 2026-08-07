@@ -257,7 +257,15 @@ test('HUD - updates combo streak badge display based on snapshot.comboCount', as
 
 test('SoundEffects - initializes and toggles enable state correctly', async () => {
     const { SoundEffects } = await import('../../src/ui/sound-effects.js');
-    const sound = new SoundEffects();
+
+    // A single win object, injected once at construction (matching how
+    // SoundEffects is actually used) and mutated in place below to simulate
+    // different AudioContext responses - SoundEffects now captures the win
+    // reference it's given at construction time rather than re-reading a
+    // global on every call, so reassigning `global.window` wholesale after
+    // construction would no longer be visible to this instance.
+    const win = {};
+    const sound = new SoundEffects(win);
     assert.equal(sound.enabled, true);
 
     const toggled = sound.toggle();
@@ -270,21 +278,19 @@ test('SoundEffects - initializes and toggles enable state correctly', async () =
 
     // Re-enable and test audio context synthesis with mock AudioContext
     sound.toggle();
-    global.window = {
-        AudioContext: class {
-            constructor() {
-                this.sampleRate = 44100;
-                this.currentTime = 0;
-                this.destination = {};
-                this.state = 'suspended';
-            }
-            createBuffer() { return { getChannelData: () => new Float32Array(100) }; }
-            createBufferSource() { return { buffer: null, connect: () => {}, start: () => {}, stop: () => {} }; }
-            createBiquadFilter() { return { type: '', frequency: { setValueAtTime: () => {} }, Q: { setValueAtTime: () => {} }, connect: () => {} }; }
-            createOscillator() { return { type: '', frequency: { setValueAtTime: () => {} }, connect: () => {}, start: () => {}, stop: () => {} }; }
-            createGain() { return { gain: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} }, connect: () => {} }; }
-            resume() { return Promise.resolve(); }
+    win.AudioContext = class {
+        constructor() {
+            this.sampleRate = 44100;
+            this.currentTime = 0;
+            this.destination = {};
+            this.state = 'suspended';
         }
+        createBuffer() { return { getChannelData: () => new Float32Array(100) }; }
+        createBufferSource() { return { buffer: null, connect: () => {}, start: () => {}, stop: () => {} }; }
+        createBiquadFilter() { return { type: '', frequency: { setValueAtTime: () => {} }, Q: { setValueAtTime: () => {} }, connect: () => {} }; }
+        createOscillator() { return { type: '', frequency: { setValueAtTime: () => {} }, connect: () => {}, start: () => {}, stop: () => {} }; }
+        createGain() { return { gain: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} }, connect: () => {} }; }
+        resume() { return Promise.resolve(); }
     };
 
     sound.init();
@@ -296,7 +302,7 @@ test('SoundEffects - initializes and toggles enable state correctly', async () =
     sound.init();
 
     // Test suspended resume rejection catch (line 23)
-    global.window.AudioContext = class {
+    win.AudioContext = class {
         constructor() { this.state = 'suspended'; }
         createBuffer() { return { getChannelData: () => new Float32Array(10) }; }
         resume() { return Promise.reject(new Error('Rejected')); }
@@ -309,7 +315,7 @@ test('SoundEffects - initializes and toggles enable state correctly', async () =
     sound.playShaveSound();
 
     // Test catch error block
-    global.window.AudioContext = class {
+    win.AudioContext = class {
         constructor() { this.state = 'running'; }
         createBuffer() { return { getChannelData: () => new Float32Array(10) }; }
         createBufferSource() { throw new Error('Audio policy error'); }
@@ -320,16 +326,13 @@ test('SoundEffects - initializes and toggles enable state correctly', async () =
     sound.playComboSound();
     sound.playWinSound();
 
-    delete global.window;
-
-    // Test init & createNoiseBuffer without window / without ctx
-    sound.ctx = null;
-    sound.init();
-    sound.createNoiseBuffer();
-    sound.enabled = true;
-    sound.playShaveSound();
-    sound.playComboSound();
-    sound.playWinSound();
+    // Test init & createNoiseBuffer without a win object / without ctx
+    const soundNoWin = new SoundEffects(null);
+    soundNoWin.init();
+    soundNoWin.createNoiseBuffer();
+    soundNoWin.playShaveSound();
+    soundNoWin.playComboSound();
+    soundNoWin.playWinSound();
 });
 
 test('HUD - modal visibility methods showStartModal, hideStartModal, showGameOver, hideOverlay, updateSoundUI, showLoading, hideLoading', async () => {
