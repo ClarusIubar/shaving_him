@@ -27,6 +27,54 @@ test('StaticJsonStageAdapter - parses raw JSON into StageDataDTO', async () => {
     assert.equal(stageDTO.textGrid.length, 2);
 });
 
+test('StaticJsonStageAdapter - default fetch preserves its receiver (no Illegal invocation in real browsers)', async () => {
+    // Native fetch requires its receiver to be the global object (window /
+    // WorkerGlobalScope). Assigning globalThis.fetch straight to an instance
+    // property and calling it as `this.fetch(...)` changes the receiver to
+    // the adapter instance, which real browsers reject with
+    // "TypeError: Illegal invocation". Node's own fetch doesn't enforce this,
+    // which is exactly why this bug went undetected - simulate the
+    // enforcement with a stub that checks its receiver.
+    const receiverCheckingFetch = function (url) {
+        if (this !== globalThis) {
+            throw new TypeError('Illegal invocation');
+        }
+        return Promise.resolve({ ok: true, json: async () => ({ rows: 1, cols: 1, text: ['A'], colors: [] }) });
+    };
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = receiverCheckingFetch;
+
+    try {
+        const adapter = new StaticJsonStageAdapter();
+        const stage = await adapter.loadStage('some-other-stage.json');
+        assert.equal(stage.rows, 1);
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
+test('StaticJsonStageAdapter - logs the original error before falling back to window.EMBEDDED_GAME_DATA', async () => {
+    const loggedArgs = [];
+    const originalConsoleError = console.error;
+    console.error = (...args) => { loggedArgs.push(args); };
+
+    global.window = { EMBEDDED_GAME_DATA: { rows: 3, cols: 3, text: ['XYZ'], colors: [] } };
+    const boomError = new Error('boom');
+    const adapter = new StaticJsonStageAdapter(async () => { throw boomError; });
+
+    try {
+        const stage = await adapter.loadStage('some.json');
+        assert.equal(stage.rows, 3);
+        assert.ok(
+            loggedArgs.some(args => args.includes(boomError)),
+            'the original fetch error must be logged before the fallback silently replaces it'
+        );
+    } finally {
+        console.error = originalConsoleError;
+        delete global.window;
+    }
+});
+
 test('DeltaDiffEngineAdapter - extracts dark hair positions and calculates skin tone', async () => {
     const { DeltaDiffEngineAdapter } = await import('../../src/adapters/delta-diff-engine.js');
     const engine = new DeltaDiffEngineAdapter();
