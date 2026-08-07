@@ -8,8 +8,6 @@ import { CanvasRenderer } from './ui/canvas-renderer.js';
 import { BrushController } from './ui/brush-controller.js';
 import { HUD } from './ui/hud.js';
 import { SoundEffects } from './ui/sound-effects.js';
-import { SessionStatus } from './domain/shave-session.js';
-
 export const KEY_BRUSH_RADIUS_MAP = Object.freeze({
     '1': 1,
     '2': 3,

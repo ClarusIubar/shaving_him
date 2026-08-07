@@ -109,11 +109,18 @@ export class GameOrchestrator {
         if (!this.session || this.session.status !== SessionStatus.RUNNING) {
             return { removed: 0, dirtyCells: [] };
         }
+        // A shave over a hair-free area still resets ScoreCalculator's combo
+        // streak internally; comparing the combo before/after catches that
+        // case even though removed/dirtyCells are both empty, so the reset
+        // reaches the HUD immediately instead of waiting for the next
+        // 1-second timer tick.
+        const comboBefore = this.session.getSnapshot().comboCount;
         const result = this.session.shave(row, col, radius);
         const removed = result ? result.removed : 0;
         const dirtyCells = result && result.dirtyCells ? result.dirtyCells : [];
+        const comboChanged = this.session.getSnapshot().comboCount !== comboBefore;
 
-        if (removed > 0 || dirtyCells.length > 0) {
+        if (removed > 0 || dirtyCells.length > 0 || comboChanged) {
             this.notifyUpdate(dirtyCells, false);
             if (this.session.status === SessionStatus.WON) {
                 this.stopTimer();

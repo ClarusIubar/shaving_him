@@ -188,10 +188,8 @@ export class BrushController {
                 if (e2 > -dc) { err -= dr; c0 += sc; }
                 if (e2 < dr) { err += dc; r0 += sr; }
             }
-        } else if (this.isMouseDown || (row !== this.lastR || col !== this.lastC)) {
-            if (this.isMouseDown && this.onShave) {
-                this.onShave(row, col, this.brushRadius);
-            }
+        } else if (this.isMouseDown && this.onShave) {
+            this.onShave(row, col, this.brushRadius);
         }
         this.lastR = row;
         this.lastC = col;
