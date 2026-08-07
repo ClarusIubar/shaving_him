@@ -4,10 +4,10 @@
  */
 export class DiffEnginePort {
     /**
-     * @param {Array<Array<[number, number, number]>>} originalColors 
-     * @param {Array<Array<[number, number, number]>>} skinBaseColors 
-     * @param {number} threshold 
-     * @returns {Array<{ r: number, c: number }>}
+     * @param {Array<Array<[number, number, number]>>} originalColors
+     * @param {Array<Array<[number, number, number]>>} skinBaseColors
+     * @param {number} threshold
+     * @returns {{ hairPositions: Array<{ r: number, c: number }>, skinBaseColors: Array<Array<[number, number, number]>> }}
      */
     computeHairCoordinates(originalColors, skinBaseColors, threshold = 25) {
         throw new Error('DiffEnginePort method not implemented');
