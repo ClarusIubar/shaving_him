@@ -33,13 +33,17 @@ export class CanvasImageProcessorAdapter extends ImageProcessorPort {
             : null;
 
         if (!canvas) {
-            // Node test fallback / headless fallback
-            return this.createMockImageData(targetWidth, targetHeight);
+            throw new Error('캔버스를 생성할 수 없는 환경입니다.');
         }
 
         canvas.width = targetWidth;
         canvas.height = targetHeight;
         const ctx = canvas.getContext('2d');
+
+        if (!ctx) {
+            throw new Error('캔버스 2D 컨텍스트를 가져올 수 없습니다.');
+        }
+
         ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
         const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
@@ -89,18 +93,5 @@ export class CanvasImageProcessorAdapter extends ImageProcessorPort {
             reader.onerror = () => reject(new Error('파일 읽기 과정에서 오류가 발생했습니다.'));
             reader.readAsDataURL(file);
         });
-    }
-
-    createMockImageData(w, h) {
-        const data = new Uint8ClampedArray(w * h * 4);
-        const colors = [];
-        for (let y = 0; y < h; y++) {
-            const row = [];
-            for (let x = 0; x < w; x++) {
-                row.push([200, 180, 160]);
-            }
-            colors.push(row);
-        }
-        return { imageData: { width: w, height: h, data }, colors };
     }
 }

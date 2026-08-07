@@ -66,7 +66,22 @@ test('LSP Signature Contract Suite - Adapters fulfill abstract Port method signa
     const imgProcessor = new CanvasImageProcessorAdapter();
     assert.ok(imgProcessor instanceof ImageProcessorPort);
 
+    // The adapter requires a real DOM canvas (it now rejects explicitly
+    // rather than fabricating data when one isn't available - see
+    // canvas-image-processor.js), so this contract check provides a minimal
+    // working canvas/2D-context mock instead of relying on a headless
+    // fallback.
+    global.document = {
+        createElement: (tag) => tag === 'canvas' ? {
+            width: 0, height: 0,
+            getContext: () => ({
+                drawImage: () => {},
+                getImageData: (x, y, w, h) => ({ width: w, height: h, data: new Uint8ClampedArray(w * h * 4) })
+            })
+        } : null
+    };
     const imgResult = await imgProcessor.processImageSource({ naturalWidth: 2, naturalHeight: 1, src: 'x' }, 2, 1);
+    delete global.document;
     assert.ok(Array.isArray(imgResult.colors));
     assert.equal(imgResult.colors.length, 1);
     assert.equal(imgResult.colors[0].length, 2);
