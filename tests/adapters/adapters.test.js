@@ -146,7 +146,7 @@ test('CanvasAsciiConverterAdapter - maps color matrix to ASCII grid', () => {
     ];
 
     const converter = new CanvasAsciiConverterAdapter(' .@');
-    const { textGrid, colorGrid } = converter.convertToAsciiGrid(colors);
+    const { textGrid, colorGrid } = converter.convertToAsciiGrid(colors, 2, 1);
 
     assert.equal(textGrid[0].length, 2);
     assert.equal(textGrid[0][0], ' ');
