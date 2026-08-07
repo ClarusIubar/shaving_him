@@ -54,6 +54,60 @@ test('DeltaDiffEngineAdapter - extracts dark hair positions', () => {
     assert.deepEqual(hairPositions[0], { r: 0, c: 1 });
 });
 
+test('DeltaDiffEngineAdapter - excludes transparent pixels (alpha < 128) from hair detection', () => {
+    // Transparent regions read back as [0,0,0,alpha] from canvas ImageData; without an
+    // alpha check they look identical to genuine dark hair pixels (lum 0 vs a bright
+    // skin base), so every transparent pixel would otherwise be misdetected as hair.
+    const originalColors = [
+        [[10, 10, 10, 255], [10, 10, 10, 0]],
+        [[10, 10, 10, 0], [10, 10, 10, 0]]
+    ];
+    const skinBaseColors = [
+        [[200, 200, 200, 255], [200, 200, 200, 0]],
+        [[200, 200, 200, 0], [200, 200, 200, 0]]
+    ];
+
+    const diffEngine = new DeltaDiffEngineAdapter();
+    const hairPositions = diffEngine.computeHairCoordinates(originalColors, skinBaseColors, 25);
+
+    assert.equal(hairPositions.length, 1);
+    assert.deepEqual(hairPositions[0], { r: 0, c: 0 });
+});
+
+test('DeltaDiffEngineAdapter - alpha-less (3-channel) input is treated as fully opaque', () => {
+    // Preset-stage colors carry no alpha channel at all; the alpha skip must not
+    // misfire on them, or every preset hair pixel would silently disappear.
+    const originalColors = [
+        [[200, 200, 200], [10, 10, 10]],
+        [[200, 200, 200], [200, 200, 200]]
+    ];
+    const skinBaseColors = [
+        [[200, 200, 200], [180, 180, 180]],
+        [[200, 200, 200], [200, 200, 200]]
+    ];
+
+    const diffEngine = new DeltaDiffEngineAdapter();
+    const hairPositions = diffEngine.computeHairCoordinates(originalColors, skinBaseColors, 25);
+
+    assert.equal(hairPositions.length, 1);
+    assert.deepEqual(hairPositions[0], { r: 0, c: 1 });
+});
+
+test('DeltaDiffEngineAdapter - dynamic skin-base generation also excludes transparent pixels from hair detection', () => {
+    // Same failure mode as above but through the skinBaseColors=null path, where the
+    // adapter derives its own skin baseline internally (delta-diff-engine.js:17-25).
+    const originalColors = [
+        [[10, 10, 10, 255], [200, 180, 160, 255]],
+        [[0, 0, 0, 0], [0, 0, 0, 0]]
+    ];
+
+    const diffEngine = new DeltaDiffEngineAdapter();
+    const hairPositions = diffEngine.computeHairCoordinates(originalColors, null, 25, 80);
+
+    assert.equal(hairPositions.length, 1);
+    assert.deepEqual(hairPositions[0], { r: 0, c: 0 });
+});
+
 test('CanvasAsciiConverterAdapter - maps color matrix to ASCII grid', () => {
     const colors = [
         [[0, 0, 0], [255, 255, 255]]
