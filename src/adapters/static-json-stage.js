@@ -4,7 +4,7 @@
  * Includes fallback for file:// protocol CORS restrictions.
  */
 export class StaticJsonStageAdapter {
-    constructor(fetchFunction = globalThis.fetch) {
+    constructor(fetchFunction = (...args) => globalThis.fetch(...args)) {
         this.fetch = fetchFunction;
     }
 
@@ -30,6 +30,9 @@ export class StaticJsonStageAdapter {
             } catch (err) {
                 // Fallback for file:// protocol or HTTP 404 fetch restrictions in browsers
                 if (typeof window !== 'undefined' && window.EMBEDDED_GAME_DATA) {
+                    if (typeof console !== 'undefined' && console.error) {
+                        console.error('StaticJsonStageAdapter: fetch failed, falling back to window.EMBEDDED_GAME_DATA', err);
+                    }
                     rawData = window.EMBEDDED_GAME_DATA;
                 } else {
                     throw err;
