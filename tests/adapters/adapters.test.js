@@ -157,11 +157,26 @@ test('CanvasAsciiConverterAdapter - maps color matrix to ASCII grid', () => {
 test('StagePipeline - computes dynamic average skin tone and loads custom HTMLImageElement source', async () => {
     const { StagePipeline } = await import('../../src/app/stage-pipeline.js');
     const { StaticJsonStageAdapter } = await import('../../src/adapters/static-json-stage.js');
-    const { CanvasImageProcessorAdapter } = await import('../../src/adapters/canvas-image-processor.js');
     const { DeltaDiffEngineAdapter } = await import('../../src/adapters/delta-diff-engine.js');
     const { CanvasAsciiConverterAdapter } = await import('../../src/adapters/canvas-ascii-converter.js');
     const diffEngine = new DeltaDiffEngineAdapter();
-    const pipeline = new StagePipeline(new StaticJsonStageAdapter(), new CanvasImageProcessorAdapter(), diffEngine, new CanvasAsciiConverterAdapter());
+    // A fake image processor stands in for CanvasImageProcessorAdapter here -
+    // this test exercises pipeline wiring, not real canvas decoding, and a
+    // fake keeps that independent of whether a DOM canvas is available in
+    // this test environment. It returns the same RGBA shape as the real
+    // adapter so this test doesn't mask a shape mismatch.
+    const fakeImageProcessor = {
+        async processImageSource(source, targetWidth, targetHeight) {
+            const colors = [];
+            for (let y = 0; y < targetHeight; y++) {
+                const row = [];
+                for (let x = 0; x < targetWidth; x++) row.push([200, 180, 160, 255]);
+                colors.push(row);
+            }
+            return { imageData: { width: targetWidth, height: targetHeight }, colors };
+        }
+    };
+    const pipeline = new StagePipeline(new StaticJsonStageAdapter(), fakeImageProcessor, diffEngine, new CanvasAsciiConverterAdapter());
     const mockColors = [
         [[10, 10, 10], [200, 180, 160]],
         [[220, 200, 180], [10, 10, 10]]
@@ -203,16 +218,70 @@ test('StagePipeline - ignores transparent pixels (alpha < 128) in skin tone calc
     assert.deepEqual(avgSkin, [210, 190, 170]);
 });
 
+test('CanvasImageProcessorAdapter - accepts an HTMLImageElement source directly and decodes it via canvas', async () => {
+    const { CanvasImageProcessorAdapter } = await import('../../src/adapters/canvas-image-processor.js');
+    const processor = new CanvasImageProcessorAdapter();
+
+    global.HTMLImageElement = class {};
+    global.document = {
+        createElement: (tag) => tag === 'canvas' ? {
+            width: 0, height: 0,
+            getContext: () => ({
+                drawImage: () => {},
+                getImageData: (x, y, w, h) => ({ width: w, height: h, data: new Uint8ClampedArray(w * h * 4) })
+            })
+        } : null
+    };
+
+    const img = new global.HTMLImageElement();
+    img.naturalWidth = 3;
+    img.naturalHeight = 3;
+
+    const result = await processor.processImageSource(img, 3, 3);
+    assert.equal(result.colors.length, 3);
+    assert.equal(result.colors[0].length, 3);
+
+    delete global.document;
+    delete global.HTMLImageElement;
+});
+
 test('CanvasImageProcessorAdapter - rejects zero dimension or invalid image sources', async () => {
     const { CanvasImageProcessorAdapter } = await import('../../src/adapters/canvas-image-processor.js');
     const adapter = new CanvasImageProcessorAdapter();
-    
+
     // Zero dimension mock image
     const zeroDimImg = { naturalWidth: 0, naturalHeight: 0 };
     await assert.rejects(
         () => adapter.processImageSource(zeroDimImg),
         { message: '이미지 해상도를 읽을 수 없습니다.' }
     );
+});
+
+test('CanvasImageProcessorAdapter - rejects explicitly when no canvas is available, instead of returning fabricated data', async () => {
+    const { CanvasImageProcessorAdapter } = await import('../../src/adapters/canvas-image-processor.js');
+    const processor = new CanvasImageProcessorAdapter();
+
+    // No global.document here - production code must fail loudly, not fall
+    // back to a fabricated single-color stage that hides the real cause
+    // (e.g. a canvas 2D context genuinely unavailable in the browser).
+    await assert.rejects(
+        () => processor.processImageSource({ naturalWidth: 5, naturalHeight: 5, src: 'x' }, 5, 5),
+        /캔버스/
+    );
+});
+
+test('CanvasImageProcessorAdapter - rejects explicitly when a 2D context cannot be obtained', async () => {
+    const { CanvasImageProcessorAdapter } = await import('../../src/adapters/canvas-image-processor.js');
+    const processor = new CanvasImageProcessorAdapter();
+
+    global.document = {
+        createElement: () => ({ width: 0, height: 0, getContext: () => null })
+    };
+    await assert.rejects(
+        () => processor.processImageSource({ naturalWidth: 5, naturalHeight: 5, src: 'x' }, 5, 5),
+        /캔버스/
+    );
+    delete global.document;
 });
 
 test('CanvasRenderer - provides exportPng method for PNG snapshot download', async () => {
