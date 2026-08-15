@@ -3,6 +3,7 @@
  * High-performance ASCII grid drawing with Dirty Region partial redraw and rAF batching.
  */
 import { GridGeometry } from '../domain/grid-geometry.js';
+import { ParticleSystem } from './particle-system.js';
 
 export class CanvasRenderer {
     constructor(canvasElement, gridGeometry = GridGeometry.default()) {
@@ -21,8 +22,39 @@ export class CanvasRenderer {
         this.needsFullRedraw = false;
         this.currentStageData = null;
         this.currentHairGrid = null;
-        this.particles = [];
-        this.particleRafId = null;
+
+        this.particleSystem = new ParticleSystem({
+            fontW: this.fontW,
+            fontH: this.fontH,
+            onRestoreCell: (r, c) => this.restoreParticleCell(r, c),
+            onRenderGlyph: (char, x, y, alpha) => {
+                if (!this.ctx) return;
+                this.ctx.font = '900 6px "Courier New", monospace';
+                this.ctx.textBaseline = 'top';
+                this.ctx.fillStyle = `rgba(255, 220, 180, ${alpha.toFixed(2)})`;
+                this.ctx.fillText(char, x, y);
+            }
+        });
+    }
+
+    get particles() {
+        return this.particleSystem ? this.particleSystem.particles : [];
+    }
+
+    set particles(val) {
+        if (this.particleSystem) {
+            this.particleSystem.particles = val;
+        }
+    }
+
+    get particleRafId() {
+        return this.particleSystem ? this.particleSystem.rafId : null;
+    }
+
+    set particleRafId(val) {
+        if (this.particleSystem) {
+            this.particleSystem.rafId = val;
+        }
     }
 
     setupCanvas() {
@@ -40,6 +72,11 @@ export class CanvasRenderer {
             this.ctx.scale(this.dpr, this.dpr);
             this.ctx.font = '900 6px "Courier New", monospace';
             this.ctx.textBaseline = 'top';
+        }
+
+        if (this.particleSystem) {
+            this.particleSystem.fontW = this.fontW;
+            this.particleSystem.fontH = this.fontH;
         }
     }
 
@@ -155,51 +192,15 @@ export class CanvasRenderer {
     }
 
     spawnParticles(dirtyCells) {
-        if (!dirtyCells || dirtyCells.length === 0) return;
-        const count = Math.min(dirtyCells.length, 12);
-        const chars = ['*', '.', '°', '·'];
-        for (let i = 0; i < count; i++) {
-            const cell = dirtyCells[i];
-            this.particles.push({
-                x: cell.c * this.fontW + (Math.random() * 4 - 2),
-                y: cell.r * this.fontH + (Math.random() * 4 - 2),
-                vx: (Math.random() - 0.5) * 1.8,
-                vy: (Math.random() - 0.8) * 1.5,
-                life: 1.0,
-                decay: 0.12 + Math.random() * 0.08,
-                char: chars[Math.floor(Math.random() * chars.length)],
-                // Grid cell this particle last painted into, so the NEXT
-                // frame can repaint it from real stage data before the
-                // particle moves on - otherwise the glyph is left behind as
-                // a permanent trail.
-                lastCellR: null,
-                lastCellC: null
-            });
+        if (this.particleSystem) {
+            this.particleSystem.spawn(dirtyCells);
         }
-        if (this.particles.length > 40) {
-            this.particles.splice(0, this.particles.length - 40);
-        }
-        this.ensureParticleLoop();
     }
 
-    /**
-     * Keep animating particles on their own schedule, independent of shave
-     * input. Without this, a particle spawned by the last shave before the
-     * user stops dragging never gets another updateAndRenderParticles()
-     * call (that only used to happen inside the dirty-cell render path) and
-     * freezes on screen mid-flight.
-     */
     ensureParticleLoop() {
-        if (this.particleRafId || this.particles.length === 0) return;
-        if (typeof requestAnimationFrame !== 'function') return;
-        const tick = () => {
-            this.particleRafId = null;
-            this.updateAndRenderParticles();
-            if (this.particles.length > 0) {
-                this.particleRafId = requestAnimationFrame(tick);
-            }
-        };
-        this.particleRafId = requestAnimationFrame(tick);
+        if (this.particleSystem) {
+            this.particleSystem.ensureLoop();
+        }
     }
 
     /** Repaint the grid cell at (r, c) from the last known stage/hair data,
@@ -212,34 +213,8 @@ export class CanvasRenderer {
     }
 
     updateAndRenderParticles() {
-        if (this.particles.length === 0 || !this.ctx) return;
-
-        for (let i = 0; i < this.particles.length; i++) {
-            const p = this.particles[i];
-            if (p.lastCellR !== null) {
-                this.restoreParticleCell(p.lastCellR, p.lastCellC);
-            }
-        }
-
-        this.ctx.font = '900 6px "Courier New", monospace';
-        this.ctx.textBaseline = 'top';
-
-        for (let i = this.particles.length - 1; i >= 0; i--) {
-            const p = this.particles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life -= p.decay;
-
-            if (p.life <= 0) {
-                this.particles.splice(i, 1);
-                continue;
-            }
-
-            this.ctx.fillStyle = `rgba(255, 220, 180, ${p.life.toFixed(2)})`;
-            this.ctx.fillText(p.char, p.x, p.y);
-
-            p.lastCellR = Math.floor(p.y / this.fontH);
-            p.lastCellC = Math.floor(p.x / this.fontW);
+        if (this.particleSystem) {
+            this.particleSystem.updateAndRender();
         }
     }
 
