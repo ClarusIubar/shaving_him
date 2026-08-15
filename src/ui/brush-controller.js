@@ -3,6 +3,7 @@
  * Optimized with cached getBoundingClientRect and GPU transform translate3d positioning.
  */
 import { GridGeometry } from '../domain/grid-geometry.js';
+import { rasterizeLine } from '../domain/line-rasterizer.js';
 
 export class BrushController {
     constructor(canvas, cursor, onShaveCallback, gridGeometry = GridGeometry.default()) {
@@ -170,24 +171,11 @@ export class BrushController {
         }
 
         if (this.isMouseDown && this.lastR !== -1 && this.lastC !== -1 && (this.lastR !== row || this.lastC !== col)) {
-            // Line interpolation (Bresenham's line algorithm)
-            let r0 = this.lastR, c0 = this.lastC;
-            const r1 = row, c1 = col;
-            const dr = Math.abs(r1 - r0);
-            const dc = Math.abs(c1 - c0);
-            const sr = r0 < r1 ? 1 : -1;
-            const sc = c0 < c1 ? 1 : -1;
-            let err = (dc > dr ? dc : -dr) / 2;
-
-            while (true) {
+            rasterizeLine(this.lastR, this.lastC, row, col, (r, c) => {
                 if (this.onShave) {
-                    this.onShave(r0, c0, this.brushRadius);
+                    this.onShave(r, c, this.brushRadius);
                 }
-                if (r0 === r1 && c0 === c1) break;
-                const e2 = err;
-                if (e2 > -dc) { err -= dr; c0 += sc; }
-                if (e2 < dr) { err += dc; r0 += sr; }
-            }
+            });
         } else if (this.isMouseDown && this.onShave) {
             this.onShave(row, col, this.brushRadius);
         }
