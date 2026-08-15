@@ -3,6 +3,7 @@
  * Implements StageSourcePort strategy handlers for JSON presets and 1-Photo Image processing.
  */
 import { StageSourcePort } from '../ports/stage-source.port.js';
+import { validateStageData } from '../domain/schema-validator.js';
 
 export class JsonSourceHandler extends StageSourcePort {
     constructor(jsonAdapter) {
@@ -21,7 +22,7 @@ export class JsonSourceHandler extends StageSourcePort {
         if (typeof onProgress === 'function') onProgress('🎮 프리셋 아스키 스테이지 로드 중...', 50);
         const data = await this.jsonAdapter.loadStage(source, targetCols, targetRows);
         if (typeof onProgress === 'function') onProgress('✨ 스테이지 준비 완료!', 100);
-        return data;
+        return validateStageData(data);
     }
 }
 
@@ -68,14 +69,14 @@ export class ImageSourceHandler extends StageSourcePort {
         const { textGrid, colorGrid } = this.asciiConverter.convertToAsciiGrid(colors, targetCols, targetRows);
 
         report('✅ 스테이지 로드 완료!', 100);
-        return {
+        return validateStageData({
             rows: targetRows,
             cols: targetCols,
             totalHairCount: hairPositions.length,
             hairPositions,
             textGrid,
             colorGrid
-        };
+        });
     }
 }
 
