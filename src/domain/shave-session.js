@@ -6,6 +6,7 @@
 import { HairGrid } from './hair-grid.js';
 import { ScoreCalculator } from './score-calculator.js';
 import { GridGeometry } from './grid-geometry.js';
+import { validateStageData } from './schema-validator.js';
 
 export const SessionStatus = {
     INIT: 'INIT',
@@ -33,6 +34,7 @@ export class ShaveSession {
     }
 
     initStage(stageData) {
+        validateStageData(stageData);
         const { hairPositions = [] } = stageData;
         this.hairGrid = new HairGrid(GridGeometry.fromStageData(stageData), hairPositions);
         this.scoreCalculator.reset();
