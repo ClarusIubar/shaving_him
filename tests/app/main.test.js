@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+
 import { ShaveSession } from '../../src/domain/shave-session.js';
+import { GamePolicy } from '../../src/domain/game-policy.js';
+import {
+    createMockDocument,
+    createMockWindow,
+    setupGlobalDOM
+} from '../helpers/dom-mock-harness.js';
 
 test('main.js - bootstrapApp full execution and 100% coverage test', async () => {
     const docListeners = {};
@@ -116,8 +123,9 @@ test('main.js - bootstrapApp full execution and 100% coverage test', async () =>
     // Test orchestrator update notification & combo sound
     let comboSoundPlayed = false;
     app.sound.playComboSound = () => { comboSoundPlayed = true; };
-    app.orchestrator.currentStageData = { cols: 10, rows: 10, textGrid: [] };
-    app.orchestrator.session = new ShaveSession({ cols: 10, rows: 10, hairPositions: [{ r: 0, c: 0 }] }, 60);
+    const dummyStageData = { cols: 10, rows: 10, hairPositions: [{ r: 0, c: 0 }], textGrid: [] };
+    app.orchestrator.currentStageData = dummyStageData;
+    app.orchestrator.session = new ShaveSession(dummyStageData, 60);
     app.orchestrator.session.start();
     app.orchestrator.notifyUpdate(null, false);
 
@@ -131,7 +139,7 @@ test('main.js - bootstrapApp full execution and 100% coverage test', async () =>
     app.sound.playWinSound = () => { winSoundPlayed = true; };
     app.orchestrator.loadAndStartStage = async (src, sec, cb) => {
         if (cb) cb('Loading...', 50);
-        const stageData = { cols: 10, rows: 10, textGrid: [] };
+        const stageData = { cols: 10, rows: 10, hairPositions: [{ r: 0, c: 0 }], textGrid: [] };
         app.orchestrator.currentStageData = stageData;
         app.orchestrator.session = new ShaveSession(stageData, 60);
         app.orchestrator.session.start();
@@ -171,4 +179,147 @@ test('main.js - bootstrapApp full execution and 100% coverage test', async () =>
 
     delete global.document;
     delete global.window;
+    delete global.requestAnimationFrame;
+    delete global.alert;
+});
+
+test('bootstrapApp - combo sound plays once per rising edge, not on every update at the same streak', async () => {
+    const { document, window, teardown } = setupGlobalDOM();
+    const { bootstrapApp } = await import('../../src/main.js');
+    try {
+        const app = bootstrapApp(document, window);
+        let comboPlays = 0;
+        app.sound.playComboSound = () => { comboPlays++; };
+
+        const stageData = { cols: 5, rows: 5, hairPositions: [{ r: 0, c: 0 }], textGrid: [] };
+        app.orchestrator.currentStageData = stageData;
+        app.orchestrator.session = new ShaveSession(stageData, 60);
+        app.orchestrator.session.start();
+
+        // Streak 1 -> no combo sound
+        app.orchestrator.session.scoreCalculator.shaveStreak = 1;
+        app.orchestrator.notifyUpdate(null, false);
+        assert.equal(comboPlays, 0);
+
+        // Streak 2 (rising edge) -> combo sound plays
+        app.orchestrator.session.scoreCalculator.shaveStreak = 2;
+        app.orchestrator.notifyUpdate(null, false);
+        assert.equal(comboPlays, 1);
+
+        // Streak 2 again (steady state) -> combo sound does NOT play again
+        app.orchestrator.notifyUpdate(null, false);
+        assert.equal(comboPlays, 1);
+
+        // Streak 3 (rising edge) -> combo sound plays
+        app.orchestrator.session.scoreCalculator.shaveStreak = 3;
+        app.orchestrator.notifyUpdate(null, false);
+        assert.equal(comboPlays, 2);
+    } finally {
+        teardown();
+    }
+});
+
+test('bootstrapApp / initAutoBootstrap - handles absent document and window gracefully', async () => {
+    delete global.document;
+    delete global.window;
+
+    const { bootstrapApp, initAutoBootstrap } = await import('../../src/main.js');
+
+    assert.equal(bootstrapApp(), null);
+    assert.equal(initAutoBootstrap(), null);
+
+    global.window = { addEventListener: () => {} };
+    assert.equal(bootstrapApp(), null);
+    assert.equal(initAutoBootstrap(), null);
+    delete global.window;
+});
+
+test('initAutoBootstrap - DOMContentLoaded and readyState loading branch', async () => {
+    const { initAutoBootstrap } = await import('../../src/main.js');
+    const doc = createMockDocument();
+    doc.readyState = 'loading';
+    let domContentLoadedCb = null;
+    const win = {
+        addEventListener: (evt, fn) => {
+            if (evt === 'DOMContentLoaded') domContentLoadedCb = fn;
+        }
+    };
+
+    const res = initAutoBootstrap(doc, win);
+    assert.equal(res, null);
+    assert.ok(domContentLoadedCb);
+    const bootstrapped = domContentLoadedCb();
+    assert.ok(bootstrapped !== null);
+});
+
+test('bootstrapApp - DI boundary verification for GamePolicy and injected doc/win', async () => {
+    const { bootstrapApp } = await import('../../src/main.js');
+    const { document, window, teardown } = setupGlobalDOM();
+    try {
+        const customPolicy = new GamePolicy();
+        const app = bootstrapApp(document, window, { gamePolicy: customPolicy });
+        assert.equal(app.hud.gamePolicy, customPolicy);
+    } finally {
+        teardown();
+    }
+});
+
+test('bootstrapApp - keydown ignores unmapped keys and contentEditable focus', async () => {
+    const { bootstrapApp } = await import('../../src/main.js');
+    const { document, window, teardown } = setupGlobalDOM();
+    try {
+        let keydownHandler = null;
+        window.addEventListener = (evt, fn) => {
+            if (evt === 'keydown') keydownHandler = fn;
+        };
+
+        const app = bootstrapApp(document, window);
+        assert.ok(keydownHandler);
+
+        // Ignored unmapped key
+        keydownHandler({ key: 'F12', target: {} });
+
+        // Ignored when contentEditable
+        document.activeElement = { tagName: 'DIV', isContentEditable: true };
+        keydownHandler({ key: '1', target: document.activeElement });
+    } finally {
+        teardown();
+    }
+});
+
+test('bootstrapApp - runs without a window object; top-level auto-bootstrap does not throw', async () => {
+    const { bootstrapApp } = await import('../../src/main.js');
+    const { document, teardown } = setupGlobalDOM();
+    delete global.window;
+    try {
+        const app = bootstrapApp(document, null);
+        assert.ok(app !== null);
+    } finally {
+        teardown();
+    }
+});
+
+test('main.js - preset and custom photo buttons reach startStageWithSource', async () => {
+    const { bootstrapApp } = await import('../../src/main.js');
+    const { document, window, teardown } = setupGlobalDOM();
+    try {
+        const app = bootstrapApp(document, window);
+        let startedSource = null;
+        app.orchestrator.loadAndStartStage = async (src) => {
+            startedSource = src;
+            return { cols: 5, rows: 5, totalHairCount: 1, hairPositions: [{ r: 0, c: 0 }], textGrid: [] };
+        };
+
+        // Trigger preset
+        app.hud.modalView.startPresetBtn.click();
+        assert.equal(startedSource, 'game_data.json');
+
+        // Trigger custom
+        const file = { name: 'face.jpg' };
+        app.hud.modalView.handleFileSelected(file);
+        app.hud.modalView.startCustomBtn.click();
+        assert.deepEqual(startedSource, file);
+    } finally {
+        teardown();
+    }
 });

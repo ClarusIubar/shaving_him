@@ -142,6 +142,13 @@ test('StageSelectModalView - shows, hides, and handles preset/custom selections 
     assert.equal(modalView.startCustomBtn.disabled, false);
     assert.equal(modalView.startCustomBtn.style.opacity, '1');
 
+    // Drag and drop events
+    modalView.dropZoneEl.listeners['dragover']({ preventDefault: () => {} });
+    assert.ok(modalView.dropZoneEl.classList.contains('drag-over'));
+
+    modalView.dropZoneEl.listeners['dragleave']({ preventDefault: () => {} });
+    assert.ok(!modalView.dropZoneEl.classList.contains('drag-over'));
+
     // Second file (triggers revokeObjectURL path if previewUrl exists)
     modalView.previewUrl = 'blob:test';
     let revoked = null;
@@ -150,7 +157,10 @@ test('StageSelectModalView - shows, hides, and handles preset/custom selections 
         createObjectURL() { return 'blob:new'; }
     };
     try {
-        modalView.handleFileSelected({ name: 'photo2.jpg' });
+        modalView.dropZoneEl.listeners['drop']({
+            preventDefault: () => {},
+            dataTransfer: { files: [{ name: 'photo2.jpg' }] }
+        });
         assert.equal(revoked, 'blob:test');
     } finally {
         delete global.URL;
@@ -269,6 +279,8 @@ test('HUD - full facade integration and property accessor tests', () => {
 
     hud.previewUrl = 'blob:url';
     assert.equal(hud.previewUrl, 'blob:url');
+
+    hud.handleFileSelected({ name: 'direct.png' });
 
     hud.showStartModal();
     assert.equal(hud.startModalEl.style.display, 'flex');

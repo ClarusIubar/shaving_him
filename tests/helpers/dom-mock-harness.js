@@ -8,6 +8,7 @@ export function createMockAudioContext() {
     return {
         state: 'running',
         currentTime: 0,
+        sampleRate: 44100,
         destination: {},
         createOscillator() {
             return {
@@ -29,6 +30,28 @@ export function createMockAudioContext() {
                     linearRampToValueAtTime() {},
                     exponentialRampToValueAtTime() {}
                 },
+                connect() {}
+            };
+        },
+        createBuffer(channels, length, sampleRate) {
+            const channelData = new Float32Array(length);
+            return {
+                getChannelData: () => channelData
+            };
+        },
+        createBufferSource() {
+            return {
+                buffer: null,
+                connect() {},
+                start() {},
+                stop() {}
+            };
+        },
+        createBiquadFilter() {
+            return {
+                type: 'bandpass',
+                frequency: { setValueAtTime() {} },
+                Q: { setValueAtTime() {} },
                 connect() {}
             };
         },
@@ -56,7 +79,10 @@ export function createMockCanvasElement(width = 800, height = 600) {
         }
     };
 
+    const listeners = {};
+
     const canvas = {
+        id: 'gameCanvas',
         width,
         height,
         style: {
@@ -80,6 +106,12 @@ export function createMockCanvasElement(width = 800, height = 600) {
                 bottom: canvas.height
             };
         },
+        addEventListener(evt, fn) {
+            listeners[evt] = fn;
+        },
+        removeEventListener(evt, fn) {
+            delete listeners[evt];
+        },
         toDataURL() {
             return 'data:image/png;base64,mock';
         }
@@ -90,6 +122,8 @@ export function createMockCanvasElement(width = 800, height = 600) {
 
 export function createMockDocument() {
     const elements = new Map();
+    elements.set('gameCanvas', createMockCanvasElement());
+
     const mockDoc = {
         getElementById(id) {
             if (!elements.has(id)) {
@@ -97,6 +131,7 @@ export function createMockDocument() {
                     id,
                     textContent: '',
                     disabled: false,
+                    innerHTML: '',
                     style: {},
                     classList: {
                         classes: new Set(),
@@ -167,12 +202,14 @@ export function createMockWindow(doc = null) {
 export function setupGlobalDOM(overrides = {}) {
     const prevDoc = global.document;
     const prevWin = global.window;
+    const prevRaf = global.requestAnimationFrame;
 
     const doc = overrides.document || createMockDocument();
     const win = overrides.window || createMockWindow(doc);
 
     global.document = doc;
     global.window = win;
+    global.requestAnimationFrame = win.requestAnimationFrame;
 
     const teardown = () => {
         if (prevDoc !== undefined) {
@@ -185,6 +222,12 @@ export function setupGlobalDOM(overrides = {}) {
             global.window = prevWin;
         } else {
             delete global.window;
+        }
+
+        if (prevRaf !== undefined) {
+            global.requestAnimationFrame = prevRaf;
+        } else {
+            delete global.requestAnimationFrame;
         }
     };
 
