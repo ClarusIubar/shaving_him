@@ -17,6 +17,24 @@ test('GridGeometry - value object immutability and dimension properties', () => 
     assert.equal(geo.contains(0, 280), false);
 });
 
+test('GridGeometry - default and fromStageData factories', () => {
+    const defaultGeo = GridGeometry.default();
+    assert.equal(defaultGeo.cols, 280);
+    assert.equal(defaultGeo.rows, 219);
+
+    const customGeo = GridGeometry.fromStageData({ cols: 100, rows: 50 });
+    assert.equal(customGeo.cols, 100);
+    assert.equal(customGeo.rows, 50);
+
+    const emptyGeo = GridGeometry.fromStageData({});
+    assert.equal(emptyGeo.cols, 280);
+    assert.equal(emptyGeo.rows, 219);
+
+    const nullGeo = GridGeometry.fromStageData(null);
+    assert.equal(nullGeo.cols, 280);
+    assert.equal(nullGeo.rows, 219);
+});
+
 test('GridGeometry - clientToGrid maps client coordinates to row col correctly across high-DPI scaling', () => {
     const geo = new GridGeometry(280, 219, 8, 8);
     const rect = { left: 100, top: 50, width: 560, height: 438 }; // 2x CSS scaling
@@ -34,7 +52,8 @@ test('GridGeometry - clientToGrid maps client coordinates to row col correctly a
     const pOut = geo.clientToGrid(10, 10, rect);
     assert.deepEqual(pOut, { row: -1, col: -1 });
 
-    // Invalid rect -> (-1, -1)
-    const pBad = geo.clientToGrid(100, 50, null);
-    assert.deepEqual(pBad, { row: -1, col: -1 });
+    // Invalid rects -> (-1, -1)
+    assert.deepEqual(geo.clientToGrid(100, 50, null), { row: -1, col: -1 });
+    assert.deepEqual(geo.clientToGrid(100, 50, { left: 0, top: 0, width: 0, height: 100 }), { row: -1, col: -1 });
+    assert.deepEqual(geo.clientToGrid(100, 50, { left: 0, top: 0, width: 100, height: 0 }), { row: -1, col: -1 });
 });
