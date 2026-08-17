@@ -67,12 +67,12 @@ export class SoundEffects {
 
             whiteNoise.start(now);
             whiteNoise.stop(now + 0.04);
-        } catch (e) {
+        } catch (_) {
             // Silence any audio context policy errors
         }
     }
 
-    playComboSound(comboCount = 2) {
+    playComboSound(comboCount) {
         if (!this.enabled) return;
         this.init();
         if (!this.ctx) return;
@@ -83,7 +83,8 @@ export class SoundEffects {
 
             osc.type = 'sine';
             const baseFreq = 523.25; // C5 note
-            const pitchShift = Math.min(comboCount * 45, 600);
+            const count = typeof comboCount === 'number' ? comboCount : 2;
+            const pitchShift = Math.min(count * 45, 600);
             const freq = baseFreq + pitchShift;
 
             const now = this.ctx.currentTime;
@@ -97,7 +98,7 @@ export class SoundEffects {
 
             osc.start(now);
             osc.stop(now + 0.12);
-        } catch (e) {
+        } catch (_) {
             // Silence any audio context policy errors
         }
     }
@@ -126,7 +127,7 @@ export class SoundEffects {
                 osc.start(now);
                 osc.stop(now + 0.25);
             });
-        } catch (e) {
+        } catch (_) {
             // Silence any audio context policy errors
         }
     }
