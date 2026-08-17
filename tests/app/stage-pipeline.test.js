@@ -56,6 +56,15 @@ test('StagePipeline - loads JSON stage and Image stage via registered handlers',
     const stage2 = await imgHandler.loadStage(mockFile, 10, 10, {}, (msg, pct) => {});
     assert.equal(stage2.cols, 10);
     assert.equal(stage2.totalHairCount, 1);
+
+    // Test handler canHandle branches
+    const jsonHandler = new JsonSourceHandler(jsonAdapter);
+    assert.equal(jsonHandler.canHandle('stage.json'), true);
+    assert.equal(jsonHandler.canHandle({ text: ['A'] }), true);
+    assert.equal(jsonHandler.canHandle({ text: ['A'], name: 'custom.jpg' }), false);
+    assert.equal(jsonHandler.canHandle(12345), false);
+    assert.equal(jsonHandler.canHandle(null), false);
+    assert.equal(imgHandler.canHandle(12345), false);
 });
 
 test('StagePipeline / StageSourceRegistry - error guards and unsupported sources', async () => {

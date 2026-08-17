@@ -16,7 +16,6 @@ export class CanvasRenderer {
 
         this.dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
 
-        this.setupCanvas();
         this.rafId = null;
         this.pendingDirtyCells = [];
         this.needsFullRedraw = false;
@@ -35,26 +34,24 @@ export class CanvasRenderer {
                 this.ctx.fillText(char, x, y);
             }
         });
+
+        this.setupCanvas();
     }
 
     get particles() {
-        return this.particleSystem ? this.particleSystem.particles : [];
+        return this.particleSystem.particles;
     }
 
     set particles(val) {
-        if (this.particleSystem) {
-            this.particleSystem.particles = val;
-        }
+        this.particleSystem.particles = val;
     }
 
     get particleRafId() {
-        return this.particleSystem ? this.particleSystem.rafId : null;
+        return this.particleSystem.rafId;
     }
 
     set particleRafId(val) {
-        if (this.particleSystem) {
-            this.particleSystem.rafId = val;
-        }
+        this.particleSystem.rafId = val;
     }
 
     setupCanvas() {
@@ -74,10 +71,8 @@ export class CanvasRenderer {
             this.ctx.textBaseline = 'top';
         }
 
-        if (this.particleSystem) {
-            this.particleSystem.fontW = this.fontW;
-            this.particleSystem.fontH = this.fontH;
-        }
+        this.particleSystem.fontW = this.fontW;
+        this.particleSystem.fontH = this.fontH;
     }
 
     /**
@@ -98,8 +93,6 @@ export class CanvasRenderer {
         } else if (dirtyCells.length > 0) {
             this.pendingDirtyCells.push(...dirtyCells);
         }
-        // An empty dirtyCells array means nothing on screen changed - nothing
-        // to schedule beyond what may already be pending.
 
         if (!this.rafId) {
             this.rafId = requestAnimationFrame(() => {
@@ -118,9 +111,6 @@ export class CanvasRenderer {
     render(stageData, hairGrid, dirtyCells = null) {
         if (!stageData || !this.ctx) return;
 
-        // Kept in sync here too (not just in requestRender()) so a direct
-        // render() call - e.g. main.js's initial synchronous paint - still
-        // leaves enough state for the particle loop to restore cells from.
         this.currentStageData = stageData;
         this.currentHairGrid = hairGrid;
 
@@ -134,20 +124,17 @@ export class CanvasRenderer {
 
         // Mode A: Partial Dirty Cell Redraw (Ultra Fast < 1ms)
         if (Array.isArray(dirtyCells)) {
-            if (dirtyCells.length === 0) return; // Nothing changed - nothing to draw
+            if (dirtyCells.length === 0) return;
             for (let i = 0; i < dirtyCells.length; i++) {
                 const { r, c } = dirtyCells[i];
                 if (r < 0 || r >= this.rows || c < 0 || c >= this.cols) continue;
                 this.renderSingleCell(r, c, textGrid, colorGrid, hairGrid);
             }
-            // spawnParticles() starts (or refills) a self-scheduling animation
-            // loop, so particles keep moving/decaying even after this render
-            // call - they must not freeze the instant shaving stops.
             this.spawnParticles(dirtyCells);
             return;
         }
 
-        // Mode B: Full Canvas Redraw (dirtyCells is null/undefined - initial load or stage change)
+        // Mode B: Full Canvas Redraw
         this.ctx.font = '900 6px "Courier New", monospace';
         this.ctx.textBaseline = 'top';
         this.ctx.fillStyle = '#000000';
@@ -192,15 +179,11 @@ export class CanvasRenderer {
     }
 
     spawnParticles(dirtyCells) {
-        if (this.particleSystem) {
-            this.particleSystem.spawn(dirtyCells);
-        }
+        this.particleSystem.spawn(dirtyCells);
     }
 
     ensureParticleLoop() {
-        if (this.particleSystem) {
-            this.particleSystem.ensureLoop();
-        }
+        this.particleSystem.ensureLoop();
     }
 
     /** Repaint the grid cell at (r, c) from the last known stage/hair data,
@@ -213,9 +196,7 @@ export class CanvasRenderer {
     }
 
     updateAndRenderParticles() {
-        if (this.particleSystem) {
-            this.particleSystem.updateAndRender();
-        }
+        this.particleSystem.updateAndRender();
     }
 
     exportPng(filename = 'shaving_art.png') {

@@ -18,12 +18,9 @@ export class GridGeometry {
      */
     static fromStageData(stageData = {}) {
         const base = GridGeometry.default();
-        return new GridGeometry(
-            stageData.cols || base.cols,
-            stageData.rows || base.rows,
-            base.cellWidth,
-            base.cellHeight
-        );
+        const cols = typeof stageData?.cols === 'number' ? stageData.cols : base.cols;
+        const rows = typeof stageData?.rows === 'number' ? stageData.rows : base.rows;
+        return new GridGeometry(cols, rows, base.cellWidth, base.cellHeight);
     }
 
     constructor(cols = 280, rows = 219, cellWidth = 6, cellHeight = 6) {

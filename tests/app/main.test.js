@@ -112,11 +112,16 @@ test('main.js - bootstrapApp full execution and 100% coverage test', async () =>
     // Test keydown shortcuts
     if (winListeners['keydown']) {
         mockDoc.activeElement = { tagName: 'input' };
+        mockDoc.activeElement = { tagName: 'textarea' };
         winListeners['keydown']({ key: '2' });
 
-        mockDoc.activeElement = { tagName: 'div' };
+        mockDoc.activeElement = { tagName: 'div', isContentEditable: true };
         winListeners['keydown']({ key: '2' });
-        assert.equal(app.brushController.brushRadius, 3);
+
+        mockDoc.activeElement = { tagName: 'div', isContentEditable: false };
+        winListeners['keydown']({ key: 'unmapped_key' });
+        winListeners['keydown']({ key: '4' });
+        assert.equal(app.brushController.brushRadius, 7);
 
         winListeners['keydown']({ key: 'r' });
         winListeners['keydown']({ key: 'R' });
@@ -152,6 +157,7 @@ test('main.js - bootstrapApp full execution and 100% coverage test', async () =>
         return stageData;
     };
     await app.startStageWithSource('game_data.json');
+    await app.startStageWithSource('custom_stage_2.json');
 
     // Test Game Over victory branch
     let restartCalled = false;
@@ -175,8 +181,14 @@ test('main.js - bootstrapApp full execution and 100% coverage test', async () =>
 
     // Test startStageWithSource error branch
     app.orchestrator.loadAndStartStage = async () => { throw new Error('Stage error'); };
-    global.alert = () => {};
+    let alertMsg = null;
+    global.alert = (msg) => { alertMsg = msg; };
     await app.startStageWithSource('invalid');
+    assert.ok(alertMsg);
+
+    // Test startStageWithSource error with string throw
+    app.orchestrator.loadAndStartStage = async () => { throw 'String error'; };
+    await app.startStageWithSource('invalid2');
 
     // Test initAutoBootstrap with readyState complete
     mockDoc.readyState = 'complete';

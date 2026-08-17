@@ -39,11 +39,6 @@ export class GameOrchestrator {
 
     notifyUpdate(dirtyCells = null, isTimerTick = false) {
         if (!this.session) return;
-        // stageData/hairView are included so UI subscribers never need to
-        // reach into orchestrator.currentStageData / orchestrator.session
-        // directly (Law of Demeter). hairView is a read-only projection of
-        // the session's HairGrid (see HairGrid.toReadOnlyView) - a UI
-        // subscriber has no business mutating session state through it.
         const event = {
             snapshot: this.session.getSnapshot(),
             dirtyCells,
@@ -109,15 +104,8 @@ export class GameOrchestrator {
         if (!this.session || this.session.status !== SessionStatus.RUNNING) {
             return { removed: 0, dirtyCells: [] };
         }
-        // A shave over a hair-free area still resets ScoreCalculator's combo
-        // streak internally; comparing the combo before/after catches that
-        // case even though removed/dirtyCells are both empty, so the reset
-        // reaches the HUD immediately instead of waiting for the next
-        // 1-second timer tick.
         const comboBefore = this.session.getSnapshot().comboCount;
-        const result = this.session.shave(row, col, radius);
-        const removed = result ? result.removed : 0;
-        const dirtyCells = result && result.dirtyCells ? result.dirtyCells : [];
+        const { removed, dirtyCells } = this.session.shave(row, col, radius);
         const comboChanged = this.session.getSnapshot().comboCount !== comboBefore;
 
         if (removed > 0 || dirtyCells.length > 0 || comboChanged) {

@@ -27,6 +27,12 @@ test('GameOrchestrator - registers and unregisters update and game over listener
     const pipeline = createMockPipeline();
     const orchestrator = new GameOrchestrator(pipeline);
 
+    // Initial null session safety
+    assert.equal(orchestrator.getCurrentHairView(), null);
+    orchestrator.notifyUpdate();
+    orchestrator.notifyGameOver();
+    orchestrator.restart();
+
     let updateCount1 = 0;
     let updateCount2 = 0;
     const l1 = () => { updateCount1++; };
