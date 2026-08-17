@@ -15,43 +15,53 @@ export class StaticJsonStageAdapter {
      */
     async loadStage(source = 'game_data.json') {
         let rawData;
-        if (typeof window !== 'undefined' && window.EMBEDDED_GAME_DATA && (source === 'game_data.json' || source === 'game_data.js' || !source)) {
-            rawData = window.EMBEDDED_GAME_DATA;
-        } else if (typeof source === 'string') {
-            try {
-                const resp = await this.fetch(source);
-                if (resp && resp.ok) {
-                    rawData = await resp.json();
-                } else if (typeof window !== 'undefined' && window.EMBEDDED_GAME_DATA) {
-                    rawData = window.EMBEDDED_GAME_DATA;
-                } else {
-                    throw new Error(`Fetch failed: ${resp ? resp.status : 'unknown'}`);
-                }
-            } catch (err) {
-                // Fallback for file:// protocol or HTTP 404 fetch restrictions in browsers
-                if (typeof window !== 'undefined' && window.EMBEDDED_GAME_DATA) {
-                    if (typeof console !== 'undefined' && console.error) {
-                        console.error('StaticJsonStageAdapter: fetch failed, falling back to window.EMBEDDED_GAME_DATA', err);
+
+        if (typeof source === 'object' && source !== null) {
+            rawData = source;
+        } else {
+            const hasEmbedded = typeof window !== 'undefined' && Boolean(window.EMBEDDED_GAME_DATA);
+            const isDefaultPreset = source === 'game_data.json' || source === 'game_data.js' || !source;
+
+            if (isDefaultPreset && hasEmbedded) {
+                rawData = window.EMBEDDED_GAME_DATA;
+            } else {
+                try {
+                    const resp = await this.fetch(source);
+                    if (resp && resp.ok) {
+                        rawData = await resp.json();
+                    } else if (hasEmbedded) {
+                        rawData = window.EMBEDDED_GAME_DATA;
+                    } else {
+                        const status = resp ? resp.status : 'network error';
+                        throw new Error(`Fetch failed: ${status}`);
                     }
-                    rawData = window.EMBEDDED_GAME_DATA;
-                } else {
-                    throw err;
+                } catch (err) {
+                    if (hasEmbedded) {
+                        if (typeof console !== 'undefined' && console.error) {
+                            console.error('StaticJsonStageAdapter: fetch failed, falling back to window.EMBEDDED_GAME_DATA', err);
+                        }
+                        rawData = window.EMBEDDED_GAME_DATA;
+                    } else {
+                        throw err;
+                    }
                 }
             }
-        } else {
-            rawData = source;
         }
 
-        const textGrid = rawData.text || [];
-        const colorGrid = rawData.colors || [];
-        const rows = rawData.rows || (textGrid ? textGrid.length : 0);
-        const cols = rawData.cols || (textGrid && textGrid[0] ? textGrid[0].length : 0);
+        const textGrid = Array.isArray(rawData.text) ? rawData.text : [];
+        const colorGrid = Array.isArray(rawData.colors) ? rawData.colors : [];
+        const rows = typeof rawData.rows === 'number' ? rawData.rows : textGrid.length;
+        const cols = typeof rawData.cols === 'number' ? rawData.cols : (textGrid[0] ? textGrid[0].length : 0);
+        const hairPositions = Array.isArray(rawData.hair) ? rawData.hair : (Array.isArray(rawData.hairPositions) ? rawData.hairPositions : []);
+        const totalHairCount = typeof rawData.totalHairCount === 'number'
+            ? rawData.totalHairCount
+            : (typeof rawData.hairCount === 'number' ? rawData.hairCount : hairPositions.length);
 
         return {
             rows,
             cols,
-            totalHairCount: rawData.totalHairCount || rawData.hairCount || (rawData.hair ? rawData.hair.length : 0),
-            hairPositions: rawData.hair || [],
+            totalHairCount,
+            hairPositions,
             textGrid,
             colorGrid
         };

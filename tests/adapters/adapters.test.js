@@ -188,18 +188,29 @@ test('DeltaDiffEngineAdapter - computeHairCoordinates returns a plain, non-self-
     assert.doesNotThrow(() => JSON.stringify(normal));
 });
 
-test('CanvasAsciiConverterAdapter - maps color matrix to ASCII grid', () => {
+test('CanvasAsciiConverterAdapter - maps color matrix to ASCII grid with custom and default ramp', () => {
     const colors = [
         [[0, 0, 0], [255, 255, 255]]
     ];
 
-    const converter = new CanvasAsciiConverterAdapter(' .@');
-    const { textGrid, colorGrid } = converter.convertToAsciiGrid(colors, 2, 1);
+    const converterCustom = new CanvasAsciiConverterAdapter(' .@');
+    const { textGrid, colorGrid } = converterCustom.convertToAsciiGrid(colors, 2, 1);
 
     assert.equal(textGrid[0].length, 2);
     assert.equal(textGrid[0][0], ' ');
     assert.equal(textGrid[0][1], '@');
     assert.deepEqual(colorGrid[0][0], [0, 0, 0]);
+
+    // Default ramp
+    const converterDefault = new CanvasAsciiConverterAdapter();
+    const resDefault = converterDefault.convertToAsciiGrid(colors, 2, 1);
+    assert.equal(resDefault.textGrid[0].length, 2);
+
+    // Dimension mismatch errors
+    assert.throws(() => converterDefault.convertToAsciiGrid(null, 2, 1), /dimensions/);
+    assert.throws(() => converterDefault.convertToAsciiGrid([], 2, 1), /dimensions/);
+    assert.throws(() => converterDefault.convertToAsciiGrid([[]], 2, 1), /dimensions/);
+    assert.throws(() => converterDefault.convertToAsciiGrid(colors, 5, 5), /dimensions/);
 });
 
 test('StagePipeline - computes dynamic average skin tone and loads custom HTMLImageElement source', async () => {
