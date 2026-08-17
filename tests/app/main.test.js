@@ -45,7 +45,13 @@ test('main.js - bootstrapApp full execution and 100% coverage test', async () =>
             if (id === 'photoInput') return mockPhotoInput;
             if (id === 'exportPngBtn') return mockExportBtn;
             if (id === 'loadingOverlay') return { style: {}, appendChild: () => {}, querySelector: () => ({ style: {}, textContent: '' }) };
-            return null;
+            return {
+                id,
+                textContent: '',
+                style: {},
+                classList: { add: () => {}, remove: () => {}, toggle: () => {} },
+                addEventListener: () => {}
+            };
         },
         querySelectorAll: (selector) => {
             if (selector === '.brush-btn') return [mockBrushBtn];

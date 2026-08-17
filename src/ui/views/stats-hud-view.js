@@ -4,19 +4,11 @@
  */
 
 export class StatsHUDView {
-    constructor(doc = typeof document !== 'undefined' ? document : null) {
-        this.doc = doc;
-        if (!this.doc) {
-            this.scoreEl = null;
-            this.timerEl = null;
-            this.remainEl = null;
-            this.barFillEl = null;
-            this.comboBadgeEl = null;
-            this.comboValEl = null;
-            this.soundToggleBtn = null;
-            this.exportPngBtn = null;
-            return;
+    constructor(doc) {
+        if (!doc) {
+            throw new Error('StatsHUDView: document is required');
         }
+        this.doc = doc;
 
         this.scoreEl = this.doc.getElementById('scoreVal');
         this.timerEl = this.doc.getElementById('timerVal');
@@ -29,42 +21,26 @@ export class StatsHUDView {
     }
 
     update(snapshot) {
-        if (!snapshot) return;
-        const { score, timeLeft, remainingHairs, percentageCleared, comboCount = 1 } = snapshot;
+        const { score, timeLeft, remainingHairs, percentageCleared, comboCount } = snapshot;
 
-        if (this.scoreEl) this.scoreEl.textContent = score;
-        if (this.timerEl) this.timerEl.textContent = timeLeft;
-        if (this.remainEl) this.remainEl.textContent = remainingHairs;
-        if (this.barFillEl) this.barFillEl.style.width = `${percentageCleared}%`;
+        this.scoreEl.textContent = score;
+        this.timerEl.textContent = timeLeft;
+        this.remainEl.textContent = remainingHairs;
+        this.barFillEl.style.width = `${percentageCleared}%`;
 
-        if (this.comboValEl) this.comboValEl.textContent = comboCount;
-        if (this.comboBadgeEl) {
-            if (this.comboBadgeEl.classList) {
-                if (comboCount > 1) {
-                    this.comboBadgeEl.classList.add('active');
-                } else {
-                    this.comboBadgeEl.classList.remove('active');
-                }
-            }
-            if (this.comboBadgeEl.style) {
-                this.comboBadgeEl.style.display = comboCount > 1 ? 'inline-block' : 'none';
-            }
-        }
+        this.comboValEl.textContent = comboCount;
+        const isComboActive = comboCount > 1;
+        this.comboBadgeEl.classList.toggle('active', isComboActive);
+        this.comboBadgeEl.style.display = isComboActive ? 'inline-block' : 'none';
     }
 
     updateSoundUI(enabled) {
-        if (this.soundToggleBtn) {
-            this.soundToggleBtn.textContent = enabled ? '🔊 소리 켬' : '🔇 음소거';
-        }
+        this.soundToggleBtn.textContent = enabled ? '🔊 소리 켬' : '🔇 음소거';
     }
 
     updateBrushSizeUI(radius) {
-        if (!this.doc) return;
         const brushBtns = this.doc.querySelectorAll('.brush-btn');
-        if (!brushBtns || typeof brushBtns.forEach !== 'function') return;
-
         brushBtns.forEach(btn => {
-            if (!btn || !btn.classList) return;
             const rAttr = btn.getAttribute('data-radius');
             if (parseInt(rAttr, 10) === radius) {
                 btn.classList.add('active');

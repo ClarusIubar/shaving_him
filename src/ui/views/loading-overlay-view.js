@@ -4,13 +4,15 @@
  */
 
 export class LoadingOverlayView {
-    constructor(doc = typeof document !== 'undefined' ? document : null) {
+    constructor(doc) {
+        if (!doc) {
+            throw new Error('LoadingOverlayView: document is required');
+        }
         this.doc = doc;
-        this.loadingEl = this.doc ? this.doc.getElementById('loadingScreen') : null;
+        this.loadingEl = this.doc.getElementById('loadingScreen');
     }
 
     show(message = '스테이지 생성 중...', percentage = 0) {
-        if (!this.doc) return;
         if (!this.loadingEl) {
             this.loadingEl = this.doc.createElement('div');
             this.loadingEl.id = 'loadingScreen';
