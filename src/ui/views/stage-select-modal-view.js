@@ -4,19 +4,11 @@
  */
 
 export class StageSelectModalView {
-    constructor(doc = typeof document !== 'undefined' ? document : null) {
-        this.doc = doc;
-        if (!this.doc) {
-            this.startModalEl = null;
-            this.photoInputEl = null;
-            this.dropZoneEl = null;
-            this.previewEl = null;
-            this.startPresetBtn = null;
-            this.startCustomBtn = null;
-            this.selectedFile = null;
-            this.previewUrl = null;
-            return;
+    constructor(doc) {
+        if (!doc) {
+            throw new Error('StageSelectModalView: document is required');
         }
+        this.doc = doc;
 
         this.startModalEl = this.doc.getElementById('startModal');
         this.photoInputEl = this.doc.getElementById('photoInput');

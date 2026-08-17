@@ -20,7 +20,11 @@ function createMockDoc() {
                         classes: new Set(),
                         add(c) { this.classes.add(c); },
                         remove(c) { this.classes.delete(c); },
-                        contains(c) { return this.classes.has(c); }
+                        contains(c) { return this.classes.has(c); },
+                        toggle(c, force) {
+                            if (force) this.classes.add(c);
+                            else this.classes.delete(c);
+                        }
                     },
                     listeners: {},
                     addEventListener(evt, fn) { this.listeners[evt] = fn; },
@@ -50,21 +54,19 @@ function createMockDoc() {
     return mockDoc;
 }
 
-test('StatsHUDView - handles null doc and null snapshot safely', () => {
-    const nullView = new StatsHUDView(null);
-    assert.equal(nullView.scoreEl, null);
-    nullView.update(null);
-    nullView.updateBrushSizeUI(1);
-
-    const doc = createMockDoc();
-    const statsView = new StatsHUDView(doc);
-    statsView.update(null);
+test('Fail-Fast: UI Views require valid document at construction', () => {
+    assert.throws(() => new StatsHUDView(null), /document is required/);
+    assert.throws(() => new StageSelectModalView(null), /document is required/);
+    assert.throws(() => new LoadingOverlayView(null), /document is required/);
+    assert.throws(() => new GameOverOverlayView(null), /document is required/);
+    assert.throws(() => new HUD(undefined, null), /document is required/);
 });
 
-test('StatsHUDView - updates snapshot values and combo badge', () => {
+test('StatsHUDView - updates snapshot values and combo badge with strict Non-Nullable contract', () => {
     const doc = createMockDoc();
     const statsView = new StatsHUDView(doc);
 
+    // Active combo (> 1)
     statsView.update({
         score: 1500,
         timeLeft: 45,
@@ -81,7 +83,7 @@ test('StatsHUDView - updates snapshot values and combo badge', () => {
     assert.ok(statsView.comboBadgeEl.classList.contains('active'));
     assert.equal(statsView.comboBadgeEl.style.display, 'inline-block');
 
-    // Combo reset
+    // Combo reset (<= 1)
     statsView.update({
         score: 1500,
         timeLeft: 45,
@@ -110,14 +112,6 @@ test('StatsHUDView - updates sound toggle text and brush button styles', () => {
     statsView.updateBrushSizeUI(2);
     assert.equal(b1.active, false);
     assert.equal(b2.active, true);
-});
-
-test('StageSelectModalView - handles null doc gracefully', () => {
-    const nullModal = new StageSelectModalView(null);
-    assert.equal(nullModal.startModalEl, null);
-    nullModal.init();
-    nullModal.show();
-    nullModal.hide();
 });
 
 test('StageSelectModalView - shows, hides, and handles preset/custom selections with URL revoke', () => {
@@ -173,42 +167,56 @@ test('StageSelectModalView - shows, hides, and handles preset/custom selections 
     assert.equal(modalView.startModalEl.style.display, 'none');
 });
 
-test('LoadingOverlayView - handles null doc, creates elements and hides', () => {
-    const nullLoading = new LoadingOverlayView(null);
-    nullLoading.show();
-    nullLoading.hide();
-
+test('LoadingOverlayView - creates loadingScreen element on demand and toggles visibility', () => {
     const doc = createMockDoc();
     const loadingView = new LoadingOverlayView(doc);
 
+    // Initial show with existing loadingScreen element
     loadingView.show('로딩 중...', 50);
     assert.ok(loadingView.loadingEl);
 
     // Refresh path
     loadingView.show('갱신 중...', 80);
-
     loadingView.hide();
     assert.equal(loadingView.loadingEl.style.display, 'none');
+
+    // Test doc without initial loadingScreen element (creation path)
+    const docWithoutLoading = {
+        getElementById: (id) => (id === 'loadingScreen' ? null : { textContent: '', style: {} }),
+        createElement: (tag) => ({
+            tagName: tag,
+            id: '',
+            className: '',
+            innerHTML: '',
+            textContent: '',
+            style: {},
+            appendChild() {}
+        }),
+        body: { appendChild() {} }
+    };
+    const dynamicLoadingView = new LoadingOverlayView(docWithoutLoading);
+    dynamicLoadingView.show('동적 생성 중...', 30);
+    assert.ok(dynamicLoadingView.loadingEl);
+    dynamicLoadingView.hide();
 });
 
-test('GameOverOverlayView - handles null doc and renders result overlays', () => {
-    const nullGameOver = new GameOverOverlayView(null);
-    nullGameOver.show();
-    nullGameOver.hide();
-
+test('GameOverOverlayView - renders victory and defeat score overlays correctly', () => {
     const doc = createMockDoc();
     const gameOverView = new GameOverOverlayView(doc);
 
     let restarted = false;
-    const snapshot = {
+    const victorySnapshot = {
         percentageCleared: 100,
         remainingHairs: 0,
         finalResult: { totalScore: 3000, timeBonus: 200, allClearBonus: 500 }
     };
 
-    // Win
-    gameOverView.show(snapshot, true, () => { restarted = true; });
+    // 1. Victory (isWin = true)
+    gameOverView.show(victorySnapshot, true, () => { restarted = true; });
     assert.equal(gameOverView.titleEl.textContent, '🎉 완벽한 면도!');
+    assert.equal(gameOverView.titleEl.style.color, '#4ecdc4');
+    assert.equal(gameOverView.msgEl.textContent, '모든 털을 완벽히 제거했습니다! ✨');
+    assert.equal(gameOverView.finalScoreEl.textContent, 3000);
     assert.equal(gameOverView.overlayEl.style.display, 'flex');
 
     const restartBtn = doc.getElementById('restartBtn');
@@ -216,13 +224,27 @@ test('GameOverOverlayView - handles null doc and renders result overlays', () =>
     assert.equal(restarted, true);
     assert.equal(gameOverView.overlayEl.style.display, 'none');
 
-    // High percentage (>=80)
-    gameOverView.show({ percentageCleared: 85, remainingHairs: 15 }, false, () => {});
+    // 2. High percentage defeat (>= 80%)
+    const highDefeatSnapshot = {
+        percentageCleared: 85,
+        remainingHairs: 15,
+        finalResult: { totalScore: 1800, timeBonus: 0, allClearBonus: 0 }
+    };
+    gameOverView.show(highDefeatSnapshot, false, () => {});
     assert.equal(gameOverView.titleEl.textContent, '👏 깔끔해요!');
+    assert.equal(gameOverView.titleEl.style.color, '#4ecdc4');
+    assert.equal(gameOverView.msgEl.textContent, '15개 남음');
 
-    // Low percentage (<80)
-    gameOverView.show({ percentageCleared: 40, remainingHairs: 60 }, false, () => {});
+    // 3. Low percentage defeat (< 80%)
+    const lowDefeatSnapshot = {
+        percentageCleared: 40,
+        remainingHairs: 60,
+        finalResult: { totalScore: 600, timeBonus: 0, allClearBonus: 0 }
+    };
+    gameOverView.show(lowDefeatSnapshot, false, () => {});
     assert.equal(gameOverView.titleEl.textContent, '😅 아쉬워요!');
+    assert.equal(gameOverView.titleEl.style.color, '#ff6b6b');
+    assert.equal(gameOverView.msgEl.textContent, '60개 남음');
 });
 
 test('HUD - full facade integration and property accessor tests', () => {
@@ -230,7 +252,11 @@ test('HUD - full facade integration and property accessor tests', () => {
     const hud = new HUD(undefined, doc);
 
     // Test element setters and getters
-    const dummy = { textContent: '', style: {} };
+    const dummy = {
+        textContent: '',
+        style: {},
+        classList: { add: () => {}, remove: () => {}, toggle: () => {} }
+    };
     hud.scoreEl = dummy;
     assert.equal(hud.scoreEl, dummy);
     hud.timerEl = dummy;
@@ -295,7 +321,7 @@ test('HUD - full facade integration and property accessor tests', () => {
     hud.updateSoundUI(true);
     hud.updateBrushSizeUI(1);
 
-    hud.showGameOver({ percentageCleared: 100, remainingHairs: 0, finalResult: { totalScore: 5000 } }, () => {});
+    hud.showGameOver({ percentageCleared: 100, remainingHairs: 0, finalResult: { totalScore: 5000, timeBonus: 100, allClearBonus: 200 } }, () => {});
     assert.equal(hud.overlayEl.style.display, 'flex');
     hud.hideOverlay();
     assert.equal(hud.overlayEl.style.display, 'none');

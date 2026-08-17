@@ -4,16 +4,11 @@
  */
 
 export class GameOverOverlayView {
-    constructor(doc = typeof document !== 'undefined' ? document : null) {
-        this.doc = doc;
-        if (!this.doc) {
-            this.overlayEl = null;
-            this.titleEl = null;
-            this.finalScoreEl = null;
-            this.msgEl = null;
-            this.detailEl = null;
-            return;
+    constructor(doc) {
+        if (!doc) {
+            throw new Error('GameOverOverlayView: document is required');
         }
+        this.doc = doc;
 
         this.overlayEl = this.doc.getElementById('gameOverlay');
         this.titleEl = this.doc.getElementById('overlayTitle');
@@ -23,40 +18,29 @@ export class GameOverOverlayView {
     }
 
     show(snapshot, isWin, onRestart) {
-        if (!this.overlayEl) return;
+        const { finalResult, remainingHairs, percentageCleared } = snapshot;
+        const { totalScore, timeBonus, allClearBonus } = finalResult;
 
-        const { finalResult, remainingHairs = 0, percentageCleared = 0 } = snapshot || {};
-        const { totalScore = 0, timeBonus = 0, allClearBonus = 0 } = finalResult || {};
-
-        if (this.finalScoreEl) this.finalScoreEl.textContent = totalScore;
+        this.finalScoreEl.textContent = totalScore;
 
         if (isWin) {
-            if (this.titleEl) {
-                this.titleEl.textContent = '🎉 완벽한 면도!';
-                this.titleEl.style.color = '#4ecdc4';
-            }
-            if (this.msgEl) this.msgEl.textContent = '모든 털을 완벽히 제거했습니다! ✨';
+            this.titleEl.textContent = '🎉 완벽한 면도!';
+            this.titleEl.style.color = '#4ecdc4';
+            this.msgEl.textContent = '모든 털을 완벽히 제거했습니다! ✨';
         } else if (percentageCleared >= 80) {
-            if (this.titleEl) {
-                this.titleEl.textContent = '👏 깔끔해요!';
-                this.titleEl.style.color = '#4ecdc4';
-            }
-            if (this.msgEl) this.msgEl.textContent = `${remainingHairs}개 남음`;
+            this.titleEl.textContent = '👏 깔끔해요!';
+            this.titleEl.style.color = '#4ecdc4';
+            this.msgEl.textContent = `${remainingHairs}개 남음`;
         } else {
-            if (this.titleEl) {
-                this.titleEl.textContent = '😅 아쉬워요!';
-                this.titleEl.style.color = '#ff6b6b';
-            }
-            if (this.msgEl) this.msgEl.textContent = `${remainingHairs}개 남음`;
+            this.titleEl.textContent = '😅 아쉬워요!';
+            this.titleEl.style.color = '#ff6b6b';
+            this.msgEl.textContent = `${remainingHairs}개 남음`;
         }
 
-        if (this.detailEl) {
-            this.detailEl.textContent = `제거율 ${percentageCleared}% | 시간 보너스 +${timeBonus} | 올클리어 +${allClearBonus}`;
-        }
-
+        this.detailEl.textContent = `제거율 ${percentageCleared}% | 시간 보너스 +${timeBonus} | 올클리어 +${allClearBonus}`;
         this.overlayEl.style.display = 'flex';
 
-        const restartBtn = this.doc ? this.doc.getElementById('restartBtn') : null;
+        const restartBtn = this.doc.getElementById('restartBtn');
         if (restartBtn) {
             restartBtn.onclick = () => {
                 this.hide();
@@ -66,6 +50,6 @@ export class GameOverOverlayView {
     }
 
     hide() {
-        if (this.overlayEl) this.overlayEl.style.display = 'none';
+        this.overlayEl.style.display = 'none';
     }
 }

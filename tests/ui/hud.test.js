@@ -68,19 +68,14 @@ test('HUD - game over victory and restart flow', () => {
     assert.equal(hud.overlayEl.style.display, 'none');
 
     // Partial clear branches
-    hud.showGameOver({ status: 'TIMEOUT', percentageCleared: 85, remainingHairs: 5, finalResult: { totalScore: 80 } });
-    hud.showGameOver({ status: 'TIMEOUT', percentageCleared: 50, remainingHairs: 20, finalResult: { totalScore: 30 } });
-    hud.showGameOver({ status: 'TIMEOUT', percentageCleared: 10, remainingHairs: 90, finalResult: { totalScore: 5 } });
+    hud.showGameOver({ status: 'TIMEOUT', percentageCleared: 85, remainingHairs: 5, finalResult: { totalScore: 80, timeBonus: 0, allClearBonus: 0 } });
+    hud.showGameOver({ status: 'TIMEOUT', percentageCleared: 50, remainingHairs: 20, finalResult: { totalScore: 30, timeBonus: 0, allClearBonus: 0 } });
+    hud.showGameOver({ status: 'TIMEOUT', percentageCleared: 10, remainingHairs: 90, finalResult: { totalScore: 5, timeBonus: 0, allClearBonus: 0 } });
     assert.equal(hud.titleEl.textContent, '😅 아쉬워요!');
 });
 
-test('HUD - null guards and modal controls', () => {
-    const emptyHud = new HUD(new GamePolicy(), null);
-    emptyHud.showStartModal();
-    emptyHud.hideStartModal();
-    emptyHud.showGameOver(null);
-    emptyHud.hideOverlay();
-    emptyHud.update(null);
+test('HUD - Fail-Fast doc requirement and modal controls', () => {
+    assert.throws(() => new HUD(new GamePolicy(), null), /HUD: document is required/);
 
     const doc = createMockDocument();
     const hud = new HUD(new GamePolicy(), doc);

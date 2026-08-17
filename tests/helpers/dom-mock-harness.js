@@ -137,7 +137,20 @@ export function createMockDocument() {
                         classes: new Set(),
                         add(c) { this.classes.add(c); },
                         remove(c) { this.classes.delete(c); },
-                        contains(c) { return this.classes.has(c); }
+                        contains(c) { return this.classes.has(c); },
+                        toggle(c, force) {
+                            if (typeof force === 'boolean') {
+                                if (force) this.classes.add(c);
+                                else this.classes.delete(c);
+                                return force;
+                            }
+                            if (this.classes.has(c)) {
+                                this.classes.delete(c);
+                                return false;
+                            }
+                            this.classes.add(c);
+                            return true;
+                        }
                     },
                     listeners: {},
                     addEventListener(evt, fn) { this.listeners[evt] = fn; },

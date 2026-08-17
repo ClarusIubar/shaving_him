@@ -10,6 +10,9 @@ import { GameOverOverlayView } from './views/game-over-overlay-view.js';
 
 export class HUD {
     constructor(gamePolicy = new GamePolicy(), doc = typeof document !== 'undefined' ? document : null) {
+        if (!doc) {
+            throw new Error('HUD: document is required');
+        }
         this.gamePolicy = gamePolicy;
         this.doc = doc;
 
