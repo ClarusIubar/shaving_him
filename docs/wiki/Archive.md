@@ -32,9 +32,9 @@
   - `ParticleSystem` 비산 파티클 물리 엔진 탑재.
   - UI 4대 서브뷰 분리 및 `HUD` 퍼사드 도입.
 
-### 4. Phase 3: 엔터프라이즈 거버넌스 및 SDD/TDD 완성 (`v1.13.0`)
+### 4. Phase 3: 엔터프라이즈 거버넌스 및 SDD/TDD 도입 (`v1.13.0`)
 - **개선**:
-  - `InputManager` 분리로 `main.js` 진입점 경량화 및 SRP 완수.
+  - `InputManager` 분리로 `main.js` 진입점 경량화 및 이벤트 바인딩 캡슐화.
   - `CanvasRenderer`의 `ParticleSystem` DI 주입 및 `ImageFileLoader` 분리.
   - TypeScript `.d.ts` DTO 타입 명세 및 `validateSnapshot` 런타임 스키마 검증.
   - 전 과정 유저 저니 E2E 통합 테스트 및 1,000회 기하 Fuzzing 퍼징 검증.

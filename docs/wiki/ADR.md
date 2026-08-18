@@ -17,10 +17,10 @@
 | **ADR-007** | Composition Root 및 생성자 의존성 주입 표준화 | **Accepted** | Service Locator 안티패턴 제거 및 테스트 용이성 극대화 |
 | **ADR-008** | GPU `translate3d` 커서 렌더링 도입 | **Accepted** | Layout Thrashing 방지 및 초당 60fps 마우스 추적 보장 |
 | **ADR-009** | Fail-Fast DOM 격리 및 Mock Harness 구축 | **Accepted** | 브라우저 없이 Node.js 내장 테스트 러너에서 100% 검증 |
-| **ADR-010** | `InputManager` 분리를 통한 DOM/키보드 바인딩 캡슐화 | **Accepted** | `main.js` 비대화 해소 및 단일 책임 원칙(SRP) 완수 |
-| **ADR-011** | `CanvasRenderer`의 `ParticleSystem` DI 및 `ImageFileLoader` 분리 | **Accepted** | 구체 클래스 하드코딩 제거(DIP) 및 비동기 디코딩 전담화 |
-| **ADR-012** | TypeScript `.d.ts` 타입 정의 및 `validateSnapshot` SDD 표준 | **Accepted** | 스키마 주도 개발(SDD) 및 세션 런타임 데이터 무결성 보증 |
-| **ADR-013** | 전 과정 유저 저니 E2E 및 기하 연산 Fuzzing 테스트 구축 | **Accepted** | 실사용자 시나리오 전수 검증 및 1,000회 기하 불변성 입증 |
+| **ADR-010** | `InputManager` 분리를 통한 DOM/키보드 바인딩 캡슐화 | **Accepted** | `main.js` 비대화 해소 및 이벤트 바인딩 라이프사이클 분리 |
+| **ADR-011** | `CanvasRenderer`의 `ParticleSystem` DI 및 `ImageFileLoader` 분리 | **Accepted** | 구체 클래스 하드코딩 완화(DI 주입) 및 비동기 디코딩 전담화 |
+| **ADR-012** | TypeScript `.d.ts` 타입 정의 및 `validateSnapshot` SDD 표준 | **Accepted** | 스키마 주도 개발(SDD) 및 세션 런타임 데이터 무결성 검증 |
+| **ADR-013** | 전 과정 유저 저니 E2E 및 기하 연산 Fuzzing 테스트 구축 | **Accepted** | 실사용자 시나리오 전수 검증 및 1,000회 기하 불변성 검증 |
 
 ---
 
@@ -59,7 +59,7 @@
 - **컨텍스트 (Context)**: 마우스를 빠르게 드래그할 때 브라우저 `mousemove` 이벤트의 발생 간격이 벌어져 수염이 듬성듬성 깎이지 않는 점박이 현상 발생.
 - **결정 (Decision)**:
   - 이전 좌표 $(r_0, c_0)$와 현재 좌표 $(r_1, c_1)$ 사이에 8-연결 브레젠험 알고리즘을 적용하여 누락 없는 선분 보간 좌표열 생성.
-- **결과 및 영향 (Consequences)**: 초고속 드래그 시에도 부드럽고 완벽한 면도 궤적 보장 (1,000회 퍼징 테스트로 연속성 증명 완료).
+- **결과 및 영향 (Consequences)**: 초고속 드래그 시에도 끊김 없는 면도 궤적 보장 (1,000회 퍼징 테스트로 연속성 검증 완료).
 
 ---
 
@@ -69,7 +69,7 @@
 - **컨텍스트 (Context)**: 서버 없이 클라이언트 브라우저만으로 단 1장의 사진에서 아스키 아트와 수염/피부 마스크를 자동 분리해야 함.
 - **결정 (Decision)**:
   - Canvas 2D 픽셀 버퍼 ➔ 그레이스케일($0.299R + 0.587G + 0.114B$) ➔ 10단계 램프(` .:-=+*#%@`) 아스키 매핑 ➔ 피부톤 임계값($Y > 120$) 델타 차분 분리 파이프라인 구축.
-- **결과 및 영향 (Consequences)**: 서버 통신 없이 100% 클라이언트 사이드에서 100ms 이내에 즉각적인 스테이지 생성 완수.
+- **결과 및 영향 (Consequences)**: 서버 통신 없이 클라이언트 사이드에서 100ms 이내에 즉각적인 스테이지 생성 지원.
 
 ---
 
@@ -119,21 +119,21 @@
 ### 📄 ADR-009: Fail-Fast DOM 격리 및 Mock Harness 구축
 
 - **상태**: `Accepted` (TSK-009)
-- **컨텍스트 (Context)**: JSDOM 등의 무거운 외부 의존성 없이 Node.js 네이티브 환경에서 DOM/Canvas/Audio를 완벽히 테스트해야 함.
+- **컨텍스트 (Context)**: JSDOM 등의 무거운 외부 의존성 없이 Node.js 네이티브 환경에서 DOM/Canvas/Audio 컴포넌트를 테스트해야 함.
 - **결정 (Decision)**:
   - `tests/helpers/dom-mock-harness.js`를 구축하여 가벼운 Canvas 2D, AudioContext, DOM Event 위임 지원.
   - 필수 엘리먼트 누락 시 즉시 에러를 던지는 Fail-Fast 수칙 확립.
-- **결과 및 영향 (Consequences)**: 0.3초 이내에 139개 전체 테스트 스위트가 실행되는 극도의 테스트 속도 달성.
+- **결과 및 영향 (Consequences)**: 0.35초 내에 139개 전체 테스트 스위트가 실행되는 신속한 테스트 환경 구축.
 
 ---
 
 ### 📄 ADR-010: `InputManager` 분리를 통한 DOM/키보드 바인딩 캡슐화
 
 - **상태**: `Accepted` (TSK-013-01)
-- **컨텍스트 (Context)**: `src/main.js` 진입점에 키보드 단축키(1~4, R), 브러시 버튼 클릭, 사운드 토글 리스너가 누적되어 SRP를 위반함.
+- **컨텍스트 (Context)**: `src/main.js` 진입점에 키보드 단축키(1~4, R), 브러시 버튼 클릭, 사운드 토글 리스너가 누적되어 진입점이 비대해짐.
 - **결정 (Decision)**:
   - `src/ui/input-manager.js`를 신설하여 모든 DOM 이벤트 등록과 `destroy()` 해제 로직을 전담 분리.
-- **결과 및 영향 (Consequences)**: `main.js`의 역할이 순수 부트스트랩으로 슬림화되고, 입력 이벤트의 독립적 단위 테스트 가능.
+- **결과 및 영향 (Consequences)**: `main.js`의 역할이 슬림화되고, 입력 이벤트의 독립적 단위 테스트 지원.
 
 ---
 
@@ -144,7 +144,7 @@
 - **결정 (Decision)**:
   - `CanvasRenderer`에 `particleSystem` DI 주입 인터페이스 개방.
   - `src/adapters/helpers/image-file-loader.js`를 신설하여 이미지 비동기 디코딩 전담.
-- **결과 및 영향 (Consequences)**: 결합도 완화 및 DIP/SRP 완전 준수.
+- **결과 및 영향 (Consequences)**: 결합도 완화 및 비동기 파일 디코딩 캡슐화.
 
 ---
 
@@ -155,7 +155,7 @@
 - **결정 (Decision)**:
   - `types/index.d.ts`에 `StageDataDTO`, `SessionSnapshotDTO`, `GameConfigDTO` 명세.
   - `src/domain/schema-validator.js`에 `validateSnapshot(snapshot)` 런타임 검증기 추가.
-- **결과 및 영향 (Consequences)**: 스키마 주도 개발(SDD) 표준 확립 및 데이터 왜곡 원천 차단.
+- **결과 및 영향 (Consequences)**: 스키마 주도 개발(SDD) 기반 및 세션 런타임 데이터 무결성 검증.
 
 ---
 
@@ -167,4 +167,4 @@
   - `tests/e2e/gameplay-journey.e2e.test.js`: 부트스트랩 ➔ 스테이지 로드 ➔ 드래그 면도 ➔ 콤보/사운드 ➔ 단축키 ➔ 승리 ➔ 리스타트 단일 통합 테스트.
   - `tests/domain/grid-geometry-fuzzing.test.js`: 1,000개 무작위 선분 8-연결 브레젠험 연속성 및 500개 뷰포트 좌표 스케일링 Fuzzing 테스트.
   - `tests/adapters/branch-coverage-booster.test.js`: 잔여 브랜치 사각지대 전수 해소.
-- **결과 및 영향 (Consequences)**: Line 100%, Function 100%, Branch 98.17% 달성 및 제로 결함 증명.
+- **결과 및 영향 (Consequences)**: Line 100%, Function 100%, Branch 98.17% 달성 및 실사용자 시나리오/기하 불변성 검증 완료.

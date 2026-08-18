@@ -28,7 +28,7 @@
 
 ### 🚀 [v1.13.0] - 2026-08-18 (Parent: #112)
 - **`[TSK-013-01]` `InputManager` 분리 (#113, PR #118)**:
-  - `src/ui/input-manager.js`를 신설하여 `main.js`의 DOM 키보드 단축키(1~4, R), 브러시 크기 버튼, 사운드 토글 리스너를 온전히 캡슐화하고 SRP 완수.
+  - `src/ui/input-manager.js`를 신설하여 `main.js`의 DOM 키보드 단축키(1~4, R), 브러시 크기 버튼, 사운드 토글 리스너를 온전히 캡슐화하고 이벤트 제어 분리.
 - **`[TSK-013-02]` `CanvasRenderer` DI 주입 & `ImageFileLoader` 분리 (#114, PR #119)**:
   - `CanvasRenderer` 생성자에 `particleSystem` 주입 인터페이스 개방.
   - `src/adapters/helpers/image-file-loader.js` 신설로 비동기 `FileReader` 분리.
