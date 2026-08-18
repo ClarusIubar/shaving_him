@@ -106,11 +106,17 @@ export function createMockCanvasElement(width = 800, height = 600) {
                 bottom: canvas.height
             };
         },
+        listeners,
         addEventListener(evt, fn) {
             listeners[evt] = fn;
         },
         removeEventListener(evt, fn) {
             delete listeners[evt];
+        },
+        dispatchEvent(evt, data = {}) {
+            if (typeof listeners[evt] === 'function') {
+                listeners[evt](data);
+            }
         },
         toDataURL() {
             return 'data:image/png;base64,mock';
