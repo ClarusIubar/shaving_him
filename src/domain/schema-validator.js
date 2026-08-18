@@ -1,6 +1,6 @@
 /**
  * Pure Domain Model: SchemaValidator
- * Validates StageDataDTO structural integrity and boundaries.
+ * Validates StageDataDTO and SessionSnapshotDTO structural integrity and boundaries.
  * 0% DOM/Canvas dependency.
  */
 
@@ -73,4 +73,37 @@ export function validateStageData(stageData) {
     }
 
     return stageData;
+}
+
+/**
+ * Validates SessionSnapshotDTO structure and invariants.
+ * @param {any} snapshot 
+ * @returns {any}
+ */
+export function validateSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
+        throw new TypeError('Invalid snapshot: must be a non-null object');
+    }
+
+    const numericFields = [
+        'score', 'shavedHair', 'totalHair', 'initialHairCount',
+        'remainingHair', 'streak', 'multiplier', 'timeLeft', 'clearPercentage'
+    ];
+
+    for (const field of numericFields) {
+        const val = snapshot[field];
+        if (typeof val !== 'number' || !Number.isFinite(val) || val < 0) {
+            throw new TypeError(`Invalid snapshot: field "${field}" must be a non-negative finite number`);
+        }
+    }
+
+    const booleanFields = ['isRunning', 'isEnded', 'victory'];
+    for (const field of booleanFields) {
+        const val = snapshot[field];
+        if (typeof val !== 'boolean') {
+            throw new TypeError(`Invalid snapshot: field "${field}" must be a boolean`);
+        }
+    }
+
+    return snapshot;
 }

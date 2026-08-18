@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { validateStageData } from '../../src/domain/schema-validator.js';
+import { validateStageData, validateSnapshot } from '../../src/domain/schema-validator.js';
 
 test('validateStageData - accepts a valid StageDataDTO', () => {
     const validDTO = {
@@ -97,4 +97,49 @@ test('validateStageData - rejects invalid colorGrid dimensions and channel value
     assert.throws(() => validateStageData({ ...base, colorGrid: [['invalid', [0, 0, 0]], [[0, 0, 0], [0, 0, 0]]] }), /color cell at \(0, 0\) must be an array of 3 or 4 channel numbers/);
     assert.throws(() => validateStageData({ ...base, colorGrid: [[[1, 2], [0, 0, 0]], [[0, 0, 0], [0, 0, 0]]] }), /color cell at \(0, 0\) must be an array of 3 or 4 channel numbers/);
     assert.throws(() => validateStageData({ ...base, colorGrid: [[[1, 2, 'NaN'], [0, 0, 0]], [[0, 0, 0], [0, 0, 0]]] }), /RGB channel value out of range/);
+});
+
+test('validateSnapshot - accepts valid SessionSnapshotDTO', () => {
+    const validSnapshot = {
+        score: 100,
+        shavedHair: 5,
+        totalHair: 10,
+        initialHairCount: 10,
+        remainingHair: 5,
+        streak: 2,
+        multiplier: 1.2,
+        timeLeft: 45,
+        isRunning: true,
+        isEnded: false,
+        clearPercentage: 50,
+        victory: false
+    };
+
+    assert.equal(validateSnapshot(validSnapshot), validSnapshot);
+});
+
+test('validateSnapshot - rejects null, non-object or invalid fields', () => {
+    assert.throws(() => validateSnapshot(null), /Invalid snapshot: must be a non-null object/);
+    assert.throws(() => validateSnapshot('not an object'), /Invalid snapshot: must be a non-null object/);
+
+    const base = {
+        score: 0,
+        shavedHair: 0,
+        totalHair: 0,
+        initialHairCount: 0,
+        remainingHair: 0,
+        streak: 0,
+        multiplier: 1,
+        timeLeft: 0,
+        isRunning: false,
+        isEnded: false,
+        clearPercentage: 0,
+        victory: false
+    };
+
+    assert.throws(() => validateSnapshot({ ...base, score: -1 }), /field "score" must be a non-negative finite number/);
+    assert.throws(() => validateSnapshot({ ...base, score: NaN }), /field "score" must be a non-negative finite number/);
+    assert.throws(() => validateSnapshot({ ...base, streak: '2' }), /field "streak" must be a non-negative finite number/);
+    assert.throws(() => validateSnapshot({ ...base, isRunning: 'true' }), /field "isRunning" must be a boolean/);
+    assert.throws(() => validateSnapshot({ ...base, victory: null }), /field "victory" must be a boolean/);
 });
