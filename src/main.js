@@ -1,6 +1,6 @@
 /**
  * Application Entry Point: main.js
- * Bootstraps GameOrchestrator, CanvasRenderer, BrushController, HUD, and SoundEffects.
+ * Bootstraps GameOrchestrator, CanvasRenderer, BrushController, HUD, SoundEffects, and InputManager.
  * Fully exported and testable in Node.js test runner suite.
  */
 import { createCompositionRoot } from './app/composition-root.js';
@@ -8,12 +8,9 @@ import { CanvasRenderer } from './ui/canvas-renderer.js';
 import { BrushController } from './ui/brush-controller.js';
 import { HUD } from './ui/hud.js';
 import { SoundEffects } from './ui/sound-effects.js';
-export const KEY_BRUSH_RADIUS_MAP = Object.freeze({
-    '1': 1,
-    '2': 3,
-    '3': 5,
-    '4': 7
-});
+import { InputManager, KEY_BRUSH_RADIUS_MAP } from './ui/input-manager.js';
+
+export { KEY_BRUSH_RADIUS_MAP };
 
 export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : null, win = typeof window !== 'undefined' ? window : null, customAdapters = {}) => {
     if (!doc) return null;
@@ -21,7 +18,6 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
     const canvas = doc.getElementById('gameCanvas');
     const cursor = doc.getElementById('razorCursor');
     const gameContainer = doc.getElementById('gameContainer');
-    const changeStageBtn = doc.getElementById('changeStageBtn');
 
     if (!canvas) return null;
 
@@ -45,56 +41,15 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
         }
     }, geometry);
 
-    // Sound toggle button in HUD
-    if (hud.soundToggleBtn) {
-        hud.soundToggleBtn.addEventListener('click', () => {
-            const enabled = sound.toggle();
-            hud.updateSoundUI(enabled);
-        });
-    }
-
-    // Synchronize HUD brush button highlight when brush radius changes
-    brushController.onRadiusChange(radius => {
-        hud.updateBrushSizeUI(radius);
+    // Input manager encapsulates all DOM keyboard shortcuts, brush buttons, sound toggle, change stage
+    const inputManager = new InputManager({
+        doc,
+        win,
+        brushController,
+        orchestrator,
+        hud,
+        sound
     });
-
-    // Brush size selector buttons
-    const brushBtns = doc.querySelectorAll('.brush-btn');
-    if (brushBtns && typeof brushBtns.forEach === 'function') {
-        brushBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                brushBtns.forEach(b => b.classList && b.classList.remove('active'));
-                if (e.target && e.target.classList) e.target.classList.add('active');
-                const radiusAttr = e.target ? e.target.getAttribute('data-radius') : '1';
-                const radius = parseInt(radiusAttr, 10) || 1;
-                brushController.setRadius(radius);
-            });
-        });
-    }
-
-    // Global Keyboard Shortcuts
-    if (win && typeof win.addEventListener === 'function') {
-        win.addEventListener('keydown', (e) => {
-            const activeEl = doc.activeElement;
-            const tag = activeEl ? activeEl.tagName.toLowerCase() : '';
-            if (tag === 'input' || tag === 'textarea' || (activeEl && activeEl.isContentEditable)) return;
-
-            const radius = KEY_BRUSH_RADIUS_MAP[e.key];
-            if (radius !== undefined) {
-                brushController.setRadius(radius);
-            } else if (e.key === 'r' || e.key === 'R') {
-                orchestrator.restart();
-            }
-        });
-    }
-
-    // Change Stage Button in HUD
-    if (changeStageBtn) {
-        changeStageBtn.addEventListener('click', () => {
-            orchestrator.stopTimer();
-            hud.showStartModal();
-        });
-    }
 
     // Subscribe to state updates. The orchestrator hands over a single event
     // object carrying everything the UI needs (snapshot, stageData,
@@ -169,6 +124,7 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
         hud,
         sound,
         brushController,
+        inputManager,
         startStageWithSource
     };
 };
