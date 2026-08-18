@@ -6,13 +6,37 @@ import { GridGeometry } from '../domain/grid-geometry.js';
 import { ParticleSystem } from './particle-system.js';
 
 export class CanvasRenderer {
-    constructor(canvasElement, gridGeometry = GridGeometry.default()) {
+    /**
+     * @param {HTMLCanvasElement} canvasElement 
+     * @param {GridGeometry|number} [gridGeometryOrCols] 
+     * @param {number|ParticleSystem} [rowsOrParticleSystem] 
+     * @param {ParticleSystem} [customParticleSystem] 
+     */
+    constructor(canvasElement, gridGeometryOrCols = GridGeometry.default(), rowsOrParticleSystem = null, customParticleSystem = null) {
         this.canvas = canvasElement;
-        this.geometry = gridGeometry;
-        this.cols = gridGeometry.cols;
-        this.rows = gridGeometry.rows;
-        this.fontW = gridGeometry.cellWidth;
-        this.fontH = gridGeometry.cellHeight;
+        let particleSystem = null;
+
+        if (Number.isFinite(gridGeometryOrCols) && Number.isFinite(rowsOrParticleSystem)) {
+            this.cols = gridGeometryOrCols;
+            this.rows = rowsOrParticleSystem;
+            const def = GridGeometry.default();
+            this.fontW = def.cellWidth;
+            this.fontH = def.cellHeight;
+            this.geometry = new GridGeometry(this.cols, this.rows, this.fontW, this.fontH);
+            particleSystem = (customParticleSystem && typeof customParticleSystem.spawn === 'function')
+                ? customParticleSystem
+                : (rowsOrParticleSystem && typeof rowsOrParticleSystem.spawn === 'function' ? rowsOrParticleSystem : null);
+        } else {
+            const geom = (gridGeometryOrCols instanceof GridGeometry) ? gridGeometryOrCols : GridGeometry.default();
+            this.geometry = geom;
+            this.cols = geom.cols;
+            this.rows = geom.rows;
+            this.fontW = geom.cellWidth;
+            this.fontH = geom.cellHeight;
+            particleSystem = (rowsOrParticleSystem && typeof rowsOrParticleSystem.spawn === 'function')
+                ? rowsOrParticleSystem
+                : customParticleSystem;
+        }
 
         this.dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
 
@@ -22,7 +46,7 @@ export class CanvasRenderer {
         this.currentStageData = null;
         this.currentHairGrid = null;
 
-        this.particleSystem = new ParticleSystem({
+        this.particleSystem = (particleSystem && typeof particleSystem.spawn === 'function') ? particleSystem : new ParticleSystem({
             fontW: this.fontW,
             fontH: this.fontH,
             onRestoreCell: (r, c) => this.restoreParticleCell(r, c),
@@ -71,8 +95,10 @@ export class CanvasRenderer {
             this.ctx.textBaseline = 'top';
         }
 
-        this.particleSystem.fontW = this.fontW;
-        this.particleSystem.fontH = this.fontH;
+        if (this.particleSystem && typeof this.particleSystem === 'object') {
+            this.particleSystem.fontW = this.fontW;
+            this.particleSystem.fontH = this.fontH;
+        }
     }
 
     /**

@@ -3,6 +3,7 @@
  * Performs in-browser skin-smoothing and hair mask extraction using HTML5 Canvas 2D ImageData.
  */
 import { ImageProcessorPort } from '../ports/image-processor.port.js';
+import { ImageFileLoader } from './helpers/image-file-loader.js';
 
 export class CanvasImageProcessorAdapter extends ImageProcessorPort {
     /**
@@ -67,31 +68,6 @@ export class CanvasImageProcessorAdapter extends ImageProcessorPort {
     }
 
     loadImageFile(file) {
-        return new Promise((resolve, reject) => {
-            if (!file) {
-                return reject(new Error('파일이 지정되지 않았습니다.'));
-            }
-            if (typeof FileReader === 'undefined') {
-                return reject(new Error('FileReader API가 지원되지 않는 환경입니다.'));
-            }
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                if (typeof Image === 'undefined') {
-                    return resolve({});
-                }
-                const img = new Image();
-                img.onload = () => {
-                    if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-                        reject(new Error('이미지 크기가 0px이거나 손상된 파일입니다.'));
-                    } else {
-                        resolve(img);
-                    }
-                };
-                img.onerror = () => reject(new Error('유효하지 않거나 손상된 이미지 파일입니다.'));
-                img.src = e.target.result;
-            };
-            reader.onerror = () => reject(new Error('파일 읽기 과정에서 오류가 발생했습니다.'));
-            reader.readAsDataURL(file);
-        });
+        return ImageFileLoader.load(file);
     }
 }
