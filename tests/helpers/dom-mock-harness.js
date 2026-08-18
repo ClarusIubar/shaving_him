@@ -124,10 +124,14 @@ export function createMockDocument() {
     const elements = new Map();
     elements.set('gameCanvas', createMockCanvasElement());
 
+    const bodyChildren = [];
+
     const mockDoc = {
         getElementById(id) {
             if (!elements.has(id)) {
-                elements.set(id, {
+                const attrs = new Map();
+                const listeners = {};
+                const el = {
                     id,
                     textContent: '',
                     disabled: false,
@@ -152,15 +156,19 @@ export function createMockDocument() {
                             return true;
                         }
                     },
-                    listeners: {},
-                    addEventListener(evt, fn) { this.listeners[evt] = fn; },
-                    removeEventListener(evt, fn) { delete this.listeners[evt]; },
+                    listeners,
+                    addEventListener(evt, fn) { listeners[evt] = fn; },
+                    removeEventListener(evt, fn) { delete listeners[evt]; },
                     click() {
                         if (typeof this.onclick === 'function') this.onclick();
-                        if (typeof this.listeners.click === 'function') this.listeners.click();
+                        if (typeof listeners.click === 'function') listeners.click({ target: el });
                     },
-                    getAttribute(attr) { return null; }
-                });
+                    setAttribute(attr, val) { attrs.set(attr, String(val)); },
+                    getAttribute(attr) { return attrs.get(attr) || null; },
+                    hasAttribute(attr) { return attrs.has(attr); },
+                    removeAttribute(attr) { attrs.delete(attr); }
+                };
+                elements.set(id, el);
             }
             return elements.get(id);
         },
@@ -168,26 +176,84 @@ export function createMockDocument() {
             if (tag === 'canvas') {
                 return createMockCanvasElement();
             }
-            return {
+            const attrs = new Map();
+            const listeners = {};
+            const el = {
                 tagName: tag,
                 id: '',
                 className: '',
                 innerHTML: '',
                 textContent: '',
                 style: {},
+                classList: {
+                    classes: new Set(),
+                    add(c) { this.classes.add(c); el.className = Array.from(this.classes).join(' '); },
+                    remove(c) { this.classes.delete(c); el.className = Array.from(this.classes).join(' '); },
+                    contains(c) { return this.classes.has(c); },
+                    toggle(c, force) {
+                        if (typeof force === 'boolean') {
+                            if (force) this.add(c);
+                            else this.remove(c);
+                            return force;
+                        }
+                        if (this.contains(c)) {
+                            this.remove(c);
+                            return false;
+                        }
+                        this.add(c);
+                        return true;
+                    }
+                },
+                setAttribute(attr, val) {
+                    attrs.set(attr, String(val));
+                    if (attr === 'class' || attr === 'className') {
+                        el.className = String(val);
+                        el.classList.classes = new Set(String(val).split(/\s+/).filter(Boolean));
+                    }
+                },
+                getAttribute(attr) { return attrs.get(attr) || null; },
+                hasAttribute(attr) { return attrs.has(attr); },
+                removeAttribute(attr) { attrs.delete(attr); },
+                listeners,
+                addEventListener(evt, fn) { listeners[evt] = fn; },
+                removeEventListener(evt, fn) { delete listeners[evt]; },
                 appendChild() {},
                 removeChild() {},
-                click() {}
+                click() {
+                    if (typeof this.onclick === 'function') this.onclick();
+                    if (typeof listeners.click === 'function') listeners.click({ target: el });
+                }
             };
+            return el;
         },
         querySelectorAll(selector) {
+            if (selector.startsWith('.')) {
+                const cls = selector.slice(1);
+                const results = [];
+                for (const el of elements.values()) {
+                    if (el.classList && el.classList.contains(cls)) results.push(el);
+                }
+                for (const el of bodyChildren) {
+                    if (el.classList && el.classList.contains(cls) && !results.includes(el)) results.push(el);
+                }
+                return results;
+            }
             return [];
         },
         addEventListener() {},
         removeEventListener() {},
         body: {
-            appendChild() {},
-            removeChild() {}
+            children: bodyChildren,
+            appendChild(child) {
+                bodyChildren.push(child);
+                if (child && child.className) {
+                    child.className.split(/\s+/).filter(Boolean).forEach(c => child.classList.add(c));
+                }
+            },
+            removeChild(child) {
+                const idx = bodyChildren.indexOf(child);
+                if (idx !== -1) bodyChildren.splice(idx, 1);
+            }
         }
     };
 
@@ -196,6 +262,7 @@ export function createMockDocument() {
 
 export function createMockWindow(doc = null) {
     const documentObj = doc || createMockDocument();
+    const listeners = {};
     return {
         document: documentObj,
         devicePixelRatio: 1,
@@ -207,8 +274,18 @@ export function createMockWindow(doc = null) {
         cancelAnimationFrame(id) {
             clearTimeout(id);
         },
-        addEventListener() {},
-        removeEventListener() {}
+        listeners,
+        addEventListener(evt, fn) {
+            listeners[evt] = fn;
+        },
+        removeEventListener(evt, fn) {
+            delete listeners[evt];
+        },
+        dispatchEvent(evt, data = {}) {
+            if (typeof listeners[evt] === 'function') {
+                listeners[evt](data);
+            }
+        }
     };
 }
 
