@@ -16,12 +16,12 @@
 | 품질 영역 | 지표 / 사양 | 엔지니어링 의의 |
 | :--- | :---: | :--- |
 | **코드 커버리지** | **Line 100.00% · Func 100.00% · Branch 98.17%** | Node.js 내장 테스트 러너 기반 139개 전수 검증 통과 |
-| **소프트웨어 아키텍처** | **5-Layer Clean Architecture & Ports/Adapters** | Core ➔ Ports ➔ App ➔ Adapters ➔ UI 단방향 의존성 완수 |
-| **SOLID 객체지향 설계** | **100% SRP / OCP / LSP / ISP / DIP 완수** | `InputManager`, `ImageFileLoader`, `ParticleSystem` DI 주입 |
-| **SDD (Schema-Driven)** | **TypeScript `.d.ts` & `validateSnapshot`** | 컴파일 타임 DTO 명세 및 런타임 스키마 무결성 100% 방어 |
-| **메모리 및 연산 효율** | **1D `Uint8Array` (0B Allocation during Shave)** | GC 프레임 드랍(Stuttering) 제로, O(1) 비트 인덱싱 |
+| **소프트웨어 아키텍처** | **5-Layer Clean Architecture & Ports/Adapters** | Core ➔ Ports ➔ App ➔ Adapters ➔ UI 단방향 의존성 계층 분리 |
+| **SOLID 객체지향 설계** | **5계층 분리 및 점진적 리팩토링 진행 (잔여 부채 관리)** | `InputManager`, `ImageFileLoader`, `ParticleSystem` DI 주입 적용 (ScoreStrategy/HUD ISP 개선 과제 식별) |
+| **SDD (Schema-Driven)** | **TypeScript `.d.ts` & `validateSnapshot`** | 컴파일 타임 DTO 명세 및 런타임 스키마 무결성 검증 |
+| **메모리 및 연산 효율** | **1D `Uint8Array` (0B Allocation during Shave)** | GC 프레임 드랍(Stuttering) 방지, O(1) 비트 인덱싱 |
 | **오디오 합성 엔진** | **100% Web Audio API 절차적 합성 (0B MP3/WAV)** | 대역통과 필터 화이트 노이즈 & 사인파 가변 피치 콤보음 |
-| **렌더링 성능** | **60fps GPU 가속 (`translate3d`) & rAF 배치** | DOM Reflow/Layout Thrashing 제로, High-DPI 정규화 |
+| **렌더링 성능** | **60fps GPU 가속 (`translate3d`) & rAF 배치** | DOM Reflow/Layout Thrashing 방지, High-DPI 정규화 |
 
 ---
 
@@ -69,7 +69,7 @@ d:\Code305\shaving_him\
 │   │       └── 📄 image-file-loader.js # FileReader & Image 비동기 디코딩 전담 헬퍼 (SRP)
 │   │
 │   └── 📂 ui/                         # 5. Interface & Presentation Layer (수동적 뷰 & 입력 제어기)
-│       ├── 📄 input-manager.js        # DOM/키보드 이벤트 바인딩 전담 관리자 (SRP 분리 완수)
+│       ├── 📄 input-manager.js        # DOM/키보드 이벤트 바인딩 전담 관리자 (이벤트 바인딩 분리)
 │       ├── 📄 brush-controller.js     # 레이저 마우스/터치 드래그 및 GPU translate3d 커서 컨트롤러
 │       ├── 📄 canvas-renderer.js      # 2D 아스키 캔버스 렌더러 (ParticleSystem DI 주입 지원)
 │       ├── 📄 particle-system.js      # 면도 파편 비산 물리 파티클 시스템
@@ -108,8 +108,8 @@ d:\Code305\shaving_him\
 
 * 📁 **[2. 시스템 아키텍처 설계서 (Architecture)](설계서)**
   * 5계층 클린 아키텍처 (Domain Core ➔ Ports ➔ App ➔ Adapters ➔ UI)
-  * SOLID 5대 원칙 완수 체계 및 Mermaid 통합 아키텍처 조감도
-  * `InputManager` 분리를 통한 진입점 경량화 및 SRP 달성 구조
+  * SOLID 5대 원칙 적용 현황 및 잔여 아키텍처 기술 부채 분석
+  * `InputManager` 분리를 통한 진입점 경량화 및 이벤트 제어 구조
   * `CanvasRenderer`의 `ParticleSystem` DI 주입 및 `ImageFileLoader` 분리 설계
   * 데이터 생명주기 및 시퀀스 다이어그램 (부트스트랩, 드래그 면도, 1-Photo 파이프라인, 게임 오버)
   * 🏛️ **[아키텍처 의사결정록 (ADR)](ADR)**: ADR-001 ~ ADR-013 기술 의사결정 맥락과 근거
