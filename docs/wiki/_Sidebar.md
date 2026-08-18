@@ -1,6 +1,7 @@
 ### 🪒 Shaving Him Wiki
 
 * 🏠 **[Home (위키 홈)](Home)**
+* 🎮 **[Live Game Play (라이브 게임 플레이)](https://clarusiubar.github.io/shaving_him/)**
 
 ---
 
