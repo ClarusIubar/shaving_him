@@ -1,4 +1,4 @@
-# 🪒 Shaving Him (그 남자의 수염을 깎아라) Wiki - v1.13.0
+# 🪒 Shaving Him (그 남자의 수염을 깎아라) Wiki - v1.14.0
 
 > **위키 퀵 내비게이션**: [🏠 Wiki 홈](Home) | [🎮 라이브 게임 플레이](https://clarusiubar.github.io/shaving_him/) | [📋 기획서 (PRD)](기획서) | [📁 시스템 설계서](설계서) | [🏛️ ADR 명세서](ADR) | [📂 소스모듈 명세서](프로젝트_디렉토리_및_모듈_구조_명세서) | [⚡ 세부 기술 명세서](명세서) | [📊 수식/퍼징 검증서](스코어링_이론계산_실측값_검증) | [🧪 테스트 체계서](테스트_체계_및_TDD_명세서) | [📜 변경 이력](CHANGELOG)
 
@@ -19,7 +19,7 @@
 1장 단일 사진(1-Photo)으로부터 실시간 아스키 아트 및 피부/수염 델타 마스크를 생성하고, 브라우저 Canvas 위에서 60fps로 매끄럽게 면도(Shaving)하며 피부를 복원해 나가는 **순수 자바스크립트 클린 아키텍처 아케이드 게임 시스템**의 통합 기술 지식 위키입니다.
 
 > [!TIP]
-> 외부 오디오/이미지 런타임 파일 의존성 제로(0B Asset Dependency), Web Audio API 기반의 100% 절차적 면도마찰음/콤보 화음/승리 팡파레 실시간 합성, 1D `Uint8Array` 기반 O(1) 0B 메모리 할당 비트맵 연산, 브레젠험 8-연결 연속 선분 래스터라이저, 5계층 Ports & Adapters 클린 아키텍처 및 엄격한 Red-Green-Refactor(RGR) TDD로 구현되었습니다.
+> 외부 오디오/이미지 런타임 파일 의존성 제로(0B Asset Dependency), Web Audio API 기반의 100% 절차적 면도마찰음/콤보 화음/승리 팡파레 실시간 합성, 1D `Uint8Array` 기반 O(1) 0B 메모리 할당 비트맵 연산, 브레젠험 8-연결 연속 선분 래스터라이저, 5계층 Ports & Adapters 클린 아키텍처, Zero-Ternary 및 엄격한 Red-Green-Refactor(RGR) TDD로 구현되었습니다.
 
 ---
 
@@ -27,9 +27,10 @@
 
 | 품질 영역 | 지표 / 사양 | 엔지니어링 의의 |
 | :--- | :---: | :--- |
-| **코드 커버리지** | **Line 100.00% · Func 100.00% · Branch 98.17%** | Node.js 내장 테스트 러너 기반 139개 전수 검증 통과 |
+| **코드 커버리지** | **Line 100.00% · Func 100.00% · Branch 99.05%** | Node.js 내장 테스트 러너 기반 150개 전수 검증 통과 |
 | **소프트웨어 아키텍처** | **5-Layer Clean Architecture & Ports/Adapters** | Core ➔ Ports ➔ App ➔ Adapters ➔ UI 단방향 의존성 계층 분리 |
-| **SOLID 객체지향 설계** | **5계층 분리 및 점진적 리팩토링 진행 (잔여 부채 관리)** | `InputManager`, `ImageFileLoader`, `ParticleSystem` DI 주입 적용 (ScoreStrategy/HUD ISP 개선 과제 식별) |
+| **SOLID 객체지향 설계** | **SOLID 5대 원칙 완결 (Zero Debt)** | `CursorView`(SRP), `SessionTimer`(SRP), `IScoringStrategy`(OCP), `InputManager`(ISP), `StageSourcePort`(LSP) |
+| **순환 복잡도 & 분기** | **Zero-Ternary (0건) & $CC \le 3\sim 4$** | 선언적 룩업 테이블(`OPACITY_MAP`, `STAGE_EXTENSIONS`) 및 순수 헬퍼 적용 |
 | **SDD (Schema-Driven)** | **TypeScript `.d.ts` & `validateSnapshot`** | 컴파일 타임 DTO 명세 및 런타임 스키마 무결성 검증 |
 | **메모리 및 연산 효율** | **1D `Uint8Array` (0B Allocation during Shave)** | GC 프레임 드랍(Stuttering) 방지, O(1) 비트 인덱싱 |
 | **오디오 합성 엔진** | **100% Web Audio API 절차적 합성 (0B MP3/WAV)** | 대역통과 필터 화이트 노이즈 & 사인파 가변 피치 콤보음 |
@@ -53,8 +54,9 @@ d:\Code305\shaving_him\
 │   │
 │   ├── 📂 domain/                      # 1. Pure Domain Core Layer (순수 비즈니스 모델 - 0% DOM/Canvas)
 │   │   ├── 📄 hair-grid.js             # 1D Uint8Array 기반 수염 비트맵 매트릭스 (O(1) Shave, 0B GC)
+│   │   ├── 📄 session-timer.js         # 1초 게임 클록 및 타이머 수명주기 서비스 (SRP)
 │   │   ├── 📄 shave-session.js         # 게임 세션 수명주기, 타이머 카운트다운, 스냅샷 관리자
-│   │   ├── 📄 score-calculator.js      # 연속 콤보 가산, 시간 보너스, 올클리어 보너스 연산 엔진
+│   │   ├── 📄 score-calculator.js      # 연속 콤보 가산, 시간 보너스, IScoringStrategy 전략 엔진 (OCP)
 │   │   ├── 📄 grid-geometry.js         # 불변(Immutable) 그리드 기하 값 객체 (Value Object)
 │   │   ├── 📄 line-rasterizer.js       # 브레젠험(Bresenham) 8-방향 연속 선분 래스터라이저 (퍼징 입증)
 │   │   ├── 📄 schema-validator.js      # StageDataDTO & SessionSnapshotDTO 런타임 스키마 검증기
@@ -73,7 +75,7 @@ d:\Code305\shaving_him\
 │   │   └── 📄 stage-source-handlers.js # 소스 핸들러 레지스트리 (JSON, Image, Preset)
 │   │
 │   ├── 📂 adapters/                     # 4. Secondary Driven Adapters Layer (인프라 및 캔버스 구현체)
-│   │   ├── 📄 static-json-stage.js      # JSON 프리셋 및 EMBEDDED_GAME_DATA 폴백 어댑터
+│   │   ├── 📄 static-json-stage.js      # JSON 프리셋 및 EMBEDDED_GAME_DATA 폴백 어댑터 (LSP)
 │   │   ├── 📄 canvas-image-processor.js # Canvas 2D 기반 이미지 디코딩/리사이징 어댑터
 │   │   ├── 📄 canvas-ascii-converter.js # 램프 테이블 기반 아스키 텍스트 그리드 변환 어댑터
 │   │   ├── 📄 delta-diff-engine.js      # 피부색 분리와 수염 마스크 추출 델타 디프 어댑터
@@ -81,19 +83,20 @@ d:\Code305\shaving_him\
 │   │       └── 📄 image-file-loader.js  # FileReader & Image 비동기 디코딩 전담 헬퍼 (SRP)
 │   │
 │   └── 📂 ui/                                 # 5. Interface & Presentation Layer (수동적 뷰 & 입력 제어기)
-│       ├── 📄 input-manager.js                # DOM/키보드 이벤트 바인딩 전담 관리자 (이벤트 바인딩 분리)
-│       ├── 📄 brush-controller.js             # 레이저 마우스/터치 드래그 및 GPU translate3d 커서 컨트롤러
+│       ├── 📄 input-manager.js                # DOM/키보드 이벤트 바인딩 전담 관리자 (ISP)
+│       ├── 📄 brush-controller.js             # 레이저 마우스/터치 드래그 좌표 제어기 (SRP)
 │       ├── 📄 canvas-renderer.js              # 2D 아스키 캔버스 렌더러 (ParticleSystem DI 주입 지원)
 │       ├── 📄 particle-system.js              # 면도 파편 비산 물리 파티클 시스템
 │       ├── 📄 sound-effects.js                # 100% Web Audio API 절차적 오디오 합성 엔진 (0B 에셋)
 │       ├── 📄 hud.js                          # 하위 4대 서브뷰를 통합 관리하는 UI 퍼사드 (Facade)
 │       └── 📂 views/                          # 개별 Passive UI 서브뷰 컴포넌트
+│           ├── 📄 cursor-view.js              # GPU translate3d 커서 DOM 렌더링 전담 뷰 (SRP)
 │           ├── 📄 stats-hud-view.js           # 점수, 타이머, 게이지, 콤보 뱃지 서브뷰
 │           ├── 📄 stage-select-modal-view.js  # 시작 모달, 프리셋 카드, 파일 드롭존 서브뷰
 │           ├── 📄 loading-overlay-view.js     # 4단계 파이프라인 로딩 프로그레스 오버레이
 │           └── 📄 game-over-overlay-view.js   # 게임 오버 / 승리 점수 오버레이
 │
-├── 📂 tests/                          # 6대 계층 RGR TDD 테스트 스위트 (139 tests 100% PASS)
+├── 📂 tests/                          # 6대 계층 RGR TDD 테스트 스위트 (150 tests 100% PASS)
 │   ├── 📂 domain/                     # 도메인 모델, 기하 퍼징, 스키마 검증기 단위 테스트
 │   ├── 📂 ports/                      # LSP 인터페이스 시그니처 및 예외 계약 검증 테스트
 │   ├── 📂 adapters/                   # 어댑터 동작, 이미지 로더, 브랜치 부스터 테스트
