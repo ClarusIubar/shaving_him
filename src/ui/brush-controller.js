@@ -9,9 +9,7 @@ import { CursorView } from './views/cursor-view.js';
 export class BrushController {
     constructor(canvas, cursorOrCursorView, onShaveCallback, gridGeometry = GridGeometry.default()) {
         this.canvas = canvas;
-        this.cursorView = (cursorOrCursorView instanceof CursorView)
-            ? cursorOrCursorView
-            : new CursorView(cursorOrCursorView);
+        this.cursorView = CursorView.from(cursorOrCursorView);
         this.onShave = onShaveCallback;
         this.geometry = gridGeometry;
         this.cols = gridGeometry.cols;

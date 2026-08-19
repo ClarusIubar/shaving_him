@@ -9,26 +9,36 @@ import { CursorView } from '../../src/ui/views/cursor-view.js';
 import { HUD } from '../../src/ui/hud.js';
 
 test('CursorView - renders translate3d, font size, and visibility cleanly', () => {
-    const mockElement = { style: {} };
-    const cursorView = new CursorView(mockElement);
+    const el = { style: {} };
+    const view = new CursorView(el);
 
-    cursorView.setPosition(100, 200);
-    assert.equal(mockElement.style.transform, 'translate3d(100px, 200px, 0) translate(-50%, -50%) rotate(-30deg)');
+    view.setPosition(100, 200);
+    assert.equal(view.cursor.style.transform, 'translate3d(100px, 200px, 0) translate(-50%, -50%) rotate(-30deg)');
 
-    cursorView.setSize(3);
-    assert.equal(mockElement.style.fontSize, '40px');
+    view.setSize(3);
+    assert.equal(view.cursor.style.fontSize, '40px');
 
-    cursorView.setVisibility(true);
-    assert.equal(mockElement.style.opacity, '1');
+    view.setVisibility(true);
+    assert.equal(view.cursor.style.opacity, '1');
 
-    cursorView.setVisibility(false);
-    assert.equal(mockElement.style.opacity, '0');
+    view.setVisibility(false);
+    assert.equal(view.cursor.style.opacity, '0');
 
-    // Handles null element gracefully
-    const nullCursorView = new CursorView(null);
-    nullCursorView.setPosition(0, 0);
-    nullCursorView.setSize(1);
-    nullCursorView.setVisibility(true);
+    // Null guards
+    const emptyView = new CursorView(null);
+    emptyView.setPosition(1, 1);
+    emptyView.setSize(1);
+    emptyView.setVisibility(true);
+});
+
+test('CursorView.from - returns instance unchanged or wraps raw element in new CursorView', () => {
+    const rawEl = { style: {} };
+    const view1 = CursorView.from(rawEl);
+    assert.ok(view1 instanceof CursorView);
+    assert.strictEqual(view1.cursor, rawEl);
+
+    const view2 = CursorView.from(view1);
+    assert.strictEqual(view2, view1);
 });
 
 function createMockDoc() {

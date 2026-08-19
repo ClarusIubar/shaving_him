@@ -3,6 +3,11 @@
  * Encapsulates DOM rendering for razor cursor with GPU-accelerated transform translate3d.
  */
 export class CursorView {
+    static from(target) {
+        if (target instanceof CursorView) return target;
+        return new CursorView(target);
+    }
+
     constructor(cursorElement = null) {
         this.cursor = cursorElement;
     }

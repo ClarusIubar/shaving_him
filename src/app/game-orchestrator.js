@@ -21,13 +21,11 @@ export class GameOrchestrator {
     }
 
     get timerId() {
-        return this.timer ? this.timer.timerId : null;
+        return this.timer.timerId;
     }
 
     set timerId(id) {
-        if (this.timer) {
-            this.timer.timerId = id;
-        }
+        this.timer.timerId = id;
     }
 
     onUpdate(callback) {
