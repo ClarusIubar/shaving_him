@@ -1,4 +1,4 @@
-# 🏛️ [Architecture Decision Records] Shaving Him ADR 명세서 - v1.13.0
+# 🏛️ [Architecture Decision Records] Shaving Him ADR 명세서 - v1.14.0
 
 > **위키 퀵 내비게이션**: [🏠 Wiki 홈](Home) | [🎮 라이브 게임 플레이](https://clarusiubar.github.io/shaving_him/) | [📋 기획서 (PRD)](기획서) | [📁 시스템 설계서](설계서) | [🏛️ ADR 명세서](ADR) | [📂 소스모듈 명세서](프로젝트_디렉토리_및_모듈_구조_명세서) | [⚡ 세부 기술 명세서](명세서) | [📊 수식/퍼징 검증서](스코어링_이론계산_실측값_검증) | [🧪 테스트 체계서](테스트_체계_및_TDD_명세서) | [📜 변경 이력](CHANGELOG)
 
@@ -21,6 +21,11 @@
 | **ADR-011** | `CanvasRenderer`의 `ParticleSystem` DI 및 `ImageFileLoader` 분리 | **Accepted** | 구체 클래스 하드코딩 완화(DI 주입) 및 비동기 디코딩 전담화 |
 | **ADR-012** | TypeScript `.d.ts` 타입 정의 및 `validateSnapshot` SDD 표준 | **Accepted** | 스키마 주도 개발(SDD) 및 세션 런타임 데이터 무결성 검증 |
 | **ADR-013** | 전 과정 유저 저니 E2E 및 기하 연산 Fuzzing 테스트 구축 | **Accepted** | 실사용자 시나리오 전수 검증 및 1,000회 기하 불변성 검증 |
+| **ADR-014** | `CursorView` 분리를 통한 `BrushController` SRP 단일 책임 강화 | **Accepted** | 면도기 커서 DOM 조작을 전담 분리하여 `BrushController` 순수 좌표계 집중 |
+| **ADR-015** | `SessionTimer` (GameClock) 서비스 분리를 통한 오케스트레이터 결합도 해소 | **Accepted** | 1초 클록 제어 및 `setInterval` 수명주기를 순수 도메인 서비스로 캡슐화 |
+| **ADR-016** | `ScoreCalculator`의 `IScoringStrategy` 전략 패턴 도입 (OCP) | **Accepted** | 점수 배율 및 보너스 산출 정책을 주입 가능한 전략으로 확장 개방 |
+| **ADR-017** | `InputManager`의 세분화된 뷰 직접 주입 지원 (ISP) | **Accepted** | 거대 `HUD` 대신 필요한 `statsView`, `modalView`만 선별 주입 가능 |
+| **ADR-018** | `StaticJsonStageAdapter`의 `StageSourcePort` 상속 및 LSP 확립 | **Accepted** | `StageSourcePort` 다형성 보장 및 통일된 로딩 시그니처 확립 |
 
 ---
 
@@ -168,3 +173,56 @@
   - `tests/domain/grid-geometry-fuzzing.test.js`: 1,000개 무작위 선분 8-연결 브레젠험 연속성 및 500개 뷰포트 좌표 스케일링 Fuzzing 테스트.
   - `tests/adapters/branch-coverage-booster.test.js`: 잔여 브랜치 사각지대 전수 해소.
 - **결과 및 영향 (Consequences)**: Line 100%, Function 100%, Branch 98.17% 달성 및 실사용자 시나리오/기하 불변성 검증 완료.
+
+---
+
+### 📄 ADR-014: `CursorView` 분리를 통한 `BrushController` SRP 단일 책임 강화
+
+- **상태**: `Accepted` (TSK-011-02)
+- **컨텍스트 (Context)**: `BrushController`가 마우스/터치 이벤트 수신 및 좌표 연산과 동시에 커서 DOM 엘리먼트의 `translate3d`, `fontSize`, `opacity` 조작을 직접 수행하여 단일 책임 원칙(SRP)에 위배됨.
+- **결정 (Decision)**:
+  - `src/ui/views/cursor-view.js`를 신설하여 커서 DOM 스타일 제어 전담.
+  - `BrushController`는 좌표 변환 및 면도 콜백 발행에만 집중하고 시각적 표시는 `CursorView`로 위임.
+- **결과 및 영향 (Consequences)**: SRP 준수 및 커서 렌더링 로직의 독립적 단위 테스트 가능.
+
+---
+
+### 📄 ADR-015: `SessionTimer` (GameClock) 서비스 분리를 통한 오케스트레이터 결합도 해소
+
+- **상태**: `Accepted` (TSK-011-03)
+- **컨텍스트 (Context)**: `GameOrchestrator` 내부에 `setInterval` / `clearInterval` 및 Node.js `unref()` 핸들링 코드가 직접 포함되어 있어 타이머 클록 로직 테스트 시 타이머 수명주기가 오케스트레이터와 강하게 결합됨.
+- **결정 (Decision)**:
+  - `src/domain/session-timer.js`를 신설하여 1초 클록 제어 및 상태(`isRunning`) 캡슐화.
+  - `GameOrchestrator` 및 `CompositionRoot`에서 `SessionTimer`를 주입받아 위임.
+- **결과 및 영향 (Consequences)**: 타이머 수명주기 캡슐화 및 테스트 시 목(Mock) 타이머 주입 용이성 확보.
+
+---
+
+### 📄 ADR-016: `ScoreCalculator`의 `IScoringStrategy` 전략 패턴 도입 (OCP)
+
+- **상태**: `Accepted` (TSK-011-04)
+- **컨텍스트 (Context)**: 점수 배율 공식, 시간 보너스, 올클리어 보너스 계산 규칙이 `ScoreCalculator` 내부에 하드코딩되어 있어, 하드코어 모드나 커스텀 점수 정책 도입 시 기존 코드를 수정해야 하는 OCP 위반 발생.
+- **결정 (Decision)**:
+  - `DefaultScoringStrategy`를 추출하고 `ScoreCalculator` 생성자에서 전략 객체를 주입받도록 리팩토링.
+- **결과 및 영향 (Consequences)**: 개방 폐쇄 원칙(OCP) 준수로 다양한 점수 규칙을 외부에서 손쉽게 확장 가능.
+
+---
+
+### 📄 ADR-017: `InputManager`의 세분화된 뷰 직접 주입 지원 (ISP)
+
+- **상태**: `Accepted` (TSK-011-05)
+- **컨텍스트 (Context)**: `InputManager`가 `HUD`라는 거대 인터페이스에 강하게 의존하고 있어, 사운드 토글이나 모달 표시를 위해 불필요한 HUD 전체를 요구하는 ISP 위반 발생.
+- **결정 (Decision)**:
+  - `InputManager` 생성자 옵션에 `statsView`, `modalView`를 직접 주입받을 수 있도록 인터페이스 분리 지원 (기존 `hud` 호환성 유지).
+- **결과 및 영향 (Consequences)**: 인터페이스 분리 원칙(ISP) 달성 및 컴포넌트 간 결합도 완화.
+
+---
+
+### 📄 ADR-018: `StaticJsonStageAdapter`의 `StageSourcePort` 상속 및 LSP 확립
+
+- **상태**: `Accepted` (TSK-011-06)
+- **컨텍스트 (Context)**: `StaticJsonStageAdapter`가 `StageSourcePort`를 명시적으로 상속하지 않고 `loadStage` 시그니처 매개변수 순서가 포트와 불일치하여 리스코프 치환 원칙(LSP) 위반 위험 존재.
+- **결정 (Decision)**:
+  - `StaticJsonStageAdapter extends StageSourcePort` 명시 상속 및 `canHandle(source)` 구현.
+  - `loadStage(source, targetCols, targetRows, options, onProgress)` 시그니처 정합.
+- **결과 및 영향 (Consequences)**: LSP 준수 및 모든 스테이지 어댑터 간의 완전한 다형성 확보.
