@@ -23,22 +23,29 @@ export class CanvasRenderer {
             this.fontW = def.cellWidth;
             this.fontH = def.cellHeight;
             this.geometry = new GridGeometry(this.cols, this.rows, this.fontW, this.fontH);
-            particleSystem = (customParticleSystem && typeof customParticleSystem.spawn === 'function')
-                ? customParticleSystem
-                : (rowsOrParticleSystem && typeof rowsOrParticleSystem.spawn === 'function' ? rowsOrParticleSystem : null);
+            particleSystem = customParticleSystem;
         } else {
-            const geom = (gridGeometryOrCols instanceof GridGeometry) ? gridGeometryOrCols : GridGeometry.default();
+            let geom = GridGeometry.default();
+            if (gridGeometryOrCols instanceof GridGeometry) {
+                geom = gridGeometryOrCols;
+            }
             this.geometry = geom;
             this.cols = geom.cols;
             this.rows = geom.rows;
             this.fontW = geom.cellWidth;
             this.fontH = geom.cellHeight;
-            particleSystem = (rowsOrParticleSystem && typeof rowsOrParticleSystem.spawn === 'function')
-                ? rowsOrParticleSystem
-                : customParticleSystem;
+            if (rowsOrParticleSystem && typeof rowsOrParticleSystem.spawn === 'function') {
+                particleSystem = rowsOrParticleSystem;
+            } else {
+                particleSystem = customParticleSystem;
+            }
         }
 
-        this.dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
+        let dpr = 1;
+        if (typeof window !== 'undefined' && window.devicePixelRatio) {
+            dpr = window.devicePixelRatio;
+        }
+        this.dpr = dpr;
 
         this.rafId = null;
         this.pendingDirtyCells = [];
@@ -46,18 +53,22 @@ export class CanvasRenderer {
         this.currentStageData = null;
         this.currentHairGrid = null;
 
-        this.particleSystem = (particleSystem && typeof particleSystem.spawn === 'function') ? particleSystem : new ParticleSystem({
-            fontW: this.fontW,
-            fontH: this.fontH,
-            onRestoreCell: (r, c) => this.restoreParticleCell(r, c),
-            onRenderGlyph: (char, x, y, alpha) => {
-                if (!this.ctx) return;
-                this.ctx.font = '900 6px "Courier New", monospace';
-                this.ctx.textBaseline = 'top';
-                this.ctx.fillStyle = `rgba(255, 220, 180, ${alpha.toFixed(2)})`;
-                this.ctx.fillText(char, x, y);
-            }
-        });
+        if (particleSystem && typeof particleSystem.spawn === 'function') {
+            this.particleSystem = particleSystem;
+        } else {
+            this.particleSystem = new ParticleSystem({
+                fontW: this.fontW,
+                fontH: this.fontH,
+                onRestoreCell: (r, c) => this.restoreParticleCell(r, c),
+                onRenderGlyph: (char, x, y, alpha) => {
+                    if (!this.ctx) return;
+                    this.ctx.font = '900 6px "Courier New", monospace';
+                    this.ctx.textBaseline = 'top';
+                    this.ctx.fillStyle = `rgba(255, 220, 180, ${alpha.toFixed(2)})`;
+                    this.ctx.fillText(char, x, y);
+                }
+            });
+        }
 
         this.setupCanvas();
     }
@@ -123,7 +134,10 @@ export class CanvasRenderer {
         if (!this.rafId) {
             this.rafId = requestAnimationFrame(() => {
                 this.rafId = null;
-                const dirty = this.needsFullRedraw ? null : this.pendingDirtyCells;
+                let dirty = null;
+                if (!this.needsFullRedraw) {
+                    dirty = this.pendingDirtyCells;
+                }
                 this.needsFullRedraw = false;
                 this.pendingDirtyCells = [];
                 this.render(this.currentStageData, this.currentHairGrid, dirty);
@@ -179,8 +193,14 @@ export class CanvasRenderer {
     renderSingleCell(r, c, textGrid, colorGrid, hairGrid) {
         const xOff = c * this.fontW;
         const yOff = r * this.fontH;
-        const ch = (textGrid[r] && textGrid[r][c]) ? textGrid[r][c] : ' ';
-        const isHair = hairGrid ? hairGrid.has(r, c) : false;
+        let ch = ' ';
+        if (textGrid[r] && textGrid[r][c]) {
+            ch = textGrid[r][c];
+        }
+        let isHair = false;
+        if (hairGrid) {
+            isHair = hairGrid.has(r, c);
+        }
 
         if (isHair) {
             // Draw dark hair cell background rect

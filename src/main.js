@@ -12,7 +12,17 @@ import { InputManager, KEY_BRUSH_RADIUS_MAP } from './ui/input-manager.js';
 
 export { KEY_BRUSH_RADIUS_MAP };
 
-export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : null, win = typeof window !== 'undefined' ? window : null, customAdapters = {}) => {
+function getDefaultDocument() {
+    if (typeof document === 'undefined') return null;
+    return document;
+}
+
+function getDefaultWindow() {
+    if (typeof window === 'undefined') return null;
+    return window;
+}
+
+export const bootstrapApp = (doc = getDefaultDocument(), win = getDefaultWindow(), customAdapters = {}) => {
     if (!doc) return null;
 
     const canvas = doc.getElementById('gameCanvas');
@@ -135,7 +145,7 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
     };
 };
 
-export function initAutoBootstrap(doc = (typeof document !== 'undefined' ? document : null), win = (typeof window !== 'undefined' ? window : null)) {
+export function initAutoBootstrap(doc = getDefaultDocument(), win = getDefaultWindow()) {
     if (!doc) return null;
     if (doc.readyState === 'loading') {
         if (win && typeof win.addEventListener === 'function') {

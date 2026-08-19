@@ -29,9 +29,10 @@ export class CanvasImageProcessorAdapter extends ImageProcessorPort {
             throw new Error('이미지 해상도를 읽을 수 없습니다.');
         }
 
-        const canvas = typeof document !== 'undefined'
-            ? document.createElement('canvas')
-            : null;
+        let canvas = null;
+        if (typeof document !== 'undefined') {
+            canvas = document.createElement('canvas');
+        }
 
         if (!canvas) {
             throw new Error('캔버스를 생성할 수 없는 환경입니다.');

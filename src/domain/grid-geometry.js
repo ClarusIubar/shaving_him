@@ -18,8 +18,14 @@ export class GridGeometry {
      */
     static fromStageData(stageData = {}) {
         const base = GridGeometry.default();
-        const cols = typeof stageData?.cols === 'number' ? stageData.cols : base.cols;
-        const rows = typeof stageData?.rows === 'number' ? stageData.rows : base.rows;
+        let cols = base.cols;
+        if (typeof stageData?.cols === 'number') {
+            cols = stageData.cols;
+        }
+        let rows = base.rows;
+        if (typeof stageData?.rows === 'number') {
+            rows = stageData.rows;
+        }
         return new GridGeometry(cols, rows, base.cellWidth, base.cellHeight);
     }
 

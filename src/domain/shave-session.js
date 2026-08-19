@@ -100,21 +100,27 @@ export class ShaveSession {
     }
 
     getSnapshot() {
-        const remain = this.hairGrid ? this.hairGrid.getRemainingCount() : 0;
-        const total = this.hairGrid ? this.hairGrid.totalHairCount : 0;
-        const clearedPct = this.hairGrid ? this.hairGrid.getClearedPercentage() : 0;
-
-        const result = this.scoreCalculator ? this.scoreCalculator.calculateFinalScore(
-            this.timeLeft,
-            remain
-        ) : { baseScore: 0, timeBonus: 0, allClearBonus: 0, totalScore: 0 };
+        let remain = 0;
+        let total = 0;
+        let clearedPct = 0;
+        if (this.hairGrid) {
+            remain = this.hairGrid.getRemainingCount();
+            total = this.hairGrid.totalHairCount;
+            clearedPct = this.hairGrid.getClearedPercentage();
+        }
+        let result = { baseScore: 0, timeBonus: 0, allClearBonus: 0, totalScore: 0 };
+        let comboCount = 0;
+        if (this.scoreCalculator) {
+            result = this.scoreCalculator.calculateFinalScore(this.timeLeft, remain);
+            comboCount = this.scoreCalculator.shaveStreak;
+        }
 
         return {
             status: this.status,
             timeLeft: this.timeLeft,
             maxTime: this.maxTime,
             score: result.baseScore,
-            comboCount: this.scoreCalculator ? this.scoreCalculator.shaveStreak : 0,
+            comboCount,
             finalResult: result,
             remainingHairs: remain,
             totalHairs: total,

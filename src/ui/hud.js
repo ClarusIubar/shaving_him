@@ -8,8 +8,13 @@ import { StageSelectModalView } from './views/stage-select-modal-view.js';
 import { LoadingOverlayView } from './views/loading-overlay-view.js';
 import { GameOverOverlayView } from './views/game-over-overlay-view.js';
 
+function getDefaultDocument() {
+    if (typeof document === 'undefined') return null;
+    return document;
+}
+
 export class HUD {
-    constructor(gamePolicy = new GamePolicy(), doc = typeof document !== 'undefined' ? document : null) {
+    constructor(gamePolicy = new GamePolicy(), doc = getDefaultDocument()) {
         if (!doc) {
             throw new Error('HUD: document is required');
         }

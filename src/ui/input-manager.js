@@ -17,10 +17,20 @@ function resolveView(explicitView, hud, propertyName) {
     return hud;
 }
 
+function getDefaultDocument() {
+    if (typeof document === 'undefined') return null;
+    return document;
+}
+
+function getDefaultWindow() {
+    if (typeof window === 'undefined') return null;
+    return window;
+}
+
 export class InputManager {
     /**
      * @param {Object} options
-     * @param {Document} options.doc
+     * @param {Document} [options.doc]
      * @param {Window} [options.win]
      * @param {BrushController} [options.brushController]
      * @param {GameOrchestrator} [options.orchestrator]
@@ -31,8 +41,8 @@ export class InputManager {
      * @param {Object} [options.keyMap]
      */
     constructor({
-        doc = typeof document !== 'undefined' ? document : null,
-        win = typeof window !== 'undefined' ? window : null,
+        doc = getDefaultDocument(),
+        win = getDefaultWindow(),
         brushController = null,
         orchestrator = null,
         hud = null,
@@ -60,7 +70,10 @@ export class InputManager {
 
     bindEvents() {
         // 1. Sound toggle button
-        const soundBtn = this.statsView ? this.statsView.soundToggleBtn : null;
+        let soundBtn = null;
+        if (this.statsView && this.statsView.soundToggleBtn) {
+            soundBtn = this.statsView.soundToggleBtn;
+        }
         if (soundBtn && this.sound) {
             const onSoundClick = () => {
                 const enabled = this.sound.toggle();
@@ -90,7 +103,10 @@ export class InputManager {
                 const onBtnClick = (e) => {
                     brushBtns.forEach(b => b.classList && b.classList.remove('active'));
                     if (e.target && e.target.classList) e.target.classList.add('active');
-                    const radiusAttr = e.target ? e.target.getAttribute('data-radius') : '1';
+                    let radiusAttr = '1';
+                    if (e.target && typeof e.target.getAttribute === 'function') {
+                        radiusAttr = e.target.getAttribute('data-radius') || '1';
+                    }
                     const radius = parseInt(radiusAttr, 10) || 1;
                     if (this.brushController) {
                         this.brushController.setRadius(radius);
@@ -105,7 +121,10 @@ export class InputManager {
         if (this.win && typeof this.win.addEventListener === 'function') {
             const onKeyDown = (e) => {
                 const activeEl = this.doc.activeElement;
-                const tag = activeEl ? activeEl.tagName.toLowerCase() : '';
+                let tag = '';
+                if (activeEl && activeEl.tagName) {
+                    tag = activeEl.tagName.toLowerCase();
+                }
                 if (tag === 'input' || tag === 'textarea' || (activeEl && activeEl.isContentEditable)) return;
 
                 const radius = this.keyMap[e.key];
