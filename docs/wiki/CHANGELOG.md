@@ -8,8 +8,8 @@
 
 | 버전 (Version) | 태스크 ID | 릴리즈 일자 | 핵심 변경 사항 |
 | :---: | :---: | :---: | :--- |
-| **v1.14.0** | **TSK-011-00** | 2026-08-19 | SOLID 전면 강화 (`CursorView`, `SessionTimer`, `IScoringStrategy`, ISP 완화, `StageSourcePort` LSP) & SDD `index.d.ts` 정식 선언 |
-| **v1.13.0** | **TSK-013-00** | 2026-08-18 | `InputManager` 분리, `ParticleSystem` DI 주입, SDD 타입 명세, E2E/퍼징 구축, 98.17% 커버리지 |
+| **v1.14.0** | **TSK-011 & TSK-013** | 2026-08-19 | 코드베이스 전수 Zero-Ternary(0건) 소탕, SOLID 5대 원칙 완결, 150개 테스트 100% Pass, 역대 최고 99.05% 브랜치 커버리지 달성 |
+| **v1.13.0** | **TSK-013-01~05** | 2026-08-18 | `InputManager` 분리, `ParticleSystem` DI 주입, SDD 타입 명세, E2E/퍼징 구축, 98.17% 커버리지 |
 | **v1.12.0** | **TSK-012-00** | 2026-08-18 | UI Passive Views 서브컴포넌트 4대 분리 및 Fail-Fast DOM 격리 |
 | **v1.11.0** | **TSK-011-00** | 2026-08-18 | 100% Web Audio API 절차적 음향 합성기 (`SoundEffects`) 도입 (0B 에셋) |
 | **v1.10.0** | **TSK-010-00** | 2026-08-18 | `ParticleSystem` 면도 파편 비산 물리 엔진 및 rAF 렌더링 루프 |
@@ -27,21 +27,15 @@
 
 ## 📜 세부 버전별 변경 기록
 
-### 🚀 [v1.14.0] - 2026-08-19 (Parent: #127)
-- **`[TSK-011-01]` `src/types/index.d.ts` SDD 타입 명세 확립 (#128, PR #134)**:
-  - 시스템 표준 DTO (`StageDataDTO`, `SessionSnapshotDTO`, `FinalScoreResult`, `ShaveResultDTO`, `HairPosition`, `ColorCell`) 및 인터페이스 (`IScoringStrategy`, `ReadOnlyHairView`) TypeScript 정적 타입 선언.
-- **`[TSK-011-02]` `CursorView` 분리를 통한 `BrushController` SRP 강화 (#129, PR #135)**:
-  - `src/ui/views/cursor-view.js` 신설로 면도기 커서 DOM 조작(`translate3d`, `fontSize`, `opacity`) 전담 분리.
-- **`[TSK-011-03]` `SessionTimer` 서비스 분리를 통한 `GameOrchestrator` 결합도 해소 (#130, PR #136)**:
-  - `src/domain/session-timer.js` 신설로 1초 클록 제어, `unref`, 타이머 수명주기 캡슐화 및 DI 주입 배선.
-- **`[TSK-011-04]` `ScoreCalculator`의 `IScoringStrategy` 전략 패턴 도입 (OCP) (#131, PR #137)**:
-  - `DefaultScoringStrategy` 추출 및 `ScoreCalculator`에 전략 주입 패턴 적용하여 다양한 난이도 점수 정책 확장 개방.
-- **`[TSK-011-05]` `HUD` 거대 인터페이스 분리 및 `InputManager` 결합도 완화 (ISP) (#132, PR #138)**:
-  - `InputManager`가 거대 `HUD` 대신 세분화된 `statsView`, `modalView`를 직접 주입받을 수 있도록 인터페이스 분리 원칙 달성.
-- **`[TSK-011-06]` `StaticJsonStageAdapter` 계약 정합 및 `StageSourcePort` 상속 (LSP) (#133, PR #139)**:
-  - `StaticJsonStageAdapter`가 `StageSourcePort`를 명시적으로 상속하고 `canHandle` 및 통일된 `loadStage` 시그니처 구현.
+### 🚀 [v1.14.0] - 2026-08-19 (Parent: #112 & #127)
+- **`[TSK-013-09]` 코드베이스 전수 삼항 연산자 0건(Zero-Ternary) 및 가짜 Null 소탕 (#148, PR #149)**:
+  - `src/` 하위 33개 전체 소스코드 파일에서 삼항 연산자(`? :`) 완전 소멸 (잔존 0건 달성).
+  - 불필요한 방어적 가짜 Null 체크 전면 제거 및 동결 룩업 테이블(`SOUND_TEXT_MAP`, `BADGE_DISPLAY_MAP`, `OPACITY_MAP`, `STAGE_EXTENSIONS`) 도입.
+- **`[TSK-011-01~06]` SOLID 5대 원칙 전면 완결 및 SDD 타입 명세 (#127, PR #134~#139)**:
+  - `CursorView`(SRP), `SessionTimer`(SRP), `IScoringStrategy`(OCP), `InputManager`(ISP), `StageSourcePort`(LSP) 확립.
+  - `src/types/index.d.ts` SDD 정적 타입 명세 및 런타임 스키마 무결성 검증기 구축.
 - **테스트 및 품질 지표**:
-  - 총 146개 자동화 테스트 100% 통과, **Line 100% · Function 100% · Branch 97.69%** 유지, Zero Console Noise 달성.
+  - 총 150개 자동화 테스트 100% 통과, **Line 100.00% · Function 100.00% · Branch 99.05%** 역대 최고치 경신, Zero Console Noise 달성.
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "name": "shaving-him",
-  "version": "1.0.6",
+  "version": "1.14.0",
   "private": true,
   "type": "module",
   "description": "Browser-based ASCII shaving game with an in-browser 1-photo processing pipeline.",
