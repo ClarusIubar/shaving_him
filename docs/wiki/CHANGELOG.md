@@ -65,7 +65,10 @@
   - `InputManager` 삼항 연산자 체이닝을 순수 헬퍼(`resolveView`)로 정돈하여 순환 복잡도(CC <= 3) 억제 및 `CursorView` 룩업 테이블 도입.
 - **`[TSK-013-08]` `STAGE_EXTENSIONS` Set 룩업 및 전체 브랜치 커버리지 98.27% 달성 (#143, PR #146)**:
   - `StaticJsonStageAdapter.canHandle` 단축 평가 체인을 `Set` O(1) 룩업으로 개편 및 `main.js` 삼항 연산자 전면 제거.
-  - 전체 커버리지: **Line 100.00% · Function 100.00% · Branch 98.27%** 최고치 갱신.
+- **`[TSK-013-09]` 코드베이스 전수 삼항 연산자 0건(Zero-Ternary) 및 가짜 Null 소탕 (#148, PR #149)**:
+  - `src/` 하위 33개 전체 소스코드 파일에서 삼항 연산자(`? :`) 완전 소멸 (잔존 0건 달성).
+  - 불필요한 방어적 가짜 Null 체크 전면 제거 및 동결 룩업 테이블(`SOUND_TEXT_MAP`, `BADGE_DISPLAY_MAP`) 도입.
+  - 전체 커버리지: **Line 100.00% · Function 100.00% · Branch 98.93%** 역대 최고 기록 달성.
 
 ---
 
