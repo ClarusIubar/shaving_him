@@ -2,9 +2,47 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { HairGrid } from '../../src/domain/hair-grid.js';
-import { ScoreCalculator } from '../../src/domain/score-calculator.js';
+import { ScoreCalculator, DefaultScoringStrategy } from '../../src/domain/score-calculator.js';
 import { ShaveSession, SessionStatus } from '../../src/domain/shave-session.js';
 import { SessionTimer } from '../../src/domain/session-timer.js';
+
+test('ScoreCalculator - supports custom scoring strategy injection (OCP)', () => {
+    class HardcoreScoringStrategy {
+        calculateMultiplier(streak) { return streak * 10; }
+        calculateTimeBonus(timeLeft) { return timeLeft * 100; }
+        calculateAllClearBonus(remainingHairs) { return remainingHairs === 0 ? 10000 : 0; }
+    }
+
+    const calc = new ScoreCalculator(new HardcoreScoringStrategy());
+    calc.addShave(2); // streak=1 -> multiplier=10 -> score=20
+    assert.equal(calc.baseScore, 20);
+
+    const finalResult = calc.calculateFinalScore(10, 0);
+    assert.equal(finalResult.timeBonus, 1000);
+    assert.equal(finalResult.allClearBonus, 10000);
+    assert.equal(finalResult.totalScore, 11020);
+
+    // Default strategy standalone test
+    const defStrat = new DefaultScoringStrategy();
+    assert.equal(defStrat.calculateMultiplier(1), 1);
+    assert.equal(defStrat.calculateMultiplier(10), 3);
+    assert.equal(defStrat.calculateMultiplier(30), 5); // Capped at 5
+    assert.equal(defStrat.calculateTimeBonus(10), 50);
+    assert.equal(defStrat.calculateAllClearBonus(0), 500);
+    assert.equal(defStrat.calculateAllClearBonus(5), 0);
+});
+
+test('ScoreCalculator - calculates streak and bonuses', () => {
+    const calc = new ScoreCalculator();
+    calc.addShave(5);
+    assert.equal(calc.baseScore, 5);
+
+    const finalResult = calc.calculateFinalScore(10, 0); // 10s left, 0 remaining
+    assert.equal(finalResult.baseScore, 5);
+    assert.equal(finalResult.timeBonus, 50);
+    assert.equal(finalResult.allClearBonus, 500);
+    assert.equal(finalResult.totalScore, 555);
+});
 
 test('SessionTimer - starts, ticks accurately, and stops cleanly', async () => {
     const timer = new SessionTimer(20);

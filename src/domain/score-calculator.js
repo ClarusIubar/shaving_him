@@ -1,10 +1,29 @@
 /**
+ * Pure Domain Model: DefaultScoringStrategy
+ * Standard scoring rule strategy (10x capped multiplier, 5x time bonus, 500 all-clear).
+ */
+export class DefaultScoringStrategy {
+    calculateMultiplier(streak) {
+        return Math.min(Math.floor(streak / 5) + 1, 5);
+    }
+
+    calculateTimeBonus(timeLeft) {
+        return Math.max(0, timeLeft) * 5;
+    }
+
+    calculateAllClearBonus(remainingHairs) {
+        return remainingHairs === 0 ? 500 : 0;
+    }
+}
+
+/**
  * Pure Domain Model: ScoreCalculator
- * Calculates points, streak multipliers, and final game completion bonuses.
+ * Calculates points, streak multipliers, and final game completion bonuses via injected strategy.
  * 0% DOM/Canvas dependency.
  */
 export class ScoreCalculator {
-    constructor() {
+    constructor(strategy = new DefaultScoringStrategy()) {
+        this.strategy = strategy;
         this.baseScore = 0;
         this.shaveStreak = 0;
     }
@@ -16,7 +35,7 @@ export class ScoreCalculator {
     addShave(hairCount) {
         if (hairCount > 0) {
             this.shaveStreak += 1;
-            const multiplier = Math.min(Math.floor(this.shaveStreak / 5) + 1, 5);
+            const multiplier = this.strategy.calculateMultiplier(this.shaveStreak);
             this.baseScore += hairCount * multiplier;
         } else {
             this.shaveStreak = 0;
@@ -30,8 +49,8 @@ export class ScoreCalculator {
      * @param {number} remainingHairs - Hairs left uncleared
      */
     calculateFinalScore(timeLeft = 0, remainingHairs = 0) {
-        const timeBonus = Math.max(0, timeLeft) * 5;
-        const allClearBonus = remainingHairs === 0 ? 500 : 0;
+        const timeBonus = this.strategy.calculateTimeBonus(timeLeft);
+        const allClearBonus = this.strategy.calculateAllClearBonus(remainingHairs);
         
         return {
             baseScore: this.baseScore,
