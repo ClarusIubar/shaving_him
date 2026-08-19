@@ -1,4 +1,4 @@
-# 🪒 Shaving Him (그 남자의 수염을 깎아라) v1.14.0
+# 🪒 Shaving Him (shaving_him) v1.14.0
 
 <div align="center">
 
@@ -8,8 +8,8 @@
 [![Tests: 150/150 Pass](https://img.shields.io/badge/Tests-150%2F150%20Pass-brightgreen?style=for-the-badge)](https://github.com/ClarusIubar/shaving_him)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-**1-Photo Dynamic ASCII Shaving Game** with 5-Layer Clean Architecture, SOLID DI & Pure Web Audio Synthesis.  
-**[👉 🌐 브라우저에서 바로 실시간 게임 플레이하기 (Live Game Play)](https://clarusiubar.github.io/shaving_him/)**
+**1-Photo Client-Side ASCII Shaving Engine** with 5-Layer Clean Architecture, SOLID DI & Web Audio Synthesis.  
+**[👉 🌐 라이브 웹 애플리케이션 실행 (Live Game Play)](https://clarusiubar.github.io/shaving_him/)**
 
 </div>
 
@@ -17,31 +17,31 @@
 
 ## 📌 Overview (개요)
 
-`shaving_him`은 사용자가 업로드한 사진 1장을 브라우저 메모리(Canvas 2D) 내에서 실시간 분석하여 **피부 톤 평탄화 + 수염 비트맵 차분 분리 + 아스키 글리프 매핑**으로 자동 변환하고, 마우스 드래그 및 터치로 면도(Shaving)를 즐기는 **100% 클라이언트 사이드 순수 자바스크립트 아케이드 게임 시스템**입니다.
+`shaving_him`은 단일 입력 사진을 브라우저 런타임(Canvas 2D) 내에서 분석하여 **피부 톤 평탄화, 수염 비트맵 차분 분리, 아스키 글리프 매핑** 파이프라인을 거친 후, 마우스/터치 인터랙션을 통해 면도(Shaving) 처리를 수행하는 클라이언트 사이드 웹 애플리케이션입니다.
 
-외부 런타임 이미지/오디오 파일 의존성 0바이트(0B Asset Dependency), Web Audio API 절차적 음향 합성, 1D `Uint8Array` 비트맵 메모리 최적화, 8-연결 브레젠험 연속 선분 래스터라이저, 5계층 클린 아키텍처 및 엄격한 RGR TDD 체계로 구현되었습니다.
+외부 런타임 이미지/오디오 파일 의존성 0바이트(0B Asset Load), Web Audio API 절차적 음향 합성, 1D `Uint8Array` 기반 비트맵 메모리 구조, 8-연결 브레젠험 선분 래스터라이저, 5계층 클린 아키텍처 및 RGR TDD 개발 방법론을 기반으로 구성되었습니다.
 
 ---
 
 ## ✨ Key Features (주요 기능)
 
-1. **📷 1-Photo 실시간 인브라우저 아스키 스테이지 생성**:
-   - `PNG`, `JPG`, `WEBP` 사용자 사진 업로드 지원.
-   - 외부 서버 전송 없이 **100% 브라우저 클라이언트 사이드**에서 100ms 이내에 피부 톤과 수염 마스크를 자동 분리하여 아스키 아트 스테이지 생성.
-2. **🎮 고정밀 아스키 프리셋 스테이지**:
-   - 내장된 기본 아스키 프리셋(`game_data.json`, `game_data.js`)으로 즉시 플레이 가능.
-3. **🪒 60fps GPU 가속 면도날 조작 & 터치 지원**:
-   - 면도날 반경 동적 변경 (`1~4` 키보드 단축키, UI 버튼 선택, 마우스 휠 스크롤 지원).
-   - 마우스 드래그 및 모바일 터치 연속 면도 완벽 지원.
-   - GPU 컴포지팅 `translate3d` 및 캐싱을 통한 Layout Thrashing 0% 달성.
-4. **🔊 100% 절차적 Web Audio API 실시간 음향 합성 (0B 에셋)**:
+1. **📷 1-Photo 인브라우저 아스키 스테이지 생성**:
+   - `PNG`, `JPG`, `WEBP` 포맷 지원.
+   - 외부 서버 전송 없이 브라우저 메모리 상에서 100ms 이내에 피부 영역과 수염 마스크를 분리하여 아스키 스테이지 생성.
+2. **🎮 내장 아스키 프리셋 스테이지**:
+   - 기본 제공 아스키 데이터(`game_data.json`, `game_data.js`) 로딩 지원.
+3. **🪒 60fps GPU 가속 면도 조작계**:
+   - 면도날 반경 제어 (`1~4` 키보드 단축키, UI 버튼, 마우스 휠 스크롤 지원).
+   - 마우스 드래그 및 모바일 터치 이벤트 수신 지원.
+   - GPU 컴포지팅 `translate3d` 및 캐싱을 통한 Layout Reflow 방지.
+4. **🔊 Web Audio API 절차적 실시간 음향 합성 (0B Asset Dependency)**:
    - **면도 마찰음**: 50ms 대역통과 필터(2200Hz) 화이트 노이즈.
-   - **콤보 차임벨**: C5(523Hz) 기준 연속 콤보에 따른 가변 피치 시프트 사인파 합성.
-   - **승리 팡파레**: C5 - E5 - G5 - C6 트라이앵글 4중 화음.
-5. **✨ 물리 비산 파티클 엔진 (`ParticleSystem`)**:
-   - 면도된 수염 글리프가 중력 및 무작위 속도로 흩어지는 절차적 파티클 애니메이션.
+   - **콤보 사운드**: C5(523Hz) 기준 연속 콤보에 따른 가변 피치 시프트 사인파 합성.
+   - **승리 사운드**: C5 - E5 - G5 - C6 트라이앵글 4중 화음.
+5. **✨ 파티클 물리 시뮬레이션 (`ParticleSystem`)**:
+   - 면도된 수염 글리프의 중력 및 무작위 속도 기반 비산 애니메이션.
 6. **📊 HUD & 통계 모니터링**:
-   - 60초 타이머, 실시간 점수, 잔여 수염 개수, 진행률 게이지, 승리/패배 오버레이 및 PNG 캡처 내보내기.
+   - 60초 제한시간 타이머, 실시간 점수, 잔여 수염 개수, 진행률 게이지, 결과 오버레이 및 PNG 캡처 내보내기.
 
 ---
 
@@ -103,27 +103,27 @@ graph TD
     SP --> P4
 ```
 
-### 💎 SOLID 객체지향 5대 원칙 완결
-- **SRP (단일 책임 원칙)**: `BrushController`에서 DOM 조작을 전담하는 `CursorView` 분리, `ImageFileLoader` 분리.
-- **OCP (개방 폐쇄 원칙)**: `ScoreCalculator`의 `IScoringStrategy` 전략 패턴 도입으로 점수 정책 확장 개방.
-- **LSP (리스코프 치환 원칙)**: 모든 어댑터가 추상 Port를 명시적으로 상속하고 통일된 시그니처 계약 준수.
-- **ISP (인터페이스 분리 원칙)**: `InputManager`가 거대 `HUD` 대신 세분화된 `statsView`/`modalView`를 직접 주입받을 수 있도록 인터페이스 분리.
-- **DIP (의존성 역전 원칙)**: `CompositionRoot` 및 생성자 의존성 주입(DI) 표준화.
+### 💎 SOLID 객체지향 5대 원칙 준수
+- **SRP (단일 책임 원칙)**: `BrushController`에서 DOM 조작을 전담하는 `CursorView` 분리, 비동기 디코딩 전담 `ImageFileLoader` 분리.
+- **OCP (개방 폐쇄 원칙)**: `ScoreCalculator`의 `IScoringStrategy` 인터페이스를 통한 점수 계산 정책 분리 및 주입.
+- **LSP (리스코프 치환 원칙)**: 모든 어댑터가 추상 Port를 상속하고 표준 시그니처 계약을 충족.
+- **ISP (인터페이스 분리 원칙)**: `InputManager`가 세분화된 `statsView`/`modalView`를 직접 주입받을 수 있도록 의존성 분리.
+- **DIP (의존성 역전 원칙)**: `CompositionRoot` 및 생성자 의존성 주입(DI) 배선 표준화.
 
 ---
 
 ## 📊 Quality & Performance Metrics (품질 지표)
 
-| 지표 항목 | 달성 수치 | 엔지니어링 의의 |
+| 지표 항목 | 실측 수치 | 엔지니어링 의의 |
 | :--- | :---: | :--- |
-| **Line Coverage** | **100.00%** | 모든 소스 코드 라인 전수 검증 통과 |
-| **Function Coverage** | **100.00%** | 모든 함수 및 메서드 계약 100% 검증 |
-| **Branch Coverage** | **99.05%** | 조건식/단축평가/에러 분기 사각지대 전수 해소 |
-| **Ternary Operators** | **0건 (Zero-Ternary)** | 가독성 저해 및 죽은 분기 양산 삼항 연산자 전면 제거 |
-| **Cyclomatic Complexity** | **$CC \le 3\sim 4$** | 선언적 룩업 매핑(`OPACITY_MAP`, `STAGE_EXTENSIONS`) 및 순수 헬퍼 적용 |
-| **Automated Tests** | **150 / 150 PASS** | Node.js 네이티브 테스트 러너 기반 (소요 시간 < 0.4초) |
-| **Console Noise** | **Zero Noise** | 테스트 및 런타임 중 콘솔 경고/에러/Unhandled Rejection 0건 |
-| **Memory Allocation** | **0B during Shave** | 1D `Uint8Array` 수염 비트맵 적용으로 GC Pause 방지 |
+| **Line Coverage** | **100.00%** | 소스 코드 전 라인 실행 검증 |
+| **Function Coverage** | **100.00%** | 전 함수 및 메서드 계약 검증 |
+| **Branch Coverage** | **99.05%** | 조건식 및 에러 분기 검증 |
+| **Ternary Operators** | **0건 (Zero-Ternary)** | 삼항 연산자 미사용으로 명시적 분기 흐름 유지 |
+| **Cyclomatic Complexity** | **$CC \le 3\sim 4$** | 선언적 룩업 매핑(`OPACITY_MAP`, `STAGE_EXTENSIONS`) 및 단일 리졸버 적용 |
+| **Automated Tests** | **150 / 150 PASS** | Node.js 네이티브 테스트 러너 기반 (실행 시간 < 0.4초) |
+| **Console Noise** | **Zero Noise** | 테스트 및 런타임 실행 시 콘솔 경고/에러/Unhandled Rejection 0건 |
+| **Memory Allocation** | **0B during Shave** | 1D `Uint8Array` 비트맵 적용으로 런타임 GC 오버헤드 억제 |
 
 ---
 

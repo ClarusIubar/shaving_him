@@ -5,7 +5,7 @@
 ---
 
 ## 📌 문서 목차 (Table of Contents)
-1. [엄격한 Red-Green-Refactor (RGR) TDD 개발 원칙](#1-엄격한-red-green-refactor-rgr-tdd-개발-원칙)
+1. [Red-Green-Refactor (RGR) TDD 개발 프로세스](#1-red-green-refactor-rgr-tdd-개발-프로세스)
 2. [6대 계층별 테스트 구조 (6-Tier Test Architecture)](#2-6대-계층별-테스트-구조-6-tier-test-architecture)
 3. [Node.js DOM Mock Harness 아키텍처](#3-nodejs-dom-mock-harness-아키텍처)
 4. [테스트 스위트 전수 매트릭스 (150 Tests Matrix)](#4-테스트-스위트-전수-매트릭스-150-tests-matrix)
@@ -13,9 +13,9 @@
 
 ---
 
-## 1. 엄격한 Red-Green-Refactor (RGR) TDD 개발 원칙
+## 1. Red-Green-Refactor (RGR) TDD 개발 프로세스
 
-본 프로젝트의 모든 기능 구현, 버그 수정, 리팩토링은 엄격한 **RGR 사이클**을 선행 통과해야만 머지됩니다:
+본 프로젝트의 모든 기능 구현, 버그 수정, 리팩토링은 **RGR 사이클**을 선행 통과해야 합니다:
 
 ```text
   🔴 RED Phase: 실패하는 단위/계약/E2E 테스트 케이스를 먼저 작성하고 실행하여 실패(Red) 확인.
@@ -24,12 +24,12 @@
   🟢 GREEN Phase: 테스트를 통과시키는 데 필요한 최소한의 프로덕션 코드 작성 (Green 확인).
        │
        ▼
-  🔵 REFACTOR Phase: 하드코딩 제거, 가짜 기본값 제거, 설계 패턴 정돈 및 100% Line, 98%+ Branch 검증.
+  🔵 REFACTOR Phase: 하드코딩 및 가짜 기본값 제거, 설계 패턴 정돈 및 100% Line, 90%+ Branch 검증.
 ```
 
-> [!CAUTION]
+> [!IMPORTANT]
 > **"TDD 100% PASS is NOT a Shield" 원칙**:
-> 테스트 통과는 최소한의 기준선일 뿐 완성을 증명하지 않습니다. 🔵 REFACTOR 단계에서 하드코딩된 상수, 숨은 매직 넘버, 가짜 기본값(Fake Default)을 완전히 제거하고 도메인 무결성을 검증합니다.
+> 테스트 통과는 최소한의 기준선이며, 🔵 REFACTOR 단계에서 하드코딩된 상수, 가짜 기본값(Fake Default)을 배제하고 도메인 무결성을 검증합니다.
 
 ---
 
@@ -55,7 +55,7 @@ flowchart TD
 
 ## 3. Node.js DOM Mock Harness 아키텍처
 
-JSDOM과 같은 외부 거대 라이브러리 없이, Node.js 내장 테스트 러너(`node --test`)에서 가볍고 신속하게 브라우저 환경을 모사하는 초경량 목 하네스(`tests/helpers/dom-mock-harness.js`)를 구축하였습니다.
+Node.js 내장 테스트 러너(`node --test`) 환경에서 브라우저 DOM 및 Web Audio API를 모사하는 Mock Harness(`tests/helpers/dom-mock-harness.js`)를 구축하여 테스트를 수행합니다.
 
 - **`createMockDocument()`**: `getElementById`, `querySelectorAll`, `createElement`, `activeElement`, 이벤트 위임 지원.
 - **`createMockWindow()`**: `requestAnimationFrame`, `cancelAnimationFrame`, `devicePixelRatio`, Web Audio `AudioContext` 목 지원.
