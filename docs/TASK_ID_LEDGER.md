@@ -22,3 +22,4 @@ This ledger tracks all allocated task identifiers across all core domains to ens
 | `TSK-013-06` | [#141](https://github.com/ClarusIubar/shaving_him/issues/141) | Eliminate ternaries, enforce Non-Nullable direct delegation & \`CursorView.from\` | CLOSED |
 | `TSK-013-07` | [#142](https://github.com/ClarusIubar/shaving_him/issues/142) | Declarative \`OPACITY_MAP\` & \`resolveView\` helper to minimize Cyclomatic Complexity | CLOSED |
 | `TSK-013-08` | [#143](https://github.com/ClarusIubar/shaving_him/issues/143) | Set lookup in \`canHandle\` & 98.27% peak branch coverage | CLOSED |
+| `TSK-013-09` | [#148](https://github.com/ClarusIubar/shaving_him/issues/148) | Complete zero-ternary elimination (0 ternaries in src/) & 98.93% branch coverage | CLOSED |
