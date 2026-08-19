@@ -4,11 +4,14 @@
  */
 import { GridGeometry } from '../domain/grid-geometry.js';
 import { rasterizeLine } from '../domain/line-rasterizer.js';
+import { CursorView } from './views/cursor-view.js';
 
 export class BrushController {
-    constructor(canvas, cursor, onShaveCallback, gridGeometry = GridGeometry.default()) {
+    constructor(canvas, cursorOrCursorView, onShaveCallback, gridGeometry = GridGeometry.default()) {
         this.canvas = canvas;
-        this.cursor = cursor;
+        this.cursorView = (cursorOrCursorView instanceof CursorView)
+            ? cursorOrCursorView
+            : new CursorView(cursorOrCursorView);
         this.onShave = onShaveCallback;
         this.geometry = gridGeometry;
         this.cols = gridGeometry.cols;
@@ -26,6 +29,14 @@ export class BrushController {
             this.updateRect();
             this.initEvents();
         }
+    }
+
+    get cursor() {
+        return this.cursorView.cursor;
+    }
+
+    set cursor(el) {
+        this.cursorView.cursor = el;
     }
 
     updateRect() {
@@ -49,9 +60,7 @@ export class BrushController {
     }
 
     updateCursorSize() {
-        if (!this.cursor) return;
-        const fontSize = 24 + (this.brushRadius - 1) * 8; // Scale cursor emoji
-        this.cursor.style.fontSize = `${fontSize}px`;
+        this.cursorView.setSize(this.brushRadius);
     }
 
     getGridCoords(clientX, clientY) {
@@ -85,10 +94,7 @@ export class BrushController {
         });
 
         this.canvas.addEventListener('mousemove', (e) => {
-            if (this.cursor) {
-                // GPU composited transform positioning (no DOM reflow)
-                this.cursor.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%) rotate(-30deg)`;
-            }
+            this.cursorView.setPosition(e.clientX, e.clientY);
             this.handlePointerMove(e.clientX, e.clientY);
         });
 
@@ -101,7 +107,7 @@ export class BrushController {
             this.lastC = -1;
             if (e.touches.length > 0) {
                 const t = e.touches[0];
-                if (this.cursor) this.cursor.style.opacity = '1';
+                this.cursorView.setVisibility(true);
                 this.handlePointerMove(t.clientX, t.clientY);
             }
         }, { passive: false });
@@ -110,9 +116,7 @@ export class BrushController {
             if (e.cancelable) e.preventDefault(); // Prevents mobile pull-to-refresh
             if (e.touches.length > 0) {
                 const t = e.touches[0];
-                if (this.cursor) {
-                    this.cursor.style.transform = `translate3d(${t.clientX}px, ${t.clientY}px, 0) translate(-50%, -50%) rotate(-30deg)`;
-                }
+                this.cursorView.setPosition(t.clientX, t.clientY);
                 this.handlePointerMove(t.clientX, t.clientY);
             }
         }, { passive: false });
@@ -121,7 +125,7 @@ export class BrushController {
             this.isMouseDown = false;
             this.lastR = -1;
             this.lastC = -1;
-            if (this.cursor) this.cursor.style.opacity = '0';
+            this.cursorView.setVisibility(false);
         }, { passive: true });
 
         // Mouse Wheel for Dynamic Razor Resizing
@@ -136,11 +140,11 @@ export class BrushController {
 
         this.canvas.addEventListener('mouseenter', () => {
             this.updateRect();
-            if (this.cursor) this.cursor.style.opacity = '1';
+            this.cursorView.setVisibility(true);
         });
 
         this.canvas.addEventListener('mouseleave', () => {
-            if (this.cursor) this.cursor.style.opacity = '0';
+            this.cursorView.setVisibility(false);
         });
     }
 

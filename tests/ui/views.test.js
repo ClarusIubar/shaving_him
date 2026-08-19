@@ -5,7 +5,31 @@ import { StatsHUDView } from '../../src/ui/views/stats-hud-view.js';
 import { StageSelectModalView } from '../../src/ui/views/stage-select-modal-view.js';
 import { LoadingOverlayView } from '../../src/ui/views/loading-overlay-view.js';
 import { GameOverOverlayView } from '../../src/ui/views/game-over-overlay-view.js';
+import { CursorView } from '../../src/ui/views/cursor-view.js';
 import { HUD } from '../../src/ui/hud.js';
+
+test('CursorView - renders translate3d, font size, and visibility cleanly', () => {
+    const mockElement = { style: {} };
+    const cursorView = new CursorView(mockElement);
+
+    cursorView.setPosition(100, 200);
+    assert.equal(mockElement.style.transform, 'translate3d(100px, 200px, 0) translate(-50%, -50%) rotate(-30deg)');
+
+    cursorView.setSize(3);
+    assert.equal(mockElement.style.fontSize, '40px');
+
+    cursorView.setVisibility(true);
+    assert.equal(mockElement.style.opacity, '1');
+
+    cursorView.setVisibility(false);
+    assert.equal(mockElement.style.opacity, '0');
+
+    // Handles null element gracefully
+    const nullCursorView = new CursorView(null);
+    nullCursorView.setPosition(0, 0);
+    nullCursorView.setSize(1);
+    nullCursorView.setVisibility(true);
+});
 
 function createMockDoc() {
     const elements = new Map();
