@@ -1,4 +1,4 @@
-# 📜 [Version History & Release Notes] Shaving Him 변경 이력 (CHANGELOG) - v1.13.0
+# 📜 [Version History & Release Notes] Shaving Him 변경 이력 (CHANGELOG) - v1.14.0
 
 > **위키 퀵 내비게이션**: [🏠 Wiki 홈](Home) | [🎮 라이브 게임 플레이](https://clarusiubar.github.io/shaving_him/) | [📋 기획서 (PRD)](기획서) | [📁 시스템 설계서](설계서) | [🏛️ ADR 명세서](ADR) | [📂 소스모듈 명세서](프로젝트_디렉토리_및_모듈_구조_명세서) | [⚡ 세부 기술 명세서](명세서) | [📊 수식/퍼징 검증서](스코어링_이론계산_실측값_검증) | [🧪 테스트 체계서](테스트_체계_및_TDD_명세서) | [📜 변경 이력](CHANGELOG)
 
@@ -8,6 +8,7 @@
 
 | 버전 (Version) | 태스크 ID | 릴리즈 일자 | 핵심 변경 사항 |
 | :---: | :---: | :---: | :--- |
+| **v1.14.0** | **TSK-011-00** | 2026-08-19 | SOLID 전면 강화 (`CursorView`, `SessionTimer`, `IScoringStrategy`, ISP 완화, `StageSourcePort` LSP) & SDD `index.d.ts` 정식 선언 |
 | **v1.13.0** | **TSK-013-00** | 2026-08-18 | `InputManager` 분리, `ParticleSystem` DI 주입, SDD 타입 명세, E2E/퍼징 구축, 98.17% 커버리지 |
 | **v1.12.0** | **TSK-012-00** | 2026-08-18 | UI Passive Views 서브컴포넌트 4대 분리 및 Fail-Fast DOM 격리 |
 | **v1.11.0** | **TSK-011-00** | 2026-08-18 | 100% Web Audio API 절차적 음향 합성기 (`SoundEffects`) 도입 (0B 에셋) |
@@ -25,6 +26,24 @@
 ---
 
 ## 📜 세부 버전별 변경 기록
+
+### 🚀 [v1.14.0] - 2026-08-19 (Parent: #127)
+- **`[TSK-011-01]` `src/types/index.d.ts` SDD 타입 명세 확립 (#128, PR #134)**:
+  - 시스템 표준 DTO (`StageDataDTO`, `SessionSnapshotDTO`, `FinalScoreResult`, `ShaveResultDTO`, `HairPosition`, `ColorCell`) 및 인터페이스 (`IScoringStrategy`, `ReadOnlyHairView`) TypeScript 정적 타입 선언.
+- **`[TSK-011-02]` `CursorView` 분리를 통한 `BrushController` SRP 강화 (#129, PR #135)**:
+  - `src/ui/views/cursor-view.js` 신설로 면도기 커서 DOM 조작(`translate3d`, `fontSize`, `opacity`) 전담 분리.
+- **`[TSK-011-03]` `SessionTimer` 서비스 분리를 통한 `GameOrchestrator` 결합도 해소 (#130, PR #136)**:
+  - `src/domain/session-timer.js` 신설로 1초 클록 제어, `unref`, 타이머 수명주기 캡슐화 및 DI 주입 배선.
+- **`[TSK-011-04]` `ScoreCalculator`의 `IScoringStrategy` 전략 패턴 도입 (OCP) (#131, PR #137)**:
+  - `DefaultScoringStrategy` 추출 및 `ScoreCalculator`에 전략 주입 패턴 적용하여 다양한 난이도 점수 정책 확장 개방.
+- **`[TSK-011-05]` `HUD` 거대 인터페이스 분리 및 `InputManager` 결합도 완화 (ISP) (#132, PR #138)**:
+  - `InputManager`가 거대 `HUD` 대신 세분화된 `statsView`, `modalView`를 직접 주입받을 수 있도록 인터페이스 분리 원칙 달성.
+- **`[TSK-011-06]` `StaticJsonStageAdapter` 계약 정합 및 `StageSourcePort` 상속 (LSP) (#133, PR #139)**:
+  - `StaticJsonStageAdapter`가 `StageSourcePort`를 명시적으로 상속하고 `canHandle` 및 통일된 `loadStage` 시그니처 구현.
+- **테스트 및 품질 지표**:
+  - 총 146개 자동화 테스트 100% 통과, **Line 100% · Function 100% · Branch 97.69%** 유지, Zero Console Noise 달성.
+
+---
 
 ### 🚀 [v1.13.0] - 2026-08-18 (Parent: #112)
 - **`[TSK-013-01]` `InputManager` 분리 (#113, PR #118)**:
