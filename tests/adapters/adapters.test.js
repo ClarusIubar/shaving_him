@@ -4,6 +4,19 @@ import assert from 'node:assert/strict';
 import { StaticJsonStageAdapter } from '../../src/adapters/static-json-stage.js';
 import { DeltaDiffEngineAdapter } from '../../src/adapters/delta-diff-engine.js';
 import { CanvasAsciiConverterAdapter } from '../../src/adapters/canvas-ascii-converter.js';
+import { StageSourcePort } from '../../src/ports/stage-source.port.js';
+
+test('StaticJsonStageAdapter - adheres to StageSourcePort contract (LSP)', async () => {
+    const adapter = new StaticJsonStageAdapter();
+    assert.ok(adapter instanceof StageSourcePort, 'StaticJsonStageAdapter must inherit from StageSourcePort');
+    assert.equal(typeof adapter.canHandle, 'function');
+    assert.equal(adapter.canHandle('stage.json'), true);
+    assert.equal(adapter.canHandle('stage.js'), true);
+    assert.equal(adapter.canHandle({ rows: 1, cols: 1 }), true);
+    assert.equal(adapter.canHandle('image.png'), false);
+    assert.equal(adapter.canHandle(12345), false);
+    assert.equal(adapter.canHandle(null), false);
+});
 
 test('StaticJsonStageAdapter - parses raw JSON into StageDataDTO', async () => {
     const mockJson = {
@@ -18,7 +31,7 @@ test('StaticJsonStageAdapter - parses raw JSON into StageDataDTO', async () => {
     };
 
     const adapter = new StaticJsonStageAdapter();
-    const stageDTO = await adapter.loadStage(mockJson);
+    const stageDTO = await adapter.loadStage(mockJson, 2, 2);
 
     assert.equal(stageDTO.rows, 2);
     assert.equal(stageDTO.cols, 2);
