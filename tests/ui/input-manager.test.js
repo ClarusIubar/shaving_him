@@ -320,3 +320,13 @@ test('InputManager - supports granular views injection without monolithic HUD (I
     changeStageBtn.click();
     assert.equal(modalShown, true);
 });
+
+test('InputManager - resolveView resolves explicit view, subview from hud, or fallback hud cleanly', () => {
+    const doc = createMockDocument();
+    const mockStats = { soundToggleBtn: doc.createElement('button') };
+    const mockHud = { statsView: mockStats, modalView: null };
+
+    const manager = new InputManager({ doc, hud: mockHud });
+    assert.strictEqual(manager.statsView, mockStats);
+    assert.strictEqual(manager.modalView, mockHud);
+});

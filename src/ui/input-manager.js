@@ -11,6 +11,12 @@ export const KEY_BRUSH_RADIUS_MAP = Object.freeze({
     '4': 7
 });
 
+function resolveView(explicitView, hud, propertyName) {
+    if (explicitView) return explicitView;
+    if (hud && hud[propertyName]) return hud[propertyName];
+    return hud;
+}
+
 export class InputManager {
     /**
      * @param {Object} options
@@ -43,8 +49,8 @@ export class InputManager {
         this.brushController = brushController;
         this.orchestrator = orchestrator;
         this.hud = hud;
-        this.statsView = statsView || (hud ? (hud.statsView || hud) : null);
-        this.modalView = modalView || (hud ? (hud.modalView || hud) : null);
+        this.statsView = resolveView(statsView, hud, 'statsView');
+        this.modalView = resolveView(modalView, hud, 'modalView');
         this.sound = sound;
         this.keyMap = keyMap;
         this.unsubscribers = [];

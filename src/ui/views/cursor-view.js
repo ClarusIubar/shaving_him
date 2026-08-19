@@ -2,6 +2,11 @@
  * Interface Layer: CursorView
  * Encapsulates DOM rendering for razor cursor with GPU-accelerated transform translate3d.
  */
+const OPACITY_MAP = Object.freeze({
+    true: '1',
+    false: '0'
+});
+
 export class CursorView {
     static from(target) {
         if (target instanceof CursorView) return target;
@@ -25,6 +30,6 @@ export class CursorView {
 
     setVisibility(visible) {
         if (!this.cursor || !this.cursor.style) return;
-        this.cursor.style.opacity = visible ? '1' : '0';
+        this.cursor.style.opacity = OPACITY_MAP[Boolean(visible)];
     }
 }
