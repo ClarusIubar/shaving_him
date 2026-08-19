@@ -26,8 +26,8 @@
 | **ADR-016** | `ScoreCalculator`의 `IScoringStrategy` 전략 패턴 도입 (OCP) | **Accepted** | 점수 배율 및 보너스 산출 정책을 주입 가능한 전략으로 확장 개방 |
 | **ADR-017** | `InputManager`의 세분화된 뷰 직접 주입 지원 (ISP) | **Accepted** | 거대 `HUD` 대신 필요한 `statsView`, `modalView`만 선별 주입 가능 |
 | **ADR-018** | `StaticJsonStageAdapter`의 `StageSourcePort` 상속 및 LSP 확립 | **Accepted** | `StageSourcePort` 다형성 보장 및 통일된 로딩 시그니처 확립 |
-| **ADR-019** | 삼항 연산자/if-else 배제, 선언적 룩업 매핑 및 순환 복잡도(CC) 제약 | **Accepted** | 죽은 분기 제거, Non-Nullable 직접 위임 및 98.27% 브랜치 커버리지 달성 |
-| **ADR-020** | 코드베이스 전수 삼항 연산자 0건(Zero-Ternary) 및 가짜 Null 소탕 | **Accepted** | 33개 전체 파일 대상 삼항 연산자 완전 소멸(0건) 및 99.05% 브랜치 커버리지 달성 |
+| **ADR-019** | 삼항 연산자/if-else 배제, 선언적 룩업 매핑 및 순환 복잡도(CC) 제약 | **Accepted** | 미도달 브랜치 제거, Non-Nullable 직접 위임 및 98.27% 브랜치 커버리지 확보 |
+| **ADR-020** | 코드베이스 삼항 연산자 전면 제거(Zero-Ternary) 및 가짜 Null 검사 배제 | **Accepted** | 33개 전체 파일 대상 삼항 연산자 배제(0건) 및 99.05% 브랜치 커버리지 확보 |
 
 ---
 
@@ -240,19 +240,19 @@
   - **정적 팩토리 패턴 (`CursorView.from`)**: 래핑 여부 판정을 클래스 내부로 격리하여 클라이언트 코드의 분기 복잡도 제거.
   - **선언적 룩업 매핑 (`OPACITY_MAP`, `STAGE_EXTENSIONS`)**: `Set`/`Object`를 활용한 O(1) 매칭으로 if-else 중첩 제거.
   - **단일 책임 리졸버 (`resolveView`)**: 얼리 리턴을 활용하여 각 함수의 순환 복잡도를 CC $\le 3$ 수준으로 억제.
-- **결과 및 영향 (Consequences)**: 죽은 브랜치 완전 소멸, 전체 코드베이스 브랜치 커버리지 **98.27%** 달성 및 가독성 극대화.
+- **결과 및 영향 (Consequences)**: 미도달 브랜치 제거 및 브랜치 커버리지 98.27% 확보.
 
 ---
 
-### 📄 ADR-020: 코드베이스 전수 삼항 연산자 0건(Zero-Ternary) 및 가짜 Null 소탕
+### 📄 ADR-020: 코드베이스 삼항 연산자 전면 제거(Zero-Ternary) 및 가짜 Null 검사 배제
 
 - **상태**: `Accepted` (TSK-013-09)
 - **컨텍스트 (Context)**: `canvas-renderer.js`, `shave-session.js`, `line-rasterizer.js`, `score-calculator.js`, `delta-diff-engine.js`, `main.js` 등 전체 코드베이스에 산재해 있던 잔여 삼항 연산자(`? :`)와 가짜 Null 체크가 코드 가독성을 저해하고 불필요한 분기를 형성함.
 - **결정 (Decision)**:
-  - `src/` 디렉터리 내 **33개 전체 소스코드 파일**을 전수 감사하여 삼항 연산자(`? :`) 잔존 개수 0건 달성 (Zero-Ternary).
-  - 브레젠험 방향 판정을 `Math.sign` 수학적 함수로 변경하고, 생성자 기본 매개변수에 ES6 표준 fallback 함수 적용.
+  - `src/` 디렉터리 내 **33개 전체 소스코드 파일**을 전수 감사하여 삼항 연산자(`? :`) 사용을 전면 배제 (잔존 0건).
+  - 브레젠험 방향 판정을 `Math.sign` 수학적 함수로 대체하고, 생성자 기본 매개변수에 ES6 표준 fallback 함수 적용.
   - UI 상태 토글 문자열 및 표시 여부를 `SOUND_TEXT_MAP`, `BADGE_DISPLAY_MAP` 동결 룩업 테이블로 정돈 ($CC = 1$).
 - **결과 및 영향 (Consequences)**:
-  - 전체 소스코드 내 삼항 연산자 0건 완벽 달성.
-  - 전체 코드베이스 브랜치 커버리지 **99.05%** 역대 최고 기록 달성.
-  - 150개 전체 테스트 100% 통과 (0 Console Noise).
+  - 전체 소스코드 내 삼항 연산자 0건 유지.
+  - 전체 코드베이스 브랜치 커버리지 **99.05%** 확보.
+  - 150개 전체 테스트 통과 (Zero Console Noise).
