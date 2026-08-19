@@ -149,10 +149,10 @@ d:\Code305\shaving_him\
   * 엄격한 Red-Green-Refactor(RGR) TDD 워크플로우 표준
   * 6대 테스트 계층 (단위, 계약, 통합, E2E, Fuzzing, 회귀) 구조
   * Node.js 환경용 `dom-mock-harness.js` 아키텍처
-  * 100% Line / 100% Func / 98.17% Branch 품질 게이트 실측치
+  * 100% Line / 100% Func / 99.05% Branch 품질 게이트 실측치
 
 * 📜 **[7. 버전별 변경 이력 (CHANGELOG)](CHANGELOG)**
-  * TSK-001부터 TSK-013(v1.13.0)까지의 기능 릴리즈 및 리팩토링 전수 기록
+  * TSK-001부터 TSK-013(v1.14.0)까지의 기능 릴리즈 및 리팩토링 전수 기록
 
 * 📂 **[8. 초기 구상 및 원본 스펙 아카이브 (Archive)](Archive)**
   * 레거시 단일 파일 시절의 원본 프로토타입 및 아키텍처 변천사 아카이브
