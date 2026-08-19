@@ -59,7 +59,13 @@
   - `tests/domain/grid-geometry-fuzzing.test.js`: 1,000회 무작위 브레젠험 벡터 및 500회 뷰포트 좌표 스케일링 퍼징 검증.
 - **`[TSK-013-05]` 브랜치 커버리지 사각지대 해소 및 98%+ 달성 (#117, PR #122)**:
   - `tests/adapters/branch-coverage-booster.test.js`로 잔여 에러/폴백 브랜치 전수 검증.
-  - 전체 커버리지: **Line 100.00% · Function 100.00% · Branch 98.17%** 달성.
+- **`[TSK-013-06]` 삼항 연산자(? :) 배제 및 Non-Nullable 불변식 직접 위임 (#141, PR #144)**:
+  - `GameOrchestrator.timerId` 불필요한 null 가드 제거 및 `CursorView.from(target)` 정적 팩토리 패턴 도입.
+- **`[TSK-013-07]` 선언적 룩업 매핑(`OPACITY_MAP`) 및 `resolveView` 헬퍼 함수 (#142, PR #145)**:
+  - `InputManager` 삼항 연산자 체이닝을 순수 헬퍼(`resolveView`)로 정돈하여 순환 복잡도(CC <= 3) 억제 및 `CursorView` 룩업 테이블 도입.
+- **`[TSK-013-08]` `STAGE_EXTENSIONS` Set 룩업 및 전체 브랜치 커버리지 98.27% 달성 (#143, PR #146)**:
+  - `StaticJsonStageAdapter.canHandle` 단축 평가 체인을 `Set` O(1) 룩업으로 개편 및 `main.js` 삼항 연산자 전면 제거.
+  - 전체 커버리지: **Line 100.00% · Function 100.00% · Branch 98.27%** 최고치 갱신.
 
 ---
 

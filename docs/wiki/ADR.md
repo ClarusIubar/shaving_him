@@ -26,6 +26,7 @@
 | **ADR-016** | `ScoreCalculator`의 `IScoringStrategy` 전략 패턴 도입 (OCP) | **Accepted** | 점수 배율 및 보너스 산출 정책을 주입 가능한 전략으로 확장 개방 |
 | **ADR-017** | `InputManager`의 세분화된 뷰 직접 주입 지원 (ISP) | **Accepted** | 거대 `HUD` 대신 필요한 `statsView`, `modalView`만 선별 주입 가능 |
 | **ADR-018** | `StaticJsonStageAdapter`의 `StageSourcePort` 상속 및 LSP 확립 | **Accepted** | `StageSourcePort` 다형성 보장 및 통일된 로딩 시그니처 확립 |
+| **ADR-019** | 삼항 연산자/if-else 배제, 선언적 룩업 매핑 및 순환 복잡도(CC) 제약 | **Accepted** | 죽은 분기 제거, Non-Nullable 직접 위임 및 98.27% 브랜치 커버리지 달성 |
 
 ---
 
@@ -226,3 +227,16 @@
   - `StaticJsonStageAdapter extends StageSourcePort` 명시 상속 및 `canHandle(source)` 구현.
   - `loadStage(source, targetCols, targetRows, options, onProgress)` 시그니처 정합.
 - **결과 및 영향 (Consequences)**: LSP 준수 및 모든 스테이지 어댑터 간의 완전한 다형성 확보.
+
+---
+
+### 📄 ADR-019: 삼항 연산자/if-else 배제, 선언적 룩업 매핑 및 순환 복잡도(CC) 제약
+
+- **상태**: `Accepted` (TSK-013-06 ~ TSK-013-08)
+- **컨텍스트 (Context)**: 하위 호환성 및 방어적 가드를 위한 다중 삼항 연산자 체이닝(`a || (b ? c : null)`)과 단축 평가 연산자가 과다한 미실행 브랜치를 양산하여 브랜치 커버리지를 하락시키고 순환 복잡도를 높임.
+- **결정 (Decision)**:
+  - **삼항 연산자(`? :`) 전면 배제**: 생성자 Non-Nullable 불변식을 신뢰하여 불필요한 null 가드 제거 (`this.timer.timerId` 직접 위임).
+  - **정적 팩토리 패턴 (`CursorView.from`)**: 래핑 여부 판정을 클래스 내부로 격리하여 클라이언트 코드의 분기 복잡도 제거.
+  - **선언적 룩업 매핑 (`OPACITY_MAP`, `STAGE_EXTENSIONS`)**: `Set`/`Object`를 활용한 O(1) 매칭으로 if-else 중첩 제거.
+  - **단일 책임 리졸버 (`resolveView`)**: 얼리 리턴을 활용하여 각 함수의 순환 복잡도를 CC $\le 3$ 수준으로 억제.
+- **결과 및 영향 (Consequences)**: 죽은 브랜치 완전 소멸, 전체 코드베이스 브랜치 커버리지 **98.27%** 달성 및 가독성 극대화.
