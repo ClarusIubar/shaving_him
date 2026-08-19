@@ -146,3 +146,13 @@ test('GameOrchestrator - timer tick interval, shaving guards, winning shave and 
         global.setInterval = originalSetInterval;
     }
 });
+
+test('GameOrchestrator - timerId accessor directly delegates to sessionTimer without null check', () => {
+    const mockTimer = { timerId: 42 };
+    const mockPipeline = createMockPipeline();
+    const orchestrator = new GameOrchestrator(mockPipeline, undefined, mockTimer);
+
+    assert.strictEqual(orchestrator.timerId, 42);
+    orchestrator.timerId = 99;
+    assert.strictEqual(mockTimer.timerId, 99);
+});
