@@ -102,6 +102,18 @@ test('BranchBooster - StaticJsonStageAdapter: game_data.js, null source, null re
     assert.equal(stage4.rows, 0);
     assert.equal(stage4.cols, 0);
     assert.equal(stage4.totalHairCount, 0);
+
+    // 5. canHandle full branch permutation booster
+    assert.strictEqual(rawAdapter.canHandle(null), false);
+    assert.strictEqual(rawAdapter.canHandle(undefined), false);
+    assert.strictEqual(rawAdapter.canHandle([]), false);
+    assert.strictEqual(rawAdapter.canHandle({}), true);
+    assert.strictEqual(rawAdapter.canHandle('stage.json'), true);
+    assert.strictEqual(rawAdapter.canHandle('stage.js'), true);
+    assert.strictEqual(rawAdapter.canHandle('game_data.json'), true);
+    assert.strictEqual(rawAdapter.canHandle('nodotfile'), false);
+    assert.strictEqual(rawAdapter.canHandle('stage.png'), false);
+    assert.strictEqual(rawAdapter.canHandle(123), false);
 });
 
 test('BranchBooster - BrushController: non-cancelable touch, empty touches, onRadiusChange non-function', () => {

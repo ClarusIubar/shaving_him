@@ -83,10 +83,6 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
             hud.hideStartModal();
             hud.hideOverlay();
             if (gameContainer && gameContainer.style) gameContainer.style.display = 'flex';
-            // The canvas was hidden (display:none) when BrushController cached its
-            // bounding rect at construction time; that cache never refreshes on its
-            // own from a script-driven visibility change. Force a fresh read now so
-            // the very first pointer/touch interaction resolves to a real cell.
             brushController.invalidateRect();
 
             currentStageData = await orchestrator.loadAndStartStage(source, 60, (msg, pct) => {
@@ -95,7 +91,11 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
             renderer.render(currentStageData, orchestrator.getCurrentHairView(), null);
         } catch (err) {
             if (typeof console !== 'undefined' && console.error) console.error('Stage loading error:', err);
-            if (typeof alert === 'function') alert(`스테이지 로드 실패: ${err ? err.message : '알 수 없는 오류'}`);
+            let errMsg = '알 수 없는 오류';
+            if (err && err.message) {
+                errMsg = err.message;
+            }
+            if (typeof alert === 'function') alert(`스테이지 로드 실패: ${errMsg}`);
             hud.showStartModal();
         } finally {
             hud.hideLoading();
@@ -104,7 +104,13 @@ export const bootstrapApp = (doc = typeof document !== 'undefined' ? document : 
 
     // Start Modal Preset & Custom Photo File Selection
     hud.initStartModalEvents(
-        (preset) => startStageWithSource(preset === 'preset1' ? 'game_data.json' : preset),
+        (preset) => {
+            let src = preset;
+            if (preset === 'preset1') {
+                src = 'game_data.json';
+            }
+            return startStageWithSource(src);
+        },
         (file) => startStageWithSource(file)
     );
 
@@ -141,5 +147,9 @@ export function initAutoBootstrap(doc = (typeof document !== 'undefined' ? docum
 }
 
 if (typeof document !== 'undefined') {
-    initAutoBootstrap(document, typeof window !== 'undefined' ? window : null);
+    let globalWin = null;
+    if (typeof window !== 'undefined') {
+        globalWin = window;
+    }
+    initAutoBootstrap(document, globalWin);
 }
