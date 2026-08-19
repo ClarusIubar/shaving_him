@@ -1,5 +1,7 @@
 import { StageSourcePort } from '../ports/stage-source.port.js';
 
+const STAGE_EXTENSIONS = new Set(['.json', '.js']);
+
 /**
  * Concrete Adapter: StaticJsonStageAdapter
  * Loads pre-rendered game stage JSON (e.g. game_data.json) into standard StageDataDTO format.
@@ -19,10 +21,12 @@ export class StaticJsonStageAdapter extends StageSourcePort {
     canHandle(source) {
         if (!source) return false;
         if (typeof source === 'object' && !Array.isArray(source)) return true;
-        if (typeof source === 'string') {
-            return source.endsWith('.json') || source.endsWith('.js') || source === 'game_data.json';
-        }
-        return false;
+        if (typeof source !== 'string') return false;
+        if (source === 'game_data.json') return true;
+
+        const dotIdx = source.lastIndexOf('.');
+        if (dotIdx === -1) return false;
+        return STAGE_EXTENSIONS.has(source.slice(dotIdx));
     }
 
     /**
@@ -71,12 +75,32 @@ export class StaticJsonStageAdapter extends StageSourcePort {
 
         const textGrid = Array.isArray(rawData.text) ? rawData.text : [];
         const colorGrid = Array.isArray(rawData.colors) ? rawData.colors : [];
-        const rows = typeof rawData.rows === 'number' ? rawData.rows : textGrid.length;
-        const cols = typeof rawData.cols === 'number' ? rawData.cols : (textGrid[0] ? textGrid[0].length : 0);
-        const hairPositions = Array.isArray(rawData.hair) ? rawData.hair : (Array.isArray(rawData.hairPositions) ? rawData.hairPositions : []);
-        const totalHairCount = typeof rawData.totalHairCount === 'number'
-            ? rawData.totalHairCount
-            : (typeof rawData.hairCount === 'number' ? rawData.hairCount : hairPositions.length);
+
+        let rows = textGrid.length;
+        if (typeof rawData.rows === 'number') {
+            rows = rawData.rows;
+        }
+
+        let cols = 0;
+        if (typeof rawData.cols === 'number') {
+            cols = rawData.cols;
+        } else if (textGrid.length > 0 && textGrid[0]) {
+            cols = textGrid[0].length;
+        }
+
+        let hairPositions = [];
+        if (Array.isArray(rawData.hair)) {
+            hairPositions = rawData.hair;
+        } else if (Array.isArray(rawData.hairPositions)) {
+            hairPositions = rawData.hairPositions;
+        }
+
+        let totalHairCount = hairPositions.length;
+        if (typeof rawData.totalHairCount === 'number') {
+            totalHairCount = rawData.totalHairCount;
+        } else if (typeof rawData.hairCount === 'number') {
+            totalHairCount = rawData.hairCount;
+        }
 
         return {
             rows,
