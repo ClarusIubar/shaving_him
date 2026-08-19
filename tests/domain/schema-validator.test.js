@@ -1,7 +1,29 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { validateStageData, validateSnapshot } from '../../src/domain/schema-validator.js';
+
+test('SDD Type Contract - src/types/index.d.ts exists and declares all canonical DTOs', () => {
+    const dtsPath = path.resolve('src/types/index.d.ts');
+    assert.ok(fs.existsSync(dtsPath), 'src/types/index.d.ts file must exist');
+    const content = fs.readFileSync(dtsPath, 'utf8');
+
+    const expectedTypes = [
+        'StageDataDTO',
+        'SessionSnapshotDTO',
+        'FinalScoreResult',
+        'HairPosition',
+        'ReadOnlyHairView',
+        'StateUpdateEventDTO',
+        'IScoringStrategy'
+    ];
+
+    for (const typeName of expectedTypes) {
+        assert.ok(content.includes(typeName), `src/types/index.d.ts must declare interface/type "${typeName}"`);
+    }
+});
 
 test('validateStageData - accepts a valid StageDataDTO', () => {
     const validDTO = {
