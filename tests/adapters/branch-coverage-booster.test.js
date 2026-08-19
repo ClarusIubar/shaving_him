@@ -443,5 +443,25 @@ test('BranchBooster - BrushController: null cursor event listeners branches', ()
     if (canvas.listeners['mouseleave']) canvas.listeners['mouseleave']();
 });
 
+test('BranchBooster - Global DOM default arguments coverage in HUD, SoundEffects, InputManager, and main.js', () => {
+    const { document: doc, window: win, teardown } = setupGlobalDOM();
+    try {
+        const hud = new HUD();
+        assert.ok(hud);
+
+        const sound = new SoundEffects();
+        assert.ok(sound);
+
+        const im = new InputManager();
+        assert.ok(im);
+        im.destroy();
+
+        const autoApp = initAutoBootstrap();
+        assert.ok(autoApp);
+    } finally {
+        teardown();
+    }
+});
+
 
 

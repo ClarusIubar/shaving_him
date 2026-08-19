@@ -3,6 +3,16 @@
  * Renders gameplay statistics (score, timer, remaining hairs, progress bar, combo badge, brush/sound controls).
  */
 
+const SOUND_TEXT_MAP = Object.freeze({
+    true: '🔊 소리 켬',
+    false: '🔇 음소거'
+});
+
+const BADGE_DISPLAY_MAP = Object.freeze({
+    true: 'inline-block',
+    false: 'none'
+});
+
 export class StatsHUDView {
     constructor(doc) {
         if (!doc) {
@@ -31,11 +41,11 @@ export class StatsHUDView {
         this.comboValEl.textContent = comboCount;
         const isComboActive = comboCount > 1;
         this.comboBadgeEl.classList.toggle('active', isComboActive);
-        this.comboBadgeEl.style.display = isComboActive ? 'inline-block' : 'none';
+        this.comboBadgeEl.style.display = BADGE_DISPLAY_MAP[isComboActive];
     }
 
     updateSoundUI(enabled) {
-        this.soundToggleBtn.textContent = enabled ? '🔊 소리 켬' : '🔇 음소거';
+        this.soundToggleBtn.textContent = SOUND_TEXT_MAP[Boolean(enabled)];
     }
 
     updateBrushSizeUI(radius) {

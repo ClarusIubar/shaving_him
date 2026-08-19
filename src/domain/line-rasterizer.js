@@ -25,9 +25,13 @@ export function rasterizeLine(r0, c0, r1, c1, onPoint = null) {
 
     const dr = Math.abs(targetR - currR);
     const dc = Math.abs(targetC - currC);
-    const sr = currR < targetR ? 1 : -1;
-    const sc = currC < targetC ? 1 : -1;
-    let err = (dc > dr ? dc : -dr) / 2;
+    const sr = Math.sign(targetR - currR) || 1;
+    const sc = Math.sign(targetC - currC) || 1;
+    let majorDelta = -dr;
+    if (dc > dr) {
+        majorDelta = dc;
+    }
+    let err = majorDelta / 2;
 
     const points = [];
 

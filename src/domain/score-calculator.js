@@ -12,7 +12,10 @@ export class DefaultScoringStrategy {
     }
 
     calculateAllClearBonus(remainingHairs) {
-        return remainingHairs === 0 ? 500 : 0;
+        if (remainingHairs === 0) {
+            return 500;
+        }
+        return 0;
     }
 }
 

@@ -25,8 +25,14 @@ export class CanvasAsciiConverterAdapter extends AsciiConverterPort {
      * @param {number} targetRows
      */
     convertToAsciiGrid(colors, targetCols, targetRows) {
-        const actualRows = Array.isArray(colors) ? colors.length : 0;
-        const actualCols = actualRows > 0 && Array.isArray(colors[0]) ? colors[0].length : 0;
+        let actualRows = 0;
+        if (Array.isArray(colors)) {
+            actualRows = colors.length;
+        }
+        let actualCols = 0;
+        if (actualRows > 0 && Array.isArray(colors[0])) {
+            actualCols = colors[0].length;
+        }
         if (actualRows !== targetRows || actualCols !== targetCols) {
             throw new Error(
                 `CanvasAsciiConverterAdapter: colors grid dimensions (${actualRows}x${actualCols}) do not match target dimensions (${targetRows}x${targetCols})`

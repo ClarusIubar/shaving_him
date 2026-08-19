@@ -15,7 +15,9 @@ export class HairGrid {
         if (geometryOrCols instanceof GridGeometry) {
             this.cols = geometryOrCols.cols;
             this.rows = geometryOrCols.rows;
-            hairPositions = Array.isArray(rowsOrHairPositions) ? rowsOrHairPositions : hairPositions;
+            if (Array.isArray(rowsOrHairPositions)) {
+                hairPositions = rowsOrHairPositions;
+            }
         } else if (Number.isFinite(geometryOrCols) && Number.isFinite(rowsOrHairPositions)) {
             this.cols = geometryOrCols;
             this.rows = rowsOrHairPositions;

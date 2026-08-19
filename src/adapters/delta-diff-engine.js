@@ -19,7 +19,10 @@ export class DeltaDiffEngineAdapter extends DiffEnginePort {
             skinBaseColors = originalColors.map(row =>
                 row.map(([r, g, b, a]) => {
                     const lum = (r + g + b) / 3;
-                    return lum < skinLumThreshold ? avgSkinColor : [r, g, b, a];
+                    if (lum < skinLumThreshold) {
+                        return avgSkinColor;
+                    }
+                    return [r, g, b, a];
                 })
             );
         }
@@ -39,7 +42,10 @@ export class DeltaDiffEngineAdapter extends DiffEnginePort {
                 // Transparent source pixels read back as near-black [0,0,0,alpha] from
                 // canvas ImageData; without this check they look identical to genuine
                 // dark hair against a bright skin base and get misdetected as hair.
-                const origAlpha = orig.length > 3 ? orig[3] : 255;
+                let origAlpha = 255;
+                if (orig.length > 3) {
+                    origAlpha = orig[3];
+                }
                 if (origAlpha < 128) continue;
 
                 const origLum = (orig[0] + orig[1] + orig[2]) / 3;
@@ -67,7 +73,13 @@ export class DeltaDiffEngineAdapter extends DiffEnginePort {
             const row = colors[r];
             for (let c = 0; c < row.length; c++) {
                 const pixel = row[c];
-                const cr = pixel[0], cg = pixel[1], cb = pixel[2], ca = pixel.length > 3 ? pixel[3] : 255;
+                const cr = pixel[0];
+                const cg = pixel[1];
+                const cb = pixel[2];
+                let ca = 255;
+                if (pixel.length > 3) {
+                    ca = pixel[3];
+                }
                 if (ca < 128) continue; // Skip transparent pixels
                 const lum = (cr + cg + cb) / 3;
                 if (lum >= threshold) {

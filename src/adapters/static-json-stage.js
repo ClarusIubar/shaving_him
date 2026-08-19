@@ -57,7 +57,10 @@ export class StaticJsonStageAdapter extends StageSourcePort {
                     } else if (hasEmbedded) {
                         rawData = window.EMBEDDED_GAME_DATA;
                     } else {
-                        const status = resp ? resp.status : 'network error';
+                        let status = 'network error';
+                        if (resp && resp.status) {
+                            status = resp.status;
+                        }
                         throw new Error(`Fetch failed: ${status}`);
                     }
                 } catch (err) {
@@ -73,8 +76,14 @@ export class StaticJsonStageAdapter extends StageSourcePort {
             }
         }
 
-        const textGrid = Array.isArray(rawData.text) ? rawData.text : [];
-        const colorGrid = Array.isArray(rawData.colors) ? rawData.colors : [];
+        let textGrid = [];
+        if (Array.isArray(rawData.text)) {
+            textGrid = rawData.text;
+        }
+        let colorGrid = [];
+        if (Array.isArray(rawData.colors)) {
+            colorGrid = rawData.colors;
+        }
 
         let rows = textGrid.length;
         if (typeof rawData.rows === 'number') {

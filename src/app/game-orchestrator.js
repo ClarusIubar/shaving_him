@@ -130,6 +130,7 @@ export class GameOrchestrator {
     }
 
     getCurrentHairView() {
-        return this.session ? this.session.hairGrid.toReadOnlyView() : null;
+        if (!this.session) return null;
+        return this.session.hairGrid.toReadOnlyView();
     }
 }

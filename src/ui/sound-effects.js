@@ -1,10 +1,10 @@
-/**
- * Interface Layer: SoundEffects
- * Synthesizes real-time razor shave scratch sound, combo chimes, and win fanfare using Web Audio API.
- * Zero external audio file dependencies (0B asset load).
- */
+function getDefaultWindow() {
+    if (typeof window === 'undefined') return null;
+    return window;
+}
+
 export class SoundEffects {
-    constructor(win = typeof window !== 'undefined' ? window : null) {
+    constructor(win = getDefaultWindow()) {
         this.win = win;
         this.ctx = null;
         this.enabled = true;
@@ -83,7 +83,10 @@ export class SoundEffects {
 
             osc.type = 'sine';
             const baseFreq = 523.25; // C5 note
-            const count = typeof comboCount === 'number' ? comboCount : 2;
+            let count = 2;
+            if (typeof comboCount === 'number') {
+                count = comboCount;
+            }
             const pitchShift = Math.min(count * 45, 600);
             const freq = baseFreq + pitchShift;
 
