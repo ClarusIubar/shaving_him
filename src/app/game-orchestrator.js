@@ -4,19 +4,30 @@
  */
 import { ShaveSession, SessionStatus } from '../domain/shave-session.js';
 import { GridGeometry } from '../domain/grid-geometry.js';
+import { SessionTimer } from '../domain/session-timer.js';
 
 export class GameOrchestrator {
-    constructor(stagePipeline, gridGeometry = GridGeometry.default()) {
+    constructor(stagePipeline, gridGeometry = GridGeometry.default(), sessionTimer = new SessionTimer()) {
         if (!stagePipeline || typeof stagePipeline.loadStage !== 'function') {
             throw new Error('GameOrchestrator requires a stage pipeline exposing loadStage()');
         }
         this.pipeline = stagePipeline;
         this.geometry = gridGeometry;
+        this.timer = sessionTimer;
         this.session = null;
         this.currentStageData = null;
-        this.timerId = null;
         this.updateCallbacks = [];
         this.gameOverCallbacks = [];
+    }
+
+    get timerId() {
+        return this.timer ? this.timer.timerId : null;
+    }
+
+    set timerId(id) {
+        if (this.timer) {
+            this.timer.timerId = id;
+        }
     }
 
     onUpdate(callback) {
@@ -71,8 +82,7 @@ export class GameOrchestrator {
     }
 
     startTimer() {
-        this.stopTimer();
-        this.timerId = setInterval(() => {
+        this.timer.start(() => {
             if (!this.session) return;
             const ended = this.session.tick();
             this.notifyUpdate(null, true); // Timer tick: HUD update only
@@ -81,17 +91,11 @@ export class GameOrchestrator {
                 this.stopTimer();
                 this.notifyGameOver();
             }
-        }, 1000);
-        if (this.timerId && typeof this.timerId.unref === 'function') {
-            this.timerId.unref();
-        }
+        });
     }
 
     stopTimer() {
-        if (this.timerId) {
-            clearInterval(this.timerId);
-            this.timerId = null;
-        }
+        this.timer.stop();
     }
 
     /**

@@ -29,6 +29,11 @@ test('GameOrchestrator - registers and unregisters update and game over listener
 
     // Initial null session safety
     assert.equal(orchestrator.getCurrentHairView(), null);
+    assert.equal(orchestrator.timerId, null);
+    orchestrator.timerId = 123;
+    assert.equal(orchestrator.timerId, 123);
+    orchestrator.timerId = null;
+
     orchestrator.notifyUpdate();
     orchestrator.notifyGameOver();
     orchestrator.restart();
