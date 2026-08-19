@@ -11,6 +11,7 @@ import { StagePipeline } from './stage-pipeline.js';
 import { GameOrchestrator } from './game-orchestrator.js';
 import { GridGeometry } from '../domain/grid-geometry.js';
 import { GamePolicy } from '../domain/game-policy.js';
+import { SessionTimer } from '../domain/session-timer.js';
 
 export const createCompositionRoot = (customAdapters = {}) => {
     const jsonAdapter = customAdapters.jsonAdapter || new StaticJsonStageAdapter();
@@ -19,9 +20,10 @@ export const createCompositionRoot = (customAdapters = {}) => {
     const asciiConverter = customAdapters.asciiConverter || new CanvasAsciiConverterAdapter();
     const geometry = customAdapters.geometry || GridGeometry.default();
     const gamePolicy = customAdapters.gamePolicy || new GamePolicy();
+    const sessionTimer = customAdapters.sessionTimer || new SessionTimer();
 
     const stagePipeline = new StagePipeline(jsonAdapter, imageProcessor, diffEngine, asciiConverter);
-    const orchestrator = new GameOrchestrator(stagePipeline, geometry);
+    const orchestrator = new GameOrchestrator(stagePipeline, geometry, sessionTimer);
 
     return {
         jsonAdapter,
@@ -30,6 +32,7 @@ export const createCompositionRoot = (customAdapters = {}) => {
         asciiConverter,
         geometry,
         gamePolicy,
+        sessionTimer,
         stagePipeline,
         orchestrator
     };

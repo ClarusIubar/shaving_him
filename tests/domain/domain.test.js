@@ -4,6 +4,31 @@ import assert from 'node:assert/strict';
 import { HairGrid } from '../../src/domain/hair-grid.js';
 import { ScoreCalculator } from '../../src/domain/score-calculator.js';
 import { ShaveSession, SessionStatus } from '../../src/domain/shave-session.js';
+import { SessionTimer } from '../../src/domain/session-timer.js';
+
+test('SessionTimer - starts, ticks accurately, and stops cleanly', async () => {
+    const timer = new SessionTimer(20);
+    let tickCount = 0;
+
+    assert.equal(timer.isRunning, false);
+    timer.start(() => { tickCount++; });
+    assert.equal(timer.isRunning, true);
+
+    await new Promise(r => setTimeout(r, 65));
+    assert.ok(tickCount >= 2, `Expected at least 2 ticks, got ${tickCount}`);
+
+    timer.stop();
+    assert.equal(timer.isRunning, false);
+    const countAfterStop = tickCount;
+    await new Promise(r => setTimeout(r, 40));
+    assert.equal(tickCount, countAfterStop, 'Ticks must cease after stop()');
+
+    // Edge cases: start with invalid callback, multiple stops
+    const safeTimer = new SessionTimer(100);
+    safeTimer.start(null);
+    assert.equal(safeTimer.isRunning, false);
+    safeTimer.stop();
+});
 
 test('HairGrid - initializes and shaves correctly', () => {
     const hairPositions = [
