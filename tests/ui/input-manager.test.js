@@ -278,3 +278,45 @@ test('InputManager - destroy() cleans up all event listeners without throwing', 
     assert.equal(soundToggled, false);
     assert.equal(radiusSet, null);
 });
+
+test('InputManager - supports granular views injection without monolithic HUD (ISP)', () => {
+    const doc = createMockDocument();
+    const soundToggleBtn = doc.getElementById('soundToggleBtn');
+    const changeStageBtn = doc.getElementById('changeStageBtn');
+    let soundUIUpdated = false;
+    let brushUIUpdated = false;
+    let modalShown = false;
+    let radiusCallback = null;
+
+    const mockStatsView = {
+        soundToggleBtn,
+        updateSoundUI: () => { soundUIUpdated = true; },
+        updateBrushSizeUI: () => { brushUIUpdated = true; }
+    };
+    const mockModalView = {
+        show: () => { modalShown = true; }
+    };
+    const mockBrushController = {
+        onRadiusChange: (cb) => { radiusCallback = cb; },
+        setRadius: () => {}
+    };
+
+    const inputManager = new InputManager({
+        doc,
+        statsView: mockStatsView,
+        modalView: mockModalView,
+        sound: { toggle: () => true },
+        brushController: mockBrushController,
+        orchestrator: { stopTimer: () => {} }
+    });
+
+    assert.ok(inputManager);
+    soundToggleBtn.click();
+    assert.equal(soundUIUpdated, true);
+
+    radiusCallback(3);
+    assert.equal(brushUIUpdated, true);
+
+    changeStageBtn.click();
+    assert.equal(modalShown, true);
+});

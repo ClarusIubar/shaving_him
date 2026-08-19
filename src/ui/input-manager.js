@@ -19,6 +19,8 @@ export class InputManager {
      * @param {BrushController} [options.brushController]
      * @param {GameOrchestrator} [options.orchestrator]
      * @param {HUD} [options.hud]
+     * @param {StatsHUDView} [options.statsView]
+     * @param {StageSelectModalView} [options.modalView]
      * @param {SoundEffects} [options.sound]
      * @param {Object} [options.keyMap]
      */
@@ -28,6 +30,8 @@ export class InputManager {
         brushController = null,
         orchestrator = null,
         hud = null,
+        statsView = null,
+        modalView = null,
         sound = null,
         keyMap = KEY_BRUSH_RADIUS_MAP
     } = {}) {
@@ -39,6 +43,8 @@ export class InputManager {
         this.brushController = brushController;
         this.orchestrator = orchestrator;
         this.hud = hud;
+        this.statsView = statsView || (hud ? (hud.statsView || hud) : null);
+        this.modalView = modalView || (hud ? (hud.modalView || hud) : null);
         this.sound = sound;
         this.keyMap = keyMap;
         this.unsubscribers = [];
@@ -47,24 +53,27 @@ export class InputManager {
     }
 
     bindEvents() {
-        // 1. Sound toggle button in HUD
-        if (this.hud && this.hud.soundToggleBtn && this.sound) {
+        // 1. Sound toggle button
+        const soundBtn = this.statsView ? this.statsView.soundToggleBtn : null;
+        if (soundBtn && this.sound) {
             const onSoundClick = () => {
                 const enabled = this.sound.toggle();
-                this.hud.updateSoundUI(enabled);
-            };
-            this.hud.soundToggleBtn.addEventListener('click', onSoundClick);
-            this.unsubscribers.push(() => {
-                if (this.hud && this.hud.soundToggleBtn) {
-                    this.hud.soundToggleBtn.removeEventListener('click', onSoundClick);
+                if (typeof this.statsView.updateSoundUI === 'function') {
+                    this.statsView.updateSoundUI(enabled);
                 }
+            };
+            soundBtn.addEventListener('click', onSoundClick);
+            this.unsubscribers.push(() => {
+                soundBtn.removeEventListener('click', onSoundClick);
             });
         }
 
-        // 2. Synchronize HUD brush button highlight when brush radius changes
-        if (this.brushController && typeof this.brushController.onRadiusChange === 'function' && this.hud) {
+        // 2. Synchronize brush button highlight when brush radius changes
+        if (this.brushController && typeof this.brushController.onRadiusChange === 'function' && this.statsView) {
             this.brushController.onRadiusChange(radius => {
-                this.hud.updateBrushSizeUI(radius);
+                if (typeof this.statsView.updateBrushSizeUI === 'function') {
+                    this.statsView.updateBrushSizeUI(radius);
+                }
             });
         }
 
@@ -106,14 +115,18 @@ export class InputManager {
             this.unsubscribers.push(() => this.win.removeEventListener('keydown', onKeyDown));
         }
 
-        // 5. Change Stage Button in HUD
+        // 5. Change Stage Button
         const changeStageBtn = this.doc.getElementById('changeStageBtn');
-        if (changeStageBtn && this.hud) {
+        if (changeStageBtn && this.modalView) {
             const onChangeStageClick = () => {
                 if (this.orchestrator) {
                     this.orchestrator.stopTimer();
                 }
-                this.hud.showStartModal();
+                if (typeof this.modalView.showStartModal === 'function') {
+                    this.modalView.showStartModal();
+                } else if (typeof this.modalView.show === 'function') {
+                    this.modalView.show();
+                }
             };
             changeStageBtn.addEventListener('click', onChangeStageClick);
             this.unsubscribers.push(() => changeStageBtn.removeEventListener('click', onChangeStageClick));
