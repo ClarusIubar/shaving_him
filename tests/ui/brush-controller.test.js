@@ -92,6 +92,11 @@ test('BrushController - null canvas/cursor and out-of-bounds guards', () => {
     emptyController.updateCursorSize();
     emptyController.setRadius(2);
 
+    // Test cursor getter and setter
+    const dummyEl = { style: {} };
+    emptyController.cursor = dummyEl;
+    assert.equal(emptyController.cursor, dummyEl);
+
     const canvas = createMockCanvasElement(800, 600);
     const controller = new BrushController(canvas, null, () => {});
     controller.isMouseDown = true;
